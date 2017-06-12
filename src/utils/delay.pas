@@ -3,9 +3,7 @@ unit delay;
 interface
 
 procedure delay_ms(t: uint16);
-
-// Input range not fully covered, in progress
-//procedure delay_us(t: uint16);
+procedure delay_us(t: uint16);
 
 implementation
 
@@ -34,90 +32,102 @@ label
   inner, outer, finish;
 asm
   // test if t = 0, jump to finish if true
-  cp R24, R1        // 1
-  cpc R25, R1       // 1
-  breq finish       // 2 if true, 1 if false
+  cp R24, R1
+  cpc R25, R1
+  breq finish       // 2 cycles to branch, 1 to continue
 
 outer:
   // load 1 ms counter value
-  ldi R26, countL   // 1
-  ldi R27, countH   // 1
+  ldi R26, countL
+  ldi R27, countH
 
 inner:
   // inner loop, 1 ms  4cycles/loop + 1
-  sbiw R26, 1      // 2
-  brne inner       // 2 if true, 1 if false
+  sbiw R26, 1      // 2 cycles
+  brne inner       // 2 cycles to branch, 1 to continue
 
   // outer loop, count ms, 4 cycles/loop + 1
-  SBIW R24,1       // 2 cycles, operates on R24:R25, R26:R27, R28:R29, R30:R31
-  BRNE outer       // 1 cycle if false, 2 if true
+  sbiw R24,1       // 2 cycles
+  brne outer       // 2 cycles to branch, 1 to continue
 finish:
 end;
 
 
-// User should limit input so that t * tickfreq < 65536
-// Can then use sbiw instruction for tight countdown loop
 // Cycle count
 // function overhead: 4 cycles for call and 4 cycles for ret = 8
-// Shortcut to exit:
-// 8 + 11 cycles
-// Normal execution through loop
-// 8 + 10 + 6 + 4*loopcount - 1 = 23 + 4*loopcount
-// t*tickFreq = (23 + 4*ticks)
-// ticks = (t*tickfreq - 23)  / 4
+// Shortcut to exit: 15 cycles
+// Shortest limit = 8 + 15 + 1/2 of 1 loop (5) = 26
+// Calculation overhead up to begining of loop: 23 + 6 + 8 = 31
+// Loop will execute if loopcounter = 0, fixed overhead of 5
+// Fixed overhead including 1 loop cycle = 30 + 5 = 35
+// cyclecount = t*tickFreq
+// Loop accounting:
+// cyclecount = 5 + 4*loopcounter + 3*(loopcounter shr 16)
+// 1st approximation:
+// loopcounter = (cyclecount - 5)/4
+// 2nd correction
+// loopcounter = loopcounter - 3*(loopcounter shr 16)
 
-// F_CPU = 20 MHz, max delay = 3276 us
-// F_CPU = 16 MHz, max delay = 4095 us
-// F_CPU = 8  MHz, max delay = 8191 us
-
-// F_CPU = 20 MHz, min delay = 0.95 us
-// F_CPU = 16 MHz, min delay = 1.1875 us
-// F_CPU = 8  MHz, min delay = 2.375 us
 procedure delay_us(t: uint16); assembler;
 const
   tickFreq = (F_CPU div 1000000); // only valid from 1 - 64 MHz clock
-  shortdelay = 19 + 6 + 2;  // If delay ticks less than this, exit
-  overheadloop = 23;    // fixed overhead besides loop
+  shortlimit = 26;                // If delay ticks less than this, exit
+  overheadloop = 36;              // fixed overhead besides loop
 label
   loop, finish;
 asm
-  // http://www.avr-asm-tutorial.net/avr_en/calc/HARDMULT.html
-  // for background
   // Calculate required # ticks
-  // tickcount * t; uint8 * uint16
+  // tickfreq * t; uint8 * uitn16
   // t passed in R25:R24
-  // put ticks in R27:R26
-  ldi R22, tickFreq     // 1
-  mul R24, R22          // 1
-  mov R26, R0           // 1
-  mov R27, R1           // 1
-  mul R25, R22          // 1
-  add R27, R0           // 1
-  // ignore overflow in R1 !!!!!!!!!!!!!!!! <= potentially jump to 3 byte loop counter portion
+  // put ticks in R26:R25:R24
+  ldi R22, tickFreq
+  mul R24, R22
+  mov R24, R0
+  mov R23, R1    // temp R
+
+  clr R26
+  mul R25, R22
+  mov R25, R0
+  add R25, R23   // add temp from previous mul
+  adc R26, R1
+
   // restore R1 to zero
-  clr R1                //1
+  clr R1
 
   // test if ticks required < overhead, jump to finish if true
-  cpi R26, shortdelay   // 1
-  cpc R27, R1           // 1                         // 9 cycles
-  brlo finish           // 2 if true, 1 if false
+  cpi R24, shortlimit
+  cpc R25, R1
+  cpc R26, R1
+  brlo finish    // 2 cycles to branch, 1 to continue
 
   // Calculate loop counter
-  // Reuse R27:R26
   // First substract overhead
-  sbiw R26, overheadloop          // 2 cycles
+  sbiw R24, overheadloop          // 2 cycles
+  sbc R26, R1
 
   // Loop count = tickcount / 4
   // http://www.avrfreaks.net/comment/150853#comment-150853
-  lsr R27               // 1
-  ror R26               // 1
-  lsr R27               // 1
-  ror R26               // 1
+  lsr R26
+  ror R25
+  ror R24
+  lsr R26
+  ror R25
+  ror R24
+
+  // loop counter correction for outer loop iterations
+  // subtract 3*(loopcounter shr 16) = sub 3*R26 from loopcounter
+  ldi R22, 3
+  mul R26, R22
+  sub R24, R0
+  sbc R25, R1
+  sbci R26, 0
+  clr R1
 
 loop:
-  // loop, 4 cycles/loop - 1  (last loop cycle doesn't branch so only 1 cycle for brne
-  sbiw R26,1       // 2 cycles, operates on R24:R25, R26:R27, R28:R29, R30:R31
-  brne loop        // 2 cycles for looping, 1 to continue
+  sbiw R24, 1      // 2 cycles
+  brcc loop        // 2 cycles to branch, 1 to continue
+  subi R26, 1
+  brcc loop        // 2 cycles to branch, 1 to continue
 finish:
 end;
 
