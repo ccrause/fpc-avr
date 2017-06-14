@@ -1,0 +1,10 @@
+*.hex
+*.bin
+*.elf
+*.lpi
+*.bak
+*.s
+*.lss
+*.o
+*.ppu
+*.lps
