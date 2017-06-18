@@ -6,7 +6,7 @@ const
 var
   pinport: byte absolute byte(@PORTB);
   pindir: byte absolute byte(@DDRB);
-  i: byte = 0;
+  i: byte = 1;
 
 procedure Timer0Overflow; alias: 'TIMER0_OVF_ISR'; interrupt;
 begin

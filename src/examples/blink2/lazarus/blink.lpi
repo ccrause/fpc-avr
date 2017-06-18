@@ -16,9 +16,6 @@
     <i18n>
       <EnableI18N LFM="False"/>
     </i18n>
-    <VersionInfo>
-      <StringTable ProductVersion=""/>
-    </VersionInfo>
     <BuildModes Count="1">
       <Item1 Name="Default" Default="True"/>
     </BuildModes>
@@ -46,6 +43,15 @@
       <IncludeFiles Value="$(ProjOutDir)"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
+    <Parsing>
+      <SyntaxOptions>
+        <CStyleOperator Value="False"/>
+        <AllowLabel Value="False"/>
+        <CPPInline Value="False"/>
+        <CStyleMacros Value="True"/>
+        <UseAnsiStrings Value="False"/>
+      </SyntaxOptions>
+    </Parsing>
     <CodeGeneration>
       <TargetProcessor Value="AVR5"/>
       <TargetCPU Value="avr"/>
@@ -60,6 +66,10 @@
       </Debugging>
     </Linking>
     <Other>
+      <Verbosity>
+        <ShowAll Value="True"/>
+      </Verbosity>
+      <WriteFPCLogo Value="False"/>
       <CustomOptions Value="-Wpatmega328p
 -g
 -a
