@@ -243,6 +243,7 @@ begin
   lcd_write(0, %00000010);
 end;
 
+// x, y are zero based indexes
 procedure lcd_gotoxy(const x, y: byte);
 begin
   case lcd_lines of

@@ -3,7 +3,14 @@ program LCDtest;
 uses lcd_config, lcd_hd44780, delay;
 
 var
-  i: byte;
+  x: int8 = 0;
+  y: int8 = 0;
+  x_inc: int8 = 1;
+  y_inc: int8 = 1;
+  x_switch: boolean = false;
+
+const
+  msg: shortstring = 'FPC-AVR';
 
 begin
   DDRB := DDRB or (1 shl 5);
@@ -11,32 +18,34 @@ begin
   lcd_init(lcd_displayOnCursorOff);
 
   repeat
-    //lcd_home();
-    for i := 0 to 5 do
+    lcd_gotoxy(x, y);
+    lcd_puts(msg); // fixed length of 10 characters assumed below
+    delay_ms(300);
+    lcd_clrscr();
+
+    if (x_inc > 0) and (x >= (lcd_displayLength - length(msg))) then
     begin
-      lcd_gotoxy(i, 0);
-      lcd_puts('Hello world');
-      delay_ms(500);
-      lcd_clrscr();
+      x_switch := true;
+      x_inc := -1;
+    end
+    else if (x_inc < 0) and (x <= 0) then
+    begin
+      x_switch := true;
+      x_inc := 1;
     end;
 
-    for i := 4 downto 1 do
+    if x_switch then
     begin
-      lcd_gotoxy(i, 0);
-      lcd_puts('Hello world');
-      delay_ms(500);
-      lcd_clrscr();
-    end;
+      if (y_inc > 0) and (y >= (lcd_lines - 1)) then
+        y_inc := -1
+      else if (y_inc < 0) and (y <= 0) then
+        y_inc := 1;
 
-    //lcd_puts('Hello world');
-    //PORTB := PORTB and not (1 shl 5);
-    //lcd_gotoxy(15, 1);
-    //lcd_putc('#');
-    //delay_ms(1000);
-    //
-    //lcd_clrscr();
-    //PORTB := PORTB or (1 shl 5);
-    //delay_ms(1000);
+      y := y + y_inc;
+      x_switch := false;
+    end
+    else
+      x := x + x_inc;
   until false;
 end.
 
