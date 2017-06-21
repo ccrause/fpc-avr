@@ -24,6 +24,7 @@ Another way that doesn't require Lazarus is to use a compile script, for example
 ```
 #!/bin/sh
 ~/fpc/3.1.1/compiler/ppcrossavr -Tembedded -Wpatmega328p -Cpavr5 -Pavr -O3 -g -a -al -XPavr- -Fu"../../library" -Sm -dF_CPU:=16000000 $1
+```
 
 This script needs to be executed from the base folder of an example, to ensure the relative path to the library is valid. The name of the example project should be passed to the script as a parameter e.g. sh compile.sh blink1.pp.
 
