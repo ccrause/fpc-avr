@@ -37,11 +37,11 @@
         <IsPartOfProject Value="True"/>
       </Unit1>
       <Unit2>
-        <Filename Value="../../fpc/fpc-avr/src/utils/lcd_hd44780.pas"/>
+        <Filename Value="../../../library/lcd_hd44780.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
       <Unit3>
-        <Filename Value="../../../utils/delay.pas"/>
+        <Filename Value="../../../library/delay.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit3>
     </Units>
@@ -53,7 +53,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);../../fpc/3.1.1/rtl/embedded/avr"/>
-      <OtherUnitFiles Value="../../fpc/fpc-avr/src/utils;../../../utils"/>
+      <OtherUnitFiles Value="../../../library"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
