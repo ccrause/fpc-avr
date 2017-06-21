@@ -21,14 +21,14 @@ This will open the example in Lazarus and all required options to compile the ex
 To configure Lazarus to use the cross compiler for the project, open _Project Options_ (ctrl + shift + F11), go to _Compiler Commands_ and enter path to cross compiler executable.
 
 Another way that doesn't require Lazarus is to use a compile script, for example on Linux:
-'''bash
+'''
 #!/bin/sh
 ~/fpc/3.1.1/compiler/ppcrossavr -Tembedded -Wpatmega328p -Cpavr5 -Pavr -O3 -g -a -al -XPavr- -Fu"../../library" -Sm -dF_CPU:=16000000 $1
 '''
 This script needs to be executed from the base folder of an example, to ensure the relative path to the library is valid. The name of the example project should be passed to the script as a parameter e.g. sh compile.sh blink1.pp.
 
 An equivalent batch file for Windows could be as follows (untested):
-'''batch
+'''
 [substitute your path to fpc compiler folder here]\ppcrossavr -Tembedded -Wpatmega328p -Cpavr5 -Pavr -O3 -g -a -al -XPavr- -Fu"..\..\library" -Sm -dF_CPU:=16000000 $1
 '''
 
