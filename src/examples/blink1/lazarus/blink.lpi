@@ -41,11 +41,11 @@
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="blink"/>
+      <Filename Value="../$nameonly($(projfile))"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="../utils;../../../library"/>
+      <OtherUnitFiles Value="../../../library"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>

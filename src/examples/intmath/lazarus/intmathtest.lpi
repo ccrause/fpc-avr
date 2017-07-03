@@ -26,7 +26,7 @@
         <WorkingDirectory Value="/home/christo/fpc/fpc-avr/src/examples/intmath"/>
       </local>
     </RunParams>
-    <Units Count="2">
+    <Units Count="3">
       <Unit0>
         <Filename Value="../intmathtest.pp"/>
         <IsPartOfProject Value="True"/>
@@ -35,16 +35,20 @@
         <Filename Value="../../../library/integermath.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit1>
+      <Unit2>
+        <Filename Value="../../../library/uart.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit2>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="intmathtest"/>
+      <Filename Value="../$nameonly($(projfile))"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="../uart1;../../library;../../../library"/>
+      <OtherUnitFiles Value="../../../library"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>
@@ -72,7 +76,7 @@
 -dF_CPU:=16000000"/>
       <CompilerPath Value="/home/christo/fpc/3.1.1/compiler/ppcrossavr"/>
       <ExecuteAfter>
-        <Command Value="/home/christo/fpc/fpc-avr/src/examples/uart1/listasm.sh $(projfile)"/>
+        <Command Value="$path($(targetfile))listasm.sh $(targetfile)"/>
       </ExecuteAfter>
     </Other>
   </CompilerOptions>

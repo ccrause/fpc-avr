@@ -49,7 +49,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="LCDtest"/>
+      <Filename Value="../$nameonly($(projfile))"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);../../fpc/3.1.1/rtl/embedded/avr"/>
