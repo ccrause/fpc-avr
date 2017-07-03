@@ -2,27 +2,23 @@ unit integermath;
 
 interface
 
+// Routines adapted from Atmel application note AVR200
 function fpc_div_byte(n, z: byte): byte;
 function fpc_div_word(n, z: word): word;
+
+// Simple extension of the word version to dword
 function fpc_div_dword(n, z: dword): dword;
 
 implementation
-
-//**************************************************************************
-// "div8u" - 8/8 Bit Unsigned Division
-// Number of words	:14
-// Number of cycles	:97
-//**************************************************************************
 
 function fpc_div_byte(n, z: byte): byte; assembler;
 label
   d8u_1, d8u_2, d8u_3, finish;
 asm
-//	drem8u	= r20		remainder
-//	dres8u	= r24		result
-//	dd8u	= r24		Dividend
-//	dv8u	= r22		Divisor
-//	dcnt8u	= r18		loop counter
+//	dividend & result R24
+//	divisor	          R22
+//	remainder         R20
+//	loop counter      R18
 
 	sub	r20, r20	// clear remainder and carry
 	ldi	r18, 9	        // init loop counter
@@ -41,24 +37,14 @@ d8u_3:	sec			//    set carry to be shifted into result
 finish:
 end;
 
-
-// **************************************************************************
-//  "div16u" - 16/16 Bit Unsigned Division
-//  Number of words	:19
-//  Number of cycles	:235/251 (Min/Max)
-// **************************************************************************
-
 function fpc_div_word(n, z: word): word; assembler;
 label
   d16u_1, d16u_2, d16u_3, finish;
 asm
-//	drem16uL=r20  // remainder low
-//	drem16uH=r21  // remainder high
-//	dd16uL	=r24  // Dividend / result low byte
-//	dd16uH	=r25  // Dividend / result high byte
-//	dv16uL	=r22  // divisor low byte
-//	dv16uH	=r23  // divisor high byte
-//	dcnt16u	=r18  // loop counter
+//	dividend & result R24, R25
+//	divisor	          R22, R23
+//	remainder         R20, R21
+//	loop counter      R18
 
   clr	R20	        //clear remainder Low byte
   sub	R21, R21        //clear remainder High byte and carry flag
@@ -68,7 +54,7 @@ d16u_1:
   rol	R25
   dec	R18		//decrement counter
   brne	d16u_2		//if done
-  rjmp  finish//ret			//    return
+  rjmp  finish		//    return
 d16u_2:
   rol	R20	        //shift dividend into remainder
   rol	R21

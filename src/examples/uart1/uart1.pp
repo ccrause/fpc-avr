@@ -6,11 +6,13 @@ var
   c: byte;
 
 begin
-  uart_init(51); // BAUD = F_CPU/(16*UBRR + 1) = 1e6/9 = 111 111 [~ 115200]
+  uart_init1(9600, true);
 
   repeat
     c := uart_receive();
+    uart_transmit(ord('#'));
     uart_transmit(c);
+    uart_transmit(13);
   until false;
 end.
 
