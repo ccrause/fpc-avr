@@ -4,13 +4,13 @@ uses
   integermath;
 
 var
-  a,b,c,d: dword;
+  a8, b8: byte;
 
 begin
-  a := 115200;
-  b := F_CPU + 8*a;
-  c := b shr 4;
-  d := fpc_div_dword(c, a);
+  a8 := 250;
+  b8 := 0;
+
+  b8 := fpc_div_byte(a8, b8);
   repeat until false;
 end.
 
