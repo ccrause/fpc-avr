@@ -15,6 +15,8 @@ delay.pas - Contain busy delay loops
 lcd_hd44780.pas - A driver for character based HD44780 compatible LCDs
 ### rtl-avr-modifications
 This folder contains "improved" implementations for the AVR. Main changes include the exclusion of exception raising code and some assembler routines which are more compact than the generic Pascal implementations in rtl/inc/generic.inc.
+### scripts
+A collection of scripts useful for debugging.
 ### tests
 This folder contains test cases for various changes to the rtl, bugs in the compiler, etc.
 
