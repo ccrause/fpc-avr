@@ -3,6 +3,9 @@ A collection of Free Pascal AVR microcontroller code snippets, examples and libr
 
 # Structure
 ## src folder
+### bin
+A Linux-64 bit compiled gdb 8.0 for avr, includes patch for debugging program memory.
+
 ### examples
 blink1 - A simple blink example using busy delay functions.
 blink2 - A simple timer interrupt driven blink example
@@ -10,6 +13,10 @@ lcd1 - A simple sliding text example for HD44780 compatible character LCDs
 ### library
 delay.pas - Contain busy delay loops
 lcd_hd44780.pas - A driver for character based HD44780 compatible LCDs
+### rtl-avr-modifications
+This folder contains "improved" implementations for the AVR. Main changes include the exclusion of exception raising code and some assembler routines which are more compact than the generic Pascal implementations in rtl/inc/generic.inc.
+### tests
+This folder contains test cases for various changes to the rtl, bugs in the compiler, etc.
 
 # Compiling
 ## AVR cross compiler
@@ -31,7 +38,7 @@ This script needs to be executed from the base folder of an example, to ensure t
 An equivalent batch file for Windows could be as follows (untested):
 
 ```
-[substitute your path to fpc compiler folder here]\ppcrossavr -Tembedded -Wpatmega328p -Cpavr5 -Pavr -O3 -g -a -al -XPavr- -Fu"..\..\library" -Sm -dF_CPU:=16000000 $1
+[substitute your path to fpc compiler folder here]\ppcrossavr.exe -Tembedded -Wpatmega328p -Cpavr5 -Pavr -O3 -g -a -al -XPavr- -Fu"..\..\library" -Sm -dF_CPU:=16000000 $1
 ```
 
 Explanation of required and useful compiler options:
