@@ -4,22 +4,197 @@ uses
   integermath;
 
 var
-  a8, b8: byte;
-  a16, b16: word;
-  a32, b32: dword;
+  successes: byte = 0;
+
+function Test_div_mod_byte: boolean;
+const testcount = 255*255 - 127*255;
+var
+  ans, x, d, rem, temp: byte;
+  successes: word = 0;
+begin
+  // Loop performs 255
+  for d := 1 to 255 do
+  for x := d to 255 do
+  begin
+    fpc_div_mod_byte(x, d, ans, rem);
+    temp := d*ans + rem;
+    if (temp = x) then
+      inc(successes)
+  end;
+
+  Result := successes = testcount;
+end;
+
+function Test_div_mod_byte_special: boolean;
+var
+  ans, x, d, rem, temp: byte;
+  successes: word = 0;
+begin
+  d := 1;
+  x := 127;
+  fpc_div_mod_byte(x, d, ans, rem);
+  if (ans = 127) and (rem = 0) then
+    inc(successes);
+
+  d := 0;
+  x := 0;
+  fpc_div_mod_byte(x, d, ans, rem);
+  if (ans = 255) and (rem = 0) then
+    inc(successes);
+
+  d := 1;
+  x := 0;
+  fpc_div_mod_byte(x, d, ans, rem);
+  if (ans = 0) and (rem = 0) then
+    inc(successes);
+
+  d := 127;
+  x := 0;
+  fpc_div_mod_byte(x, d, ans, rem);
+  if (ans = 0) and (rem = 0) then
+    inc(successes);
+
+  d := 7;
+  x := 123;
+  fpc_div_mod_byte(x, d, ans, rem);
+  if (ans = 17) and (rem = 4) then
+    inc(successes);
+
+  Result := successes = 5;
+end;
+
+function Test_div_mod_word_special: boolean;
+var
+  ans, x, d, rem, temp: word;
+  successes: dword = 0;
+begin
+  d := 1;
+  x := 127;
+  fpc_div_mod_word(x, d, ans, rem);
+  if ans = 127 then
+    inc(successes);
+
+  d := 0;
+  x := 0;
+  fpc_div_mod_word(x, d, ans, rem);
+  if (ans = 65535) and (rem = 0) then
+    inc(successes);
+
+  d := 1;
+  x := 0;
+  fpc_div_mod_word(x, d, ans, rem);
+  if (ans = 0) and (rem = 0) then
+    inc(successes);
+
+  d := 127;
+  x := 0;
+  fpc_div_mod_word(x, d, ans, rem);
+  if (ans = 0) and (rem = 0) then
+    inc(successes);
+
+  d := 7;
+  x := 23456;
+  fpc_div_mod_word(x, d, ans, rem);
+  if (ans = 3350) and (rem = 6) then
+    inc(successes);
+
+  Result := successes = 5;
+end;
+
+function Test_div_mod_dword_special: boolean;
+var
+  ans, x, d, rem, temp: dword;
+  successes: dword = 0;
+begin
+  d := 1;
+  x := 127;
+  fpc_div_mod_dword(x, d, ans, rem);
+  if ans = 127 then
+    inc(successes);
+
+  d := 0;
+  x := 0;
+  fpc_div_mod_dword(x, d, ans, rem);
+  if (ans = 4294967295) and (rem = 0) then
+    inc(successes);
+
+  d := 1;
+  x := 0;
+  fpc_div_mod_dword(x, d, ans, rem);
+  if (ans = 0) and (rem = 0) then
+    inc(successes);
+
+  d := 127;
+  x := 0;
+  fpc_div_mod_dword(x, d, ans, rem);
+  if (ans = 0) and (rem = 0) then
+    inc(successes);
+
+  d := 127;
+  x := 1;
+  fpc_div_mod_dword(x, d, ans, rem);
+  if (ans = 0) and (rem = 1) then
+    inc(successes);
+
+  d := 7;
+  x := 3272356035;
+  fpc_div_mod_dword(x, d, ans, rem);
+  if (ans = 467479433) and (rem = 4) then
+    inc(successes);
+
+  Result := successes = 6;
+end;
+
+function Test_div_mod_qword_special: boolean;
+var
+  ans, x, d, rem: qword;
+  successes: dword = 0;
+begin
+  d := 1;
+  x := 127;
+  ans := fpc_div_mod_qword(x, d, rem);
+  if (ans = 127) and (rem = 0) then
+    inc(successes);
+
+  d := 0;
+  x := 0;
+  ans := fpc_div_mod_qword(x, d, rem);
+  if (ans = 18446744073709551615) and (rem = 0) then
+    inc(successes);
+
+  d := 1;
+  x := 0;
+  ans := fpc_div_mod_qword(x, d, rem);
+  if (ans = 0) and (rem = 0) then
+    inc(successes);
+
+  d := 127;
+  x := 0;
+  ans := fpc_div_mod_qword(x, d, rem);
+  if (ans = 0) and (rem = 0) then
+    inc(successes);
+
+  d := 127;
+  x := 1;
+  ans := fpc_div_mod_qword(x, d, rem);
+  if (ans = 0) and (rem = 1) then
+    inc(successes);
+
+  d := 13;
+  x := 714682557999;
+  ans := fpc_div_mod_qword(x, d, rem);
+  if (ans = 54975581384) and (rem = 7) then
+    inc(successes);
+
+  Result := successes = 6;
+end;
 
 begin
-  //a16 := 60000;
-  //b16 := 0;
-  //
-  //b16 := fpc_div_word(a16, b16);
-  //
-  //a8 := 254;
-  //b8 := fpc_div_byte(a8, byte(b16));
-
-  a32 := 323;
-  b32 := 7;
-  b32 := fpc_div_dword(a32, b32);
+  Test_div_mod_byte;
+  Test_div_mod_byte_special;
+  Test_div_mod_word_special;
+  Test_div_mod_dword_special;
+  Test_div_mod_qword_special;
   repeat until false;
 end.
 

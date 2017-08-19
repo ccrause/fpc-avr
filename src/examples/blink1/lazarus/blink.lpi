@@ -74,6 +74,14 @@
         <Define0 Value="F_CPU:=16000000"/>
       </OtherDefines>
       <CompilerPath Value="/home/christo/fpc/3.1.1/compiler/ppcrossavr"/>
+      <ExecuteBefore>
+        <Command Value="/home/christo/fpc/fpc-avr/src/scripts/run-simavr.sh $(targetfile)"/>
+        <CompileReasons Compile="False" Build="False"/>
+      </ExecuteBefore>
+      <ExecuteAfter>
+        <Command Value="/home/christo/fpc/fpc-avr/src/scripts/listasm.sh $(targetfile)"/>
+        <CompileReasons Run="False"/>
+      </ExecuteAfter>
     </Other>
   </CompilerOptions>
   <Debugging>

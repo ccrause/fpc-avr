@@ -46,6 +46,9 @@
       <TargetProcessor Value="AVR5"/>
       <TargetCPU Value="avr"/>
       <TargetOS Value="embedded"/>
+      <Optimizations>
+        <OptimizationLevel Value="4"/>
+      </Optimizations>
       <SmallerCode Value="True"/>
     </CodeGeneration>
     <Linking>
@@ -65,11 +68,11 @@
 -dF_CPU:=16000000"/>
       <CompilerPath Value="/home/christo/fpc/3.1.1/compiler/ppcrossavr"/>
       <ExecuteBefore>
-        <Command Value="$path($(targetfile))listasm.sh $(targetfile)"/>
+        <Command Value="/home/christo/fpc/fpc-avr/src/scripts/run-simavr.sh $(targetfile)"/>
         <CompileReasons Compile="False" Build="False"/>
       </ExecuteBefore>
       <ExecuteAfter>
-        <Command Value="$path($(targetfile))listasm.sh $(targetfile)"/>
+        <Command Value="/home/christo/fpc/fpc-avr/src/scripts/listasm.sh $(targetfile)"/>
         <CompileReasons Run="False"/>
       </ExecuteAfter>
     </Other>

@@ -128,6 +128,12 @@ finish:
   // Copy remainder via pointer stored in pushed address
   pop R30
   pop R31
+  // TODO: can potenially change to the following to prevent a change to register pair R30:R31
+  // this cannot be done until the following bug is fixed: https://bugs.freepascal.org/view.php?id=32016
+  // Not really required in this case
+  //st Z, R20
+  //std Z+1, R21
+  // Current work-around
   st Z+, R20
   st Z, R21
 end;
@@ -159,6 +165,8 @@ asm
   push R16
   push R17
   // Push pointer to Remainder variable
+  // Could eliminate extra pushes if bug is fixed: https://bugs.freepascal.org/view.php?id=32016
+  // See epilogue at end of function
   push R16
   push R17
 
@@ -205,6 +213,15 @@ finish:
   // Copy remainder via pointer stored in pushed address
   pop R31
   pop R30
+  // TODO: can potenially change to the following to prevent a change to register pair R30:R31
+  // this cannot be done until the following bug is fixed: https://bugs.freepascal.org/view.php?id=32016
+  // Not really required in this case
+  //st Z, R14
+  //std Z+1, R15
+  //etc
+  // then movw R16, R30
+  // This would save stack space
+  // Current work-around
   st Z+, R14
   st Z+, R15
   st Z+, R16
@@ -235,112 +252,113 @@ end;
 
 {$define FPC_SYSTEM_HAS_DIV_SHORTINT}
 function fpc_div_shortint(n,z : shortint) : shortint; [public,alias: 'FPC_DIV_SHORTINT']; compilerproc;
-  var
-     sign : boolean;
-     b1,b2 : byte;
-  begin
-     if n=0 then
+var
+  sign: boolean;
+  b1, b2: byte;
+begin
+   if n = 0 then
+   begin
+     if z > 0 then
+       fpc_div_shortint := 127
+     else
+       fpc_div_shortint := -128;
+     exit;
+   end;
+   sign := false;
+   if z < 0 then
      begin
-       if z > 0 then
-         fpc_div_shortint := 127
-       else
-         fpc_div_shortint := -128;
-       exit;
-     end;
-     sign:=false;
-     if z<0 then
-       begin
-          sign:=not(sign);
-          b1:=byte(-z);
-       end
-     else
-       b1:=z;
-     if n<0 then
-       begin
-          sign:=not(sign);
-          b2:=byte(-n);
-       end
-     else
-       b2:=n;
+        sign := not(sign);
+        b1 := byte(-z);
+     end
+   else
+     b1 := z;
+   if n < 0 then
+     begin
+        sign := not(sign);
+        b2 := byte(-n);
+     end
+   else
+     b2 := n;
 
-     { the div is coded by the compiler as call to divdword }
-     if sign then
-       result:=-(b1 div b2)
-     else
-       result:=b1 div b2;
-  end;
+   { the div is coded by the compiler as call to divdword }
+   if sign then
+     result := -(b1 div b2)
+   else
+     result := b1 div b2;
+end;
 
 {$define FPC_SYSTEM_HAS_DIV_SMALLINT}
 function fpc_div_smallint(n,z : smallint) : smallint; [public,alias: 'FPC_DIV_SMALLINT']; compilerproc;
-  var
-     sign : boolean;
-     w1,w2 : word;
+var
+  sign: boolean;
+  w1, w2: word;
+begin
+  if n = 0 then
   begin
-     if n=0 then
-     begin
-       if z > 0 then
-         fpc_div_smallint := 32767
-       else
-         fpc_div_smallint := -32768;
-       exit;
-     end;
-     sign:=false;
-     if z<0 then
-       begin
-          sign:=not(sign);
-          w1:=word(-z);
-       end
-     else
-       w1:=z;
-     if n<0 then
-       begin
-          sign:=not(sign);
-          w2:=word(-n);
-       end
-     else
-       w2:=n;
-
-     { the div is coded by the compiler as call to divdword }
-     if sign then
-       result:=-(w1 div w2)
-     else
-       result:=w1 div w2;
+    if z > 0 then
+      fpc_div_smallint := 32767
+    else
+      fpc_div_smallint := -32768;
+    exit;
   end;
+  sign := false;
+  if z < 0 then
+  begin
+    sign := not(sign);
+    w1 := word(-z);
+  end
+  else
+    w1 := z;
+
+  if n < 0 then
+  begin
+    sign := not(sign);
+    w2 := word(-n);
+  end
+  else
+    w2 := n;
+
+   { the div is coded by the compiler as call to divdword }
+  if sign then
+    result := -(w1 div w2)
+  else
+    result := w1 div w2;
+end;
 
 {$define FPC_SYSTEM_HAS_DIV_LONGINT}
 function fpc_div_longint(n,z : longint) : longint; [public,alias: 'FPC_DIV_LONGINT']; compilerproc;
-  var
-     sign : boolean;
-     d1,d2 : dword;
+var
+  sign: boolean;
+  d1, d2: dword;
+begin
+  if n = 0 then
   begin
-     if n=0 then
-     begin
-       if z > 0 then
-         fpc_div_longint := 2147483647
-       else
-         fpc_div_longint := -2147483648;
-       exit;
-     end;
-     sign:=false;
-     if z<0 then
-       begin
-          sign:=not(sign);
-          d1:=dword(-z);
-       end
-     else
-       d1:=z;
-     if n<0 then
-       begin
-          sign:=not(sign);
-          d2:=dword(-n);
-       end
-     else
-       d2:=n;
-
-     { the div is coded by the compiler as call to divdword }
-     if sign then
-       result:=-(d1 div d2)
-     else
-       result:=d1 div d2;
+    if z > 0 then
+      fpc_div_longint := 2147483647
+    else
+      fpc_div_longint := -2147483648;
+    exit;
   end;
+  sign := false;
+  if z < 0 then
+  begin
+    sign := not(sign);
+    d1 := dword(-z);
+  end
+  else
+    d1 := z;
+  if n < 0 then
+  begin
+    sign := not(sign);
+    d2 := dword(-n);
+  end
+  else
+    d2 := n;
+
+   { the div is coded by the compiler as call to divdword }
+  if sign then
+    result := -(d1 div d2)
+  else
+    result := d1 div d2;
+end;
 
