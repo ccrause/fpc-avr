@@ -39,7 +39,7 @@ const
 
   LCD_DISP_CTRL = 1 shl 3;
 
-  // A character consists of 8 bits vertical x 8 bits horizontal
+  // A character consists of 8 bits vertical x 7 bits horizontal
   // A space before and after the character is assumed
   // Vertical spacing is included in character bitmap
   // By convention this space is the last (bottom) pixel
