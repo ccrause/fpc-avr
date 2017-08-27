@@ -27,7 +27,7 @@
         <FormatVersion Value="1"/>
       </local>
     </RunParams>
-    <Units Count="5">
+    <Units Count="6">
       <Unit0>
         <Filename Value="../LCDtest.pp"/>
         <IsPartOfProject Value="True"/>
@@ -48,6 +48,10 @@
         <Filename Value="../spi_config.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit4>
+      <Unit5>
+        <Filename Value="../../../library/delay.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit5>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -76,15 +80,14 @@
     </CodeGeneration>
     <Linking>
       <Debugging>
-        <GenerateDebugInfo Value="False"/>
+        <UseLineInfoUnit Value="False"/>
       </Debugging>
       <LinkSmart Value="True"/>
     </Linking>
     <Other>
       <CustomOptions Value="-XPavr-
--g
--a
 -Wpatmega328p
+-a
 -Sm
 -dF_CPU:=16000000"/>
       <CompilerPath Value="/home/christo/fpc/3.1.1/compiler/ppcrossavr"/>

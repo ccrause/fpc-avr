@@ -9,35 +9,64 @@ type
   // TODO: could further limit lower value to something like 50
   // Not sure what a safe lower (and upper) value would be for different bias values...
   TVopRange = 0 .. 127;
-  TTCControlValue = (tcZero, tcOne, tcThree, tcFour);
+  TTCControlValue = (tcZero, tcOne, tcTwo, tcThree, tcFour);
   TBiasValue = (bvZero, bvOne, bvTwo, bvThree, bvFour, bvFive, bvSix, bvSeven);
+
+  TByteShortArray = array[0..$FF] of byte;
+  PByteShortArray = ^TByteShortArray;
 
 const
   screen_width_char = (84 div 7);
   screen_height_char = 6;
 
-procedure lcd_init(Vop: TVopRange = 68; Tcoef: TTCControlValue = tcOne; Bias: TBiasValue = bvThree);
-procedure lcd_gotoxy(x, y: byte);
+  // Command values
+  LCD_FUNC_SET = 1 shl 5;
+    LCD_FUNC_PD = 1 shl 2;          // Power down mode if set
+    LCD_FUNC_V = 1 shl 1;           // Vertical addressing mode
+    LCD_FUNC_EXT_Instr = 1;         // Extended instruction set
+    LCD_FUNC_NORMAL = 0;            // Normal instruction set
+
+  // Normal mode commands
+  LCD_DISP_CONF = 1 shl 3;
+    LCD_DISP_BLANK = 0;
+    LCD_DISP_NORMAL = 4;
+    LCD_DISP_ALL_SEG_ON = 1;
+    LCD_DISP_INV = 5;
+
+  LCD_SET_Y_ADDR = 1 shl 6;         // Set Y address, should be 0 <= Y <= 5, Y in 8 pixel increments
+  LCD_SET_X_ADDR = 1 shl 7;         // Set X address, should be 0 <= X <= 83, X in pixel increments
+
+  // Extended mode commands
+  LCD_TEMP_COEF = 1 shl 2;          // Set temperature coef for display, use TTCControlValue type
+  LCD_BIAS = 1 shl 4;               // Set bias value, use TBaisValue type
+  LCD_VOP = 1 shl 7;                // Set temperature coefficient for display, use TVopRange type
+
+procedure lcd_init(Vop: TVopRange = 60; Tcoef: TTCControlValue = tcOne; Bias: TBiasValue = bvThree);
+
 procedure lcd_printChar(const character: char);
 procedure lcd_printString(const s: ShortString);
+procedure lcd_putc(const c:char);
+procedure lcd_puts(const s: shortstring);
 
 procedure lcd_clrscr;
 procedure lcd_home;
+procedure lcd_gotoxy(x, y: byte);
 
-procedure lcd_write(const mode, data: byte);
+procedure lcd_glyph(glyph: PByteShortArray; count: byte);
+
+// Inverted display of text
+procedure lcd_printCharInv(const character: char);
+procedure lcd_printStringInv(const s: ShortString);
+procedure lcd_glyphInv(glyph: PByteShortArray; count: byte);
+
+procedure lcd_command(const cmd: byte);
+procedure lcd_data(const data: byte);
 
 implementation
 
 const
   LCD_MODE_CMD = 0;
   LCD_MODE_DATA = 1;
-
-  // Command values
-  LCD_FUNC_SET = 1 shl 5;
-  LCD_PD = 1 shl 2;          // Power down mode if set
-  LCD_V = 1 shl 1;           // Vertical addressing mode
-
-  LCD_DISP_CTRL = 1 shl 3;
 
   // A character consists of 8 bits vertical x 7 bits horizontal
   // A space before and after the character is assumed
@@ -108,7 +137,7 @@ const
   ($07, $08, $70, $08, $07), // 59 Y
   ($61, $51, $49, $45, $43), // 5a Z
   ($00, $7f, $41, $41, $00), // 5b [
-  ($02, $04, $08, $10, $20), // 5c ¥
+  ($02, $04, $08, $10, $20), // 5c \
   ($00, $41, $41, $7f, $00), // 5d ]
   ($04, $02, $01, $02, $04), // 5e ^
   ($40, $40, $40, $40, $40), // 5f _
@@ -142,8 +171,8 @@ const
   ($00, $08, $36, $41, $00), // 7b {
   ($00, $00, $7f, $00, $00), // 7c |
   ($00, $41, $36, $08, $00), // 7d }
-  ($10, $08, $08, $10, $08), // 7e ←
-  ($78, $46, $41, $46, $78)  // 7f →
+  ($10, $08, $08, $10, $08), // 7e ~
+  ($78, $46, $41, $46, $78)  // 7f DELTA
   );
 
 procedure lcd_write(const mode, data: byte);
@@ -159,9 +188,9 @@ begin
   LCD_SS_PORT := LCD_SS_PORT or (1 shl LCD_SS_PIN);
 end;
 
-procedure lcd_command(const data: byte);
+procedure lcd_command(const cmd: byte);
 begin
-  lcd_write(LCD_MODE_CMD, data);
+  lcd_write(LCD_MODE_CMD, cmd);
 end;
 
 procedure lcd_data(const data: byte);
@@ -169,7 +198,7 @@ begin
   lcd_write(LCD_MODE_DATA, data);
 end;
 
-procedure lcd_init(Vop: TVopRange = 68; Tcoef: TTCControlValue = tcOne; Bias: TBiasValue = bvThree);
+procedure lcd_init(Vop: TVopRange = 60; Tcoef: TTCControlValue = tcOne; Bias: TBiasValue = bvThree);
 begin
   LCD_RST_DDR := LCD_RST_DDR or (1 shl LCD_RST_PIN);
   LCD_RST_PORT := LCD_RST_PORT and not(1 shl LCD_RST_PIN);
@@ -185,18 +214,60 @@ begin
   //Release reset, pull high
   LCD_RST_PORT := LCD_RST_PORT or (1 shl LCD_RST_PIN);
 
-  lcd_command($21);       // LCD Extended Commands mode
-  lcd_command($80 or Vop);  // Set LCD Vop (Contrast).  Datasheet suggest a Vop of above 6.06V for a MUX 0f 1:48, so 50 (0x32) is minimum setting
-  lcd_command($04 or ord(Tcoef));   // Set Temp coefficent. //0x04, 0 is OK at low temp (5 - 20C), fades at >25C, try 1 next
-  lcd_command($10 or ord(Bias));    // LCD bias mode 1:48.
-  lcd_command($20);       // Basic commands mode
-  lcd_command($0C);       // LCD in normal mode.  //0xC = normal, 0xD = inverse
+  lcd_command(LCD_FUNC_SET or LCD_FUNC_EXT_Instr);  // LCD Extended Commands mode
+  lcd_command(LCD_VOP or Vop);                      // Set LCD Vop (Contrast).  Datasheet suggest a Vop of above 6.06V for a MUX 0f 1:48, so 50 (0x32) is minimum setting
+  lcd_command(LCD_TEMP_COEF or ord(Tcoef));         // Set Temp coefficent. //0x04, 0 is OK at low temp (5 - 20C), fades at >25C, try 1 next
+  lcd_command(LCD_BIAS or ord(Bias));               // LCD bias mode 1:48.
+  lcd_command(LCD_FUNC_SET or LCD_FUNC_NORMAL);     // Basic commands mode
+  lcd_command(LCD_DISP_CONF or LCD_DISP_NORMAL);       // LCD in normal mode.  //0xC = normal, 0xD = inverse
 end;
 
 procedure lcd_gotoxy(x, y: byte);
 begin
   lcd_command($80 or (x*char_width));    // column in chars
   lcd_command($40 or y);		 // row in chars
+end;
+
+procedure lcd_glyph(glyph: PByteShortArray; count: byte);
+var
+  i: byte;
+begin
+  // Writes columns of 8 pixels, so array of 8 bytes will fill character space
+  for i := 0 to count-1 do
+    lcd_data(TByteShortArray(glyph^)[i]);
+end;
+
+procedure lcd_printCharInv(const character: char);
+var
+  i: byte;
+begin
+  lcd_data($FF);  // empty column of pixels
+
+  if( (ord(character) < $20) or (ord(character) > $7F)) then  // write black square
+    for i := 0 to char_width - 3 do
+      lcd_data($FF - $7E)
+  else
+    for i := 0 to char_width - 3 do
+      lcd_data($FF - ASCII_CHARSET[ord(character) - $20][i]);
+
+  lcd_data($FF);  // empty column of pixels
+end;
+
+procedure lcd_printStringInv(const s: ShortString);
+var
+  i: byte;
+begin
+  for i := 1 to length(s) do
+    lcd_printCharInv(s[i]);
+end;
+
+procedure lcd_glyphInv(glyph: PByteShortArray; count: byte);
+var
+  i: byte;
+begin
+  // Writes columns of 8 pixels, so array of 8 bytes will fill character space
+    for i := 0 to count-1 do
+        lcd_data($FF - TByteShortArray(glyph^)[i]);
 end;
 
 procedure lcd_printChar(const character: char);
@@ -221,6 +292,16 @@ var
 begin
   for i := 1 to length(s) do
     lcd_printChar(s[i]);
+end;
+
+procedure lcd_putc(const c: char); inline;
+begin
+  lcd_printChar(c);
+end;
+
+procedure lcd_puts(const s: shortstring); inline;
+begin
+  lcd_printString(s);
 end;
 
 procedure lcd_clrscr;

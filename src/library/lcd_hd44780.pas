@@ -15,7 +15,6 @@ procedure lcd_init(const settings_mask: byte);
 
 procedure lcd_printChar(const c:char);
 procedure lcd_printString(const s: shortstring);
-
 procedure lcd_putc(const c:char);
 procedure lcd_puts(const s: shortstring);
 

@@ -11,6 +11,59 @@ procedure spi_transmit(data: byte);
 
 implementation
 
+{$if declared(USE_SPI_SOFTWARE) AND (USE_SPI_SOFTWARE=1)}
+uses
+  delay;
+
+procedure spi_init;
+begin
+  SPI_DDR := SPI_DDR or (1 shl SPI_MOSI_PIN) or (1 shl SPI_CLK_PIN);
+  SPI_PORT := SPI_PORT and not((1 shl SPI_MOSI_PIN) or (1 shl SPI_CLK_PIN));
+end;
+
+function spi_transfer(data: byte): byte;
+var
+  i: byte;
+begin
+  result := 0;
+  for i := 0 to 7 do
+  begin
+    if (data and (1 shl 7) > 0) then
+      SPI_PORT := SPI_PORT or (1 shl SPI_MOSI_PIN)
+    else
+      SPI_PORT := SPI_PORT and not(1 shl SPI_MOSI_PIN);
+
+    data := data shl 1;
+
+    SPI_PORT := SPI_PORT and not(1 shl SPI_CLK_PIN);
+    result := result shl 1;
+    if (SPI_PORT and (1 shl SPI_MISO_PIN) > 0) then
+      result := result and 1;
+    //delay_us(1);
+    SPI_PORT := SPI_PORT or (1 shl SPI_CLK_PIN);
+  end;
+end;
+
+procedure spi_transmit(data: byte);
+var
+  i: byte;
+begin
+  for i := 0 to 7 do
+  begin
+    if (data and (1 shl 7) > 0) then
+      SPI_PORT := SPI_PORT or (1 shl SPI_MOSI_PIN)
+    else
+      SPI_PORT := SPI_PORT and not(1 shl SPI_MOSI_PIN);
+
+    data := data shl 1;
+
+    SPI_PORT := SPI_PORT and not(1 shl SPI_CLK_PIN);
+    delay_us(1);
+    SPI_PORT := SPI_PORT or (1 shl SPI_CLK_PIN);
+  end;
+end;
+
+{$elseif}
 { Keep in mind the following note about SS pin in Master mode (ATmega 328P manual p. 18.3.2:
 
 When the SPI is configured as a Master (MSTR in SPCR is set), the user can determine the
@@ -58,6 +111,7 @@ begin
   repeat
   until((SPSR and (1 shl SPIF)) > 0);
 end;
+{$EndIf}
 
 
 end.

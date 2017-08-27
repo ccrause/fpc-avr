@@ -10,6 +10,7 @@ A Linux-64 bit compiled gdb 8.0 for avr, includes patch for debugging program me
 blink1 - A simple blink example using busy delay functions.
 blink2 - A simple timer interrupt driven blink example
 lcd1 - A simple sliding text example for HD44780 compatible character LCDs
+lcd2 - Show bitmap and sliding text on PCD8544 compatible LCD
 ### library
 delay.pas - Contain busy delay loops
 lcd_hd44780.pas - A driver for character based HD44780 compatible LCDs
