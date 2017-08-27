@@ -7,13 +7,17 @@ A collection of Free Pascal AVR microcontroller code snippets, examples and libr
 A Linux-64 bit compiled gdb 8.0 for avr, includes patch for debugging program memory.
 
 ### examples
-blink1 - A simple blink example using busy delay functions.
-blink2 - A simple timer interrupt driven blink example
-lcd1 - A simple sliding text example for HD44780 compatible character LCDs
-lcd2 - Show bitmap and sliding text on PCD8544 compatible LCD
+blink1 - A simple blink example using busy delay functions.  
+blink2 - A simple timer interrupt driven blink example.  
+lcd1 - A simple sliding text example for HD44780 compatible character LCDs.  
+lcd2 - Show bitmap and sliding text on PCD8544 compatible LCD.  
+uart1 - A simple serial echo example.  
 ### library
-delay.pas - Contain busy delay loops
-lcd_hd44780.pas - A driver for character based HD44780 compatible LCDs
+delay.pas - Contain busy delay loops.  
+lcd_hd44780.pas - A driver for character based HD44780 compatible LCDs.  
+lcd_pcd8544.pas - A simple driver for text and graphics for PCD8544 compatible LCDs.  
+spi.pas - Hardware or software based serial peripheral interface.  
+uart.pas - Simple hardware based serial driver.  
 ### rtl-avr-modifications
 This folder contains "improved" implementations for the AVR. Main changes include the exclusion of exception raising code and some assembler routines which are more compact than the generic Pascal implementations in rtl/inc/generic.inc.
 ### scripts
