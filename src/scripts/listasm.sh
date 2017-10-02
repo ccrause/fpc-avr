@@ -4,5 +4,5 @@ elfname=$filename.elf
 asmsource=$filename.lss
 
 # Generate assembler listing from compiled executable:
-avr-objdump -S $elfname > $asmsource
+avr-objdump -S -h $elfname > $asmsource
 
