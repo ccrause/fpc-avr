@@ -9,3 +9,9 @@
 *.lps
 **/backup/*
 **/lib/*
+**/georghieber/*
+git\ notes.txt
+git\ simple\ guide
+git\ simple\ guide_files/*
+**/references/*
+!**/progmem/*.s
