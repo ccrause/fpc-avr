@@ -4,8 +4,8 @@ const
   PB5 = 1 shl 5;
 
 var
-  pinport: byte absolute byte(@PORTB);
-  pindir: byte absolute byte(@DDRB);
+  pinport: byte absolute PORTB;
+  pindir: byte absolute DDRB;
   i: byte = 1;
 
 procedure Timer0Overflow; alias: 'TIMER0_OVF_ISR'; interrupt;

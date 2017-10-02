@@ -10,9 +10,9 @@ const
   LCD_RST_PIN       = 0;        // Could be tied to MCU reset
 
 var
-  LCD_DC_PORT: byte absolute byte(@PORTB);
-  LCD_SS_PORT: byte absolute byte(@PORTB);
-  LCD_RST_PORT: byte absolute byte(@PORTB);
+  LCD_DC_PORT: byte absolute PORTB;
+  LCD_SS_PORT: byte absolute PORTB;
+  LCD_RST_PORT: byte absolute PORTB;
 
   //  DDR ports, automatically formed from PORT declarations above
   LCD_DC_DDR: byte absolute byte(@LCD_DC_PORT - 1);

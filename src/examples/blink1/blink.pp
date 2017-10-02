@@ -6,8 +6,8 @@ const
   PB5 = 1 shl 5;
 
 var
-  pinport: byte absolute byte(@PORTB);
-  pindir: byte absolute byte(@DDRB);
+  pinport: byte absolute PORTB;
+  pindir: byte absolute DDRB;
   i: byte;
 
 begin
@@ -19,7 +19,7 @@ begin
 
      pinport := pinport and not PB5;  // LED off
      for i := 0 to 19 do       // delay 20 x 50 ms = 1 second
-       delay_us(50000);
+       delay_ms(50);
   end;
 end.
 

@@ -10,8 +10,8 @@ const
 
 var
   c: byte;
-  pinport: byte absolute byte(@PORTB);
-  pindir: byte absolute byte(@DDRB);
+  pinport: byte absolute PORTB;
+  pindir: byte absolute DDRB;
 
 begin
   uart_init1(BAUD, false);

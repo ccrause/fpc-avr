@@ -33,23 +33,23 @@
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="lcd_config.pas"/>
+        <Filename Value="../../../library/lcd_pcd8544.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit1>
       <Unit2>
-        <Filename Value="../../../library/lcd_pcd8544.pas"/>
+        <Filename Value="../../../library/spi.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
       <Unit3>
-        <Filename Value="../../../library/spi.pas"/>
+        <Filename Value="../spi_config.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit3>
       <Unit4>
-        <Filename Value="../spi_config.pas"/>
+        <Filename Value="../../../library/delay.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit4>
       <Unit5>
-        <Filename Value="../../../library/delay.pas"/>
+        <Filename Value="../lcd_config.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit5>
     </Units>

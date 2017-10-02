@@ -1,7 +1,7 @@
 program LCDtest;
 
 uses
-  lcd_config, lcd_pcd8544, spi, spi_config,
+  lcd_pcd8544, spi, spi_config, lcd_config,
   delay;
 
 const
