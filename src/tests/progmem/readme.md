@@ -1,4 +1,4 @@
-Concept to put data in flash a la PROGMEM or __flash in GCC
+Concept to put data in flash/program memory a la PROGMEM or __flash in GCC
 
 == Normal initialized array of char: ==
 .section .data.n_TC_sPsPROGMEM_ss_S
