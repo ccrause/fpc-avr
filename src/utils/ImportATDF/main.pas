@@ -100,7 +100,7 @@ end;
 
 function unpackAddressSpaces(const dev: TDevice): string;
 var
-  i: integer;
+  i, j: integer;
   s1, s2, s3: string;
 begin
   for i := 0 to High(dev.AddressSpaces) do
@@ -108,7 +108,13 @@ begin
     if dev.AddressSpaces[i].id = 'prog' then
       s1 := '0,' + IntToStr(dev.AddressSpaces[i].size)
     else if dev.AddressSpaces[i].id = 'data' then
-      s2 := '0,' + IntToStr(dev.AddressSpaces[i].size)
+      for j := 0 to High(dev.AddressSpaces[i].memorySegments) do
+        if dev.AddressSpaces[i].memorySegments[j].name  = 'IRAM' then
+        begin
+          s2 := IntToStr(dev.AddressSpaces[i].memorySegments[j].start) + ',' +
+                IntToStr(dev.AddressSpaces[i].memorySegments[j].size);
+          Break;
+        end
     else if dev.AddressSpaces[i].id = 'eeprom' then
       s3 := '0,' + IntToStr(dev.AddressSpaces[i].size);
   end;
@@ -127,6 +133,7 @@ begin
   ReadXMLFile(Doc, FileName);
   device := parseDevice(Doc.DocumentElement);
   generateUnitFromATDFInfo(device, SL);
+  FreeAndNil(Doc);
 
   if Assigned(ControllerInfo) then
   begin
