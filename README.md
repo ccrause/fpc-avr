@@ -24,7 +24,8 @@ This folder contains "improved" implementations for the AVR. Main changes includ
 A collection of scripts useful for debugging.
 ### tests
 This folder contains test cases for various changes to the rtl, bugs in the compiler, etc.
-
+### utils
+At the moment the only utility is a tool to convert [Atmel device packs](http://packs.download.atmel.com/) to corresponding RTL controller units.
 # Compiling
 ## AVR cross compiler
 Refer to [Building cross-compiler](http://wiki.freepascal.org/AVR#Building_cross-compiler) for tips.
