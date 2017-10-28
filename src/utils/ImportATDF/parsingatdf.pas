@@ -14,14 +14,14 @@ type
     size,
     pagesize: integer;
     type_,
-    name: string;
+    aname: string;
     executable: boolean;
     ReadWrite: set of TReadWrite;
     external_: boolean;
   end;
 
   TAddressSpace = record
-    name,
+    aname,
     id: string;
     start,
     size: integer;
@@ -29,62 +29,85 @@ type
   end;
   TAddressSpaces = array of TAddressSpace;
 
+  // Beginning of structures for peripherals node
   TSignal = record
     group,
     function_,
     index,
     pad: string;
   end;
-  //TSingals = array of TSignal;
+  TSignals = array of TSignal;
 
+  TPeriphRegGroup = record
+    aname,
+    nameInModule,
+    caption,
+    addressSpace: string;
+    offset: integer;
+    signals: TSignals;
+  end;
+  PPeriphRegGroup = ^TPeriphRegGroup;
+  TPeriphRegGroups = array of TPeriphRegGroup;
+
+  TPeriphInstance = record
+    aname: string;
+    RegGroup: TPeriphRegGroups;
+  end;
+  TPeriphInstances = array of TPeriphInstance;
+
+  TPeriphModule = record
+    aname: string;
+    periphInstances: TPeriphInstances;
+  end;
+  TPeriphModules = array of TPeriphModule;
+  // End of structures for peripherals node
+
+  // Beginning of structures for modules node
   TBitField = record
-    name,
+    aname,
     caption,
     values: string;    // values only set when enumeration are given in value-group
     mask,
     lsb: integer;         // offset for bit name index
   end;
-  //TBitFields = array of TBitField;
+  TBitFields = array of TBitField;
 
   TRegister = record
-    name,
+    aname,
     caption: string;
     offset,
-    size: integer;
-    bitFields: array of TBitField;
+    size,
+    initVal,
+    mask: integer;
+    bitFields: TBitFields;
   end;
+  TRegisters = array of TRegister;
 
-  TValueEnum = record
-    name,
+  TRegisterGroup = record
+    aname,
+    caption: string;
+    registers: TRegisters;
+  end;
+  TRegisterGroups = array of TRegisterGroup;
+
+  TValue = record
+    aname,
     caption: string;
     value: integer;
   end;
-  TValueEnums = record
-    name,
-    caption: string;
-    values: array of TValueEnum;
-  end;
 
-  TRegisterGroup= record
-    name,
+  TValueGroup = record
+    aname,
     caption: string;
-    addressSpace: string;
-    offset: integer;
-    signals: array of TSignal; // usually alternative names for pin names, e.g. MOSI = PB2   or pin number, e.g. PB2 = 2
-    registers: array of TRegister; // register could be mentioned several times to cover different bit fields
+    values: array of TValue;
   end;
+  TValueGroups = array of TValueGroup;
 
-  // Module, includes information from peripherals node & modules node
   TModule = record
-    name,
+    aname,
     caption: string;
-    registerGroups: array of TRegisterGroup;
-    //addressSpace: string;
-    //offset: integer;
-    //type_: string;   // e.g. UART, PORT
-    //signals: array of TSignal; // usually alternative names for pin names, e.g. MOSI = PB2   or pin number, e.g. PB2 = 2
-    //registers: array of TRegister; // register could be mentioned several times to cover different bit fields
-    valueEnums: array of TValueEnums;
+    registerGroups: TRegisterGroups;
+    valueGroups: TValueGroups;
   end;
   TModules = array of TModule;
 
@@ -117,7 +140,9 @@ type
     architechture,       // e.g. AVR8, AVR8L, AVR8X
     family: string;      // e.g. megaAVR, tinyAVR, AVR TINY
     AddressSpaces: TAddressSpaces;
+    PeriphModules: TPeriphModules;
     Modules: TModules;
+//    Registers: TRegisters;
     Interrupts: TInterrupts;
     Interfaces: TProgrammerInterfaces;
     PropertyGroups: TPropGroups;
@@ -126,13 +151,6 @@ type
 function parseDevice(DocNode: TDOMNode): TDevice;
 
 implementation
-
-function findChildNode(parentNode: TDOMNode; nodeName: string): TDOMNode;
-begin
-  Result := parentNode.FirstChild;
-  while Assigned(Result) and not(Result.NodeName = nodeName) do
-    Result := Result.NextSibling;
-end;
 
 function findChildNodebyAttribute(parentNode: TDOMNode; AttribName, AttribValue: string): TDOMNode;
 begin
@@ -149,6 +167,19 @@ begin
     Result := '';
 end;
 
+function safeAttributeInteger(attr: TDOMNode): integer;
+var
+  s: string;
+  v, errcode: integer;
+begin
+  s := safeAttributeValue(attr);
+  Val(s, v, errCode);
+  if errCode = 0 then
+    Result := v
+  else
+    Result := 0;
+end;
+
 function parseAddressSpaces(DocNode: TDOMNode): TAddressSpaces;
 var
   node, memSegNode, ASNode: TDOMNode;
@@ -156,17 +187,17 @@ var
   s: string;
 begin
   Result := nil;
-  node := findChildNode(DocNode, 'devices');
+  node := DocNode.FindNode('devices');
   if Assigned(node) then
   begin
-    node := findChildNode(node, 'device');
+    node := node.FindNode('device');
   end
   else
     exit;
 
   if Assigned(node) then
   begin
-    node := findChildNode(node, 'address-spaces');
+    node := node.FindNode('address-spaces');
   end
   else
     exit;
@@ -182,7 +213,7 @@ begin
     SetLength(Result, i+1);
 
     Result[i].id := safeAttributeValue(ASNode.Attributes.GetNamedItem('id'));
-    Result[i].name := safeAttributeValue(ASNode.Attributes.GetNamedItem('name'));
+    Result[i].aname := safeAttributeValue(ASNode.Attributes.GetNamedItem('name'));
     Val(safeAttributeValue(ASNode.Attributes.GetNamedItem('size')), Result[i].size, errCode);
     Val(safeAttributeValue(ASNode.Attributes.GetNamedItem('start')), Result[i].start, errCode);
 
@@ -192,7 +223,7 @@ begin
       j := length(Result[i].memorySegments);
       SetLength(Result[i].memorySegments, j+1);
 
-      Result[i].memorySegments[j].name := safeAttributeValue(memSegNode.Attributes.GetNamedItem('name'));
+      Result[i].memorySegments[j].aname := safeAttributeValue(memSegNode.Attributes.GetNamedItem('name'));
       Result[i].memorySegments[j].type_ := safeAttributeValue(memSegNode.Attributes.GetNamedItem('type'));
       Result[i].memorySegments[j].executable := safeAttributeValue(memSegNode.Attributes.GetNamedItem('exec')) = '1';
 
@@ -218,198 +249,217 @@ begin
   end;
 end;
 
-function parseModules(DocNode: TDOMNode): TModules;
+function parsePeripherals(DocNode: TDOMNode): TPeriphModules;
 var
-  periphNode, periphModuleNode, periphModuleInstanceNode, periphRegisterGroup, periphSignalsNode,
-  modulesNode, moduleChildNode, rgNode, bfNode, vgNode, node: TDOMNode;
-  i, j, k, l, errCode, v: integer;
+  periphModuleNode, periphInstNode, rgNode, sigNode: TDOMNode;
+  i, j, k, l: integer;
   s, periphName: string;
 begin
-  Result := nil;
-  periphNode := findChildNode(DocNode, 'devices');
-  if Assigned(periphNode) then
-    periphNode := findChildNode(periphNode, 'device')
+  periphModuleNode := DocNode.FindNode('devices');
+  if Assigned(periphModuleNode) then
+    periphModuleNode := periphModuleNode.FindNode('device')
   else
     exit;
 
-  if Assigned(periphNode) then
-    periphNode := findChildNode(periphNode, 'peripherals')
+  if Assigned(periphModuleNode) then
+    periphModuleNode := periphModuleNode.FindNode('peripherals')
   else
     exit;
 
-  if not Assigned(periphNode) then
+  if not Assigned(periphModuleNode) then
     exit;
 
-  // E.g. <module name="ADC">
-  periphModuleNode := periphNode.FirstChild;
-  periphName := safeAttributeValue(periphModuleNode.Attributes.GetNamedItem('name'));
+  periphModuleNode := periphModuleNode.FirstChild;
 
-  modulesNode := DocNode.FindNode('modules');
-  if not Assigned(modulesNode) then
-    raise Exception.Create('Error finding node <modules>');
-
-  // E.g. <module caption="Fuses" name="FUSE">
-  moduleChildNode := findChildNodebyAttribute(modulesNode, 'name', periphName);
-
-  // iterate over modules
-  while Assigned(periphModuleNode) and Assigned(moduleChildNode) do
+  while Assigned(periphModuleNode) do
   begin
     i := length(Result);
     SetLength(Result, i+1);
-    Result[i].name := safeAttributeValue(periphModuleNode.Attributes.GetNamedItem('name'));
 
-    // iterate over instances/register-groups
-    // E.g.  <instance name="PORTB" caption="I/O Port">
-    periphModuleInstanceNode := findChildNode(periphModuleNode, 'instance');
-    rgNode := findChildNode(moduleChildNode, 'register-group');
-    while Assigned(periphModuleInstanceNode) and Assigned(rgNode) do
+    Result[i].aname := safeAttributeValue(periphModuleNode.Attributes.GetNamedItem('name'));
+
+    periphInstNode := periphModuleNode.FirstChild;
+    while Assigned(periphInstNode) do
     begin
-      j := Length(Result[i].registerGroups);
-      SetLength(Result[i].registerGroups, j + 1);
-
-      // E.g. <register-group name="PORTB" name-in-module="PORTB" offset="0x00" address-space="data" caption="I/O Port"/>
-      periphRegisterGroup := findChildNode(periphModuleInstanceNode, 'register-group');
-
-      Result[i].registerGroups[j].name := safeAttributeValue(periphRegisterGroup.Attributes.GetNamedItem('name'));
-      Result[i].registerGroups[j].caption := safeAttributeValue(periphRegisterGroup.Attributes.GetNamedItem('caption'));
-      Result[i].registerGroups[j].addressSpace := safeAttributeValue(periphRegisterGroup.Attributes.GetNamedItem('address-space'));
-
-      s := safeAttributeValue(periphRegisterGroup.Attributes.GetNamedItem('offset'));
-      Val(s, v, errCode);
-      if errCode = 0 then
-        Result[i].registerGroups[j].offset := v
-      else
+      if periphInstNode.NodeType <> COMMENT_NODE then
       begin
-        Result[i].registerGroups[j].offset := 0;
-      end;
+        j := Length(Result[i].periphInstances);
+        SetLength(Result[i].periphInstances, j+1);
 
-      // Read signals from periph
-      periphSignalsNode := findChildNode(periphModuleInstanceNode, 'signals');
-      SetLength(Result[i].registerGroups[j].signals, 0);
-      while Assigned(periphSignalsNode) do
-      begin
-        node := periphSignalsNode.FirstChild;
-        while Assigned(node) do
+        Result[i].periphInstances[j].aname := safeAttributeValue(periphInstNode.Attributes.GetNamedItem('name'));
+
+        rgNode := periphInstNode.FirstChild;
+        while Assigned(rgNode) and (rgNode.NodeName = 'register-group') do
         begin
-          if node.NodeType <> COMMENT_NODE then
+          if rgNode.NodeType <> COMMENT_NODE then
           begin
-            k := length(Result[i].registerGroups[j].signals);
-            SetLength(Result[i].registerGroups[j].signals, k+1);
+            k := Length(Result[i].periphInstances[j].RegGroup);
+            SetLength(Result[i].periphInstances[j].RegGroup, k+1);
 
-            Result[i].registerGroups[j].signals[k].function_ := safeAttributeValue(node.Attributes.GetNamedItem('function'));
-            Result[i].registerGroups[j].signals[k].group := safeAttributeValue(node.Attributes.GetNamedItem('group'));
-            Result[i].registerGroups[j].signals[k].index := safeAttributeValue(node.Attributes.GetNamedItem('index'));
-            Result[i].registerGroups[j].signals[k].pad := safeAttributeValue(node.Attributes.GetNamedItem('pad'));
+            Result[i].periphInstances[j].RegGroup[k].aname :=
+              safeAttributeValue(rgNode.Attributes.GetNamedItem('name'));
+            Result[i].periphInstances[j].RegGroup[k].nameInModule :=
+              safeAttributeValue(rgNode.Attributes.GetNamedItem('name-in-module'));
+            Result[i].periphInstances[j].RegGroup[k].addressSpace :=
+              safeAttributeValue(rgNode.Attributes.GetNamedItem('address-space'));
+            Result[i].periphInstances[j].RegGroup[k].offset :=
+              safeAttributeInteger(rgNode.Attributes.GetNamedItem('offset'));
+            Result[i].periphInstances[j].RegGroup[k].caption :=
+              safeAttributeValue(rgNode.Attributes.GetNamedItem('caption'));
+
+            sigNode := periphInstNode.FindNode('signals');  // one per register-group?
+            if Assigned(sigNode) then                       // not all register groups have signals
+              sigNode := sigNode.FirstChild;
+            while Assigned(sigNode) do
+            begin
+              if sigNode.NodeType <> COMMENT_NODE then
+              begin
+                l := Length(Result[i].periphInstances[j].RegGroup[k].signals);
+                SetLength(Result[i].periphInstances[j].RegGroup[k].signals, l+1);
+
+                Result[i].periphInstances[j].RegGroup[k].signals[l].function_ :=
+                  safeAttributeValue(sigNode.Attributes.GetNamedItem('function'));
+                Result[i].periphInstances[j].RegGroup[k].signals[l].group :=
+                  safeAttributeValue(sigNode.Attributes.GetNamedItem('group'));
+                Result[i].periphInstances[j].RegGroup[k].signals[l].index :=
+                  safeAttributeValue(sigNode.Attributes.GetNamedItem('index'));
+                Result[i].periphInstances[j].RegGroup[k].signals[l].pad :=
+                  safeAttributeValue(sigNode.Attributes.GetNamedItem('pad'));
+              end;
+
+              sigNode := sigNode.NextSibling;
+            end;
           end;
-          node := node.NextSibling;
+
+          rgNode := rgNode.NextSibling;
         end;
-        periphSignalsNode := periphSignalsNode.NextSibling;
       end;
 
-      // Scan registers
-      node := findChildNode(rgNode, 'register');
-      while Assigned(node) do
+      periphInstNode := periphInstNode.NextSibling;
+    end;
+
+    periphModuleNode := periphModuleNode.NextSibling;
+  end;
+end;
+
+function parseModules(DocNode: TDOMNode): TModules;
+var
+  ModulesNode, ModuleNode, rgNode, rNode, bfNode, vgNode, vNode: TDOMNode;
+  i, j, k, l: integer;
+  s: string;
+begin
+  ModulesNode := DocNode.FindNode('modules');
+  if Assigned(ModulesNode) then
+    ModuleNode := ModulesNode.FirstChild
+  else
+    exit;
+
+  while Assigned(ModuleNode) do
+  begin
+    i := length(Result);
+    SetLength(Result, i+1);
+
+    Result[i].aname := safeAttributeValue(ModuleNode.Attributes.GetNamedItem('name'));
+    Result[i].caption := safeAttributeValue(ModuleNode.Attributes.GetNamedItem('caption'));
+
+    rgNode := ModuleNode.FindNode('register-group');
+    while Assigned(rgNode) and (rgNode.NodeName = 'register-group') do
+    begin
+      if rgNode.NodeType <> COMMENT_NODE then
       begin
-        k := Length(Result[i].registerGroups[j].registers);
-        SetLength(Result[i].registerGroups[j].registers, k+1);
+        j := Length(Result[i].registerGroups);
+        SetLength(Result[i].registerGroups, j+1);
 
-        Result[i].registerGroups[j].registers[k].name := safeAttributeValue(node.Attributes.GetNamedItem('name'));
-        Result[i].registerGroups[j].registers[k].caption := safeAttributeValue(node.Attributes.GetNamedItem('caption'));
+        Result[i].registerGroups[j].aname := safeAttributeValue(rgNode.Attributes.GetNamedItem('name'));
+        Result[i].registerGroups[j].caption := safeAttributeValue(rgNode.Attributes.GetNamedItem('caption'));
 
-        s := safeAttributeValue(node.Attributes.GetNamedItem('offset'));
-        Val(s, v, errCode);
-        if errCode = 0 then
-          Result[i].registerGroups[j].registers[k].offset := v
-        else
-          Result[i].registerGroups[j].registers[k].offset := 0;
-
-        s := safeAttributeValue(node.Attributes.GetNamedItem('size'));
-        Val(s, v, errCode);
-        if errCode = 0 then
-          Result[i].registerGroups[j].registers[k].size := v
-        else
-          Result[i].registerGroups[j].registers[k].size := 0;
-
-        //bit fields
-        SetLength(Result[i].registerGroups[j].registers[k].bitFields, 0);
-        bfNode := node.FirstChild;
-        while Assigned(bfNode) do
+        rNode := rgNode.FirstChild;
+        while Assigned(rNode) and (rNode.NodeName = 'register') do
         begin
-          if bfNode.NodeType <> COMMENT_NODE then
+          if rNode.NodeType <> COMMENT_NODE then
           begin
-            l := Length(Result[i].registerGroups[j].registers[k].bitFields);
-            SetLength(Result[i].registerGroups[j].registers[k].bitFields, l+1);
+            k := Length(Result[i].registerGroups[j].registers);
+            SetLength(Result[i].registerGroups[j].registers, k+1);
 
-            Result[i].registerGroups[j].registers[k].bitFields[l].caption := safeAttributeValue(bfNode.Attributes.GetNamedItem('caption'));
-            Result[i].registerGroups[j].registers[k].bitFields[l].name := safeAttributeValue(bfNode.Attributes.GetNamedItem('name'));
-            Result[i].registerGroups[j].registers[k].bitFields[l].values := safeAttributeValue(bfNode.Attributes.GetNamedItem('values'));
+            Result[i].registerGroups[j].registers[k].aname :=
+              safeAttributeValue(rNode.Attributes.GetNamedItem('name'));
+            Result[i].registerGroups[j].registers[k].caption :=
+              safeAttributeValue(rNode.Attributes.GetNamedItem('caption'));
+            Result[i].registerGroups[j].registers[k].offset :=
+              safeAttributeInteger(rNode.Attributes.GetNamedItem('offset'));
+            Result[i].registerGroups[j].registers[k].size :=
+              safeAttributeInteger(rNode.Attributes.GetNamedItem('size'));
+            Result[i].registerGroups[j].registers[k].mask :=
+              safeAttributeInteger(rNode.Attributes.GetNamedItem('mask'));
+            Result[i].registerGroups[j].registers[k].initVal :=
+              safeAttributeInteger(rNode.Attributes.GetNamedItem('initval'));
 
-            s := safeAttributeValue(bfNode.Attributes.GetNamedItem('mask'));
-            Val(s, v, errCode);
-            if errCode = 0 then
-              Result[i].registerGroups[j].registers[k].bitFields[l].mask := v
-            else
-              Result[i].registerGroups[j].registers[k].bitFields[l].mask := 0;
+            bfNode := rNode.FindNode('bitfield');
+            while Assigned(bfNode) and (bfNode.NodeName = 'bitfield') do
+            begin
+              if bfNode.NodeType <> COMMENT_NODE then
+              begin
+                l := Length(Result[i].registerGroups[j].registers[k].bitFields);
+                SetLength(Result[i].registerGroups[j].registers[k].bitFields, l+1);
 
-            s := safeAttributeValue(bfNode.Attributes.GetNamedItem('lsb'));
-            Val(s, v, errCode);
-            if errCode = 0 then
-              Result[i].registerGroups[j].registers[k].bitFields[l].lsb := v
-            else
-              Result[i].registerGroups[j].registers[k].bitFields[l].lsb := 0;
+                Result[i].registerGroups[j].registers[k].bitFields[l].aname :=
+                  safeAttributeValue(bfNode.Attributes.GetNamedItem('name'));
+                Result[i].registerGroups[j].registers[k].bitFields[l].caption :=
+                  safeAttributeValue(bfNode.Attributes.GetNamedItem('caption'));
+                Result[i].registerGroups[j].registers[k].bitFields[l].values :=
+                  safeAttributeValue(bfNode.Attributes.GetNamedItem('values'));
+                Result[i].registerGroups[j].registers[k].bitFields[l].lsb :=
+                  safeAttributeInteger(bfNode.Attributes.GetNamedItem('lsb'));
+                Result[i].registerGroups[j].registers[k].bitFields[l].mask :=
+                  safeAttributeInteger(bfNode.Attributes.GetNamedItem('mask'));
+              end;
 
+              bfNode := bfNode.NextSibling;
+            end;
           end;
-          bfNode := bfNode.NextSibling;
+
+          rNode := rNode.NextSibling;
         end;
-        node := node.NextSibling;
       end;
-      periphModuleInstanceNode := periphModuleInstanceNode.NextSibling;
+
       rgNode := rgNode.NextSibling;
     end;
 
-    // Scan value group
-//      <value-group caption="" name="ENUM_SUT_CKSEL">
-//        <value caption="Ext. Clock; Start-up time: 14 CK + 0 ms" name="EXTCLK_14CK_0MS" value="0x00"/>
-    vgNode := findChildNode(moduleChildNode, 'value-group');
+    vgNode := ModuleNode.FindNode('value-group');
     while Assigned(vgNode) and (vgNode.NodeName = 'value-group') do
     begin
-      j := Length(Result[i].valueEnums);
-      SetLength(Result[i].valueEnums, j+1);
-
-      Result[i].valueEnums[j].name := safeAttributeValue(vgNode.Attributes.GetNamedItem('name'));
-      Result[i].valueEnums[j].caption := safeAttributeValue(vgNode.Attributes.GetNamedItem('caption'));
-
-      //bit fields
-      SetLength(Result[i].valueEnums[j].values, 0);
-      bfNode := vgNode.FirstChild;
-      while Assigned(bfNode) do
+      if vgNode.NodeType <> COMMENT_NODE then
       begin
-        k := Length(Result[i].valueEnums[j].values);
-        SetLength(Result[i].valueEnums[j].values, k+1);
+        j := Length(Result[i].valueGroups);
+        SetLength(Result[i].valueGroups, j+1);
 
-        Result[i].valueEnums[j].values[k].caption := safeAttributeValue(bfNode.Attributes.GetNamedItem('caption'));
-        Result[i].valueEnums[j].values[k].name := safeAttributeValue(bfNode.Attributes.GetNamedItem('name'));
+        Result[i].valueGroups[j].aname := safeAttributeValue(vgNode.Attributes.GetNamedItem('name'));
+        Result[i].valueGroups[j].caption := safeAttributeValue(vgNode.Attributes.GetNamedItem('caption'));
 
-        s := safeAttributeValue(bfNode.Attributes.GetNamedItem('value'));
-        Val(s, v, errCode);
-        if errCode = 0 then
-          Result[i].valueEnums[j].values[k].value := v
-        else
-          Result[i].valueEnums[j].values[k].value := 0;
+        vNode := vgNode.FirstChild;
+        while Assigned(vNode) do
+        begin
+          if vNode.NodeType <> COMMENT_NODE then
+          begin
+            k := Length(Result[i].valueGroups[j].values);
+            SetLength(Result[i].valueGroups[j].values, k+1);
 
-        bfNode := bfNode.NextSibling;
+            Result[i].valueGroups[j].values[k].aname :=
+              safeAttributeValue(vNode.Attributes.GetNamedItem('name'));
+            Result[i].valueGroups[j].values[k].caption :=
+              safeAttributeValue(vNode.Attributes.GetNamedItem('caption'));
+            Result[i].valueGroups[j].values[k].value :=
+              safeAttributeInteger(vNode.Attributes.GetNamedItem('value'));
+          end;
+
+          vNode := vNode.NextSibling;
+        end;
       end;
+
       vgNode := vgNode.NextSibling;
     end;
 
-    // Next child nodes
-    periphModuleNode := periphModuleNode.NextSibling;
-
-    if Assigned(periphModuleNode) then
-    begin
-      periphName := safeAttributeValue(periphModuleNode.Attributes.GetNamedItem('name'));
-      moduleChildNode := findChildNodebyAttribute(modulesNode, 'name', periphName);
-    end;
+    ModuleNode := ModuleNode.NextSibling;
   end;
 end;
 
@@ -543,10 +593,10 @@ function parseDevice(DocNode: TDOMNode): TDevice;
 var
   node: TDOMNode;
 begin
-  node := findChildNode(DocNode, 'devices');
+  node := DocNode.FindNode('devices');
   if Assigned(node) then
   begin
-    node := findChildNode(node, 'device');
+    node := node.FindNode('device');
   end
   else
     exit;
@@ -559,6 +609,7 @@ begin
   Result.family := safeAttributeValue(node.Attributes.GetNamedItem('family'));
 
   Result.AddressSpaces := parseAddressSpaces(DocNode);
+  Result.PeriphModules := parsePeripherals(DocNode);
   Result.Modules := parseModules(DocNode);
   Result.Interrupts := parseInterrupts(DocNode);
   Result.PropertyGroups := parsePropertyGroups(DocNode);

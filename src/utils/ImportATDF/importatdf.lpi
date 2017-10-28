@@ -18,7 +18,7 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <CommandLineParams Value="&quot;/home/christo/Desktop/Electronics/Atmel info/fpc/ATmega8A.atdf&quot;"/>
+        <CommandLineParams Value="&quot;/home/christo/Desktop/Electronics/Atmel info/fpc/ATmega128A.atdf&quot;"/>
       </local>
     </RunParams>
     <RequiredPackages Count="1">
@@ -66,7 +66,7 @@
         <StackChecks Value="True"/>
       </Checks>
       <Optimizations>
-        <OptimizationLevel Value="3"/>
+        <OptimizationLevel Value="0"/>
       </Optimizations>
     </CodeGeneration>
     <Linking>
