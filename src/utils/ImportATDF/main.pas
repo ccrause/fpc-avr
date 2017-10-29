@@ -132,7 +132,6 @@ begin
   begin
     if dev.AddressSpaces[i].id = 'prog' then
     begin
-//      s1 := '0,' + IntToStr(dev.AddressSpaces[i].size)
       for j := 0 to High(dev.AddressSpaces[i].memorySegments) do
       begin
         if dev.AddressSpaces[i].memorySegments[j].aname = 'FLASH' then

@@ -269,12 +269,15 @@ begin
 
   // Locate spot after next smallest entry
   i := 0;
-  while (i < len-1) and (trunc(log2(source.mask)) >= trunc(log2(dest[i].mask))) do
+  while (i < len-1) and (source.mask >= dest[i].mask) do
     inc(i);
 
   // Potentially just after previous duplicate
   if (i > 0) and (source.aname = dest[i-1].aname) then
+  begin
+    SetLength(dest, len-1);  // remove added field
     exit;
+  end;
 
   j := len-1;
   while (j > i) do
@@ -293,7 +296,11 @@ var
   reg: ^TReg;
   prg: PPeriphRegGroup;
   portChar: char;
+  bitFieldList: TStringList;
+  s: string;
 begin
+  bitFieldList := TStringList.Create;
+
   i := 0;
   while (i < length(device.AddressSpaces)) and (device.AddressSpaces[i].aname <> 'data') do
     inc(i);
@@ -332,7 +339,12 @@ begin
           begin
             for l := 0 to length(device.Modules[i].registerGroups[j].registers[k].bitFields)-1 do
             begin
-              insertBitfield(device.Modules[i].registerGroups[j].registers[k].bitFields[l], Result[reg_offset].bitFields);
+              s := device.Modules[i].registerGroups[j].registers[k].bitFields[l].aname;
+              if bitFieldList.IndexOf(s) = -1 then  // hack to prevent duplicate identifier names from at90usb646
+              begin
+                bitFieldList.Add(s);
+                insertBitfield(device.Modules[i].registerGroups[j].registers[k].bitFields[l], Result[reg_offset].bitFields);
+              end;
             end;
           end
           else if pos('PORT', reg^.aname) = 1 then  // check for PORTA, PORTD etc.
@@ -351,6 +363,8 @@ begin
         end;
     end;
   end;
+
+  FreeAndNil(bitFieldList);
 end;
 
 procedure generateDeclarations(constref device: TDevice; var List: TStrings);
@@ -476,7 +490,7 @@ begin
              device.Interrupts[i].index, device.Interrupts[i].caption]));
     end;
 
-    SL.Add(#13#10'procedure _FPC_start; assembler; nostackframe;'#13#10'label'#13#10'  _start'#13#10 +
+    SL.Add(#13#10'procedure _FPC_start; assembler; nostackframe;'#13#10'label'#13#10'  _start;'#13#10 +
                     'asm'#13#10'  .init'#13#10'  .globl _start'#13#10#13#10'  '+jmpInstr+' _start');
 
     for i := 0 to High(device.Interrupts) do
