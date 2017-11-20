@@ -142,7 +142,6 @@ type
     AddressSpaces: TAddressSpaces;
     PeriphModules: TPeriphModules;
     Modules: TModules;
-//    Registers: TRegisters;
     Interrupts: TInterrupts;
     Interfaces: TProgrammerInterfaces;
     PropertyGroups: TPropGroups;
