@@ -676,7 +676,7 @@ begin
 
     SL.Clear;
     SL.Add('unit ' + device.deviceName + ';');
-    SL.Add(#13#10'{$goto on}'#10#13'interface'#10#13);
+    SL.Add(#13#10'{$goto on}'#13#10'interface'#13#10);
 
     //generateDeclarationsOpt1(device, SL);
     generateDeclarationsOpt2(device, SL);
