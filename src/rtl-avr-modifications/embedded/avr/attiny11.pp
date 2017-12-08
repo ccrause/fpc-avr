@@ -1,7 +1,7 @@
 unit ATtiny11;
 
 {$goto on}
-interface
+interface
 
 {$bitpacking on}{$packset 1}{$packenum 1}
 type

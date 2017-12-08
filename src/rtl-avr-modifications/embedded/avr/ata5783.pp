@@ -1,7 +1,7 @@
 unit ATA5783;
 
 {$goto on}
-interface
+interface
 
 {$bitpacking on}{$packset 1}{$packenum 1}
 type

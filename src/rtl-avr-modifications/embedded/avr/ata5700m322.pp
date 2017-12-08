@@ -1,7 +1,7 @@
 unit ATA5700M322;
 
 {$goto on}
-interface
+interface
 
 {$bitpacking on}{$packset 1}{$packenum 1}
 type

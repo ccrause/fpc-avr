@@ -1,7 +1,7 @@
 unit ATmega8;
 
 {$goto on}
-interface
+interface
 
 {$bitpacking on}{$packset 1}{$packenum 1}
 type

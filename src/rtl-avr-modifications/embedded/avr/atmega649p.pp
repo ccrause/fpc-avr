@@ -1,7 +1,7 @@
 unit ATmega649P;
 
 {$goto on}
-interface
+interface
 
 {$bitpacking on}{$packset 1}{$packenum 1}
 type

@@ -1,7 +1,7 @@
 unit ATmega16U4;
 
 {$goto on}
-interface
+interface
 
 {$bitpacking on}{$packset 1}{$packenum 1}
 type
