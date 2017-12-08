@@ -252,8 +252,8 @@ function parsePeripherals(DocNode: TDOMNode): TPeriphModules;
 var
   periphModuleNode, periphInstNode, rgNode, sigNode: TDOMNode;
   i, j, k, l: integer;
-  s, periphName: string;
 begin
+  SetLength(Result, 0);
   periphModuleNode := DocNode.FindNode('devices');
   if Assigned(periphModuleNode) then
     periphModuleNode := periphModuleNode.FindNode('device')
@@ -345,8 +345,8 @@ function parseModules(DocNode: TDOMNode): TModules;
 var
   ModulesNode, ModuleNode, rgNode, rNode, bfNode, vgNode, vNode: TDOMNode;
   i, j, k, l: integer;
-  s: string;
 begin
+  SetLength(Result, 0);
   ModulesNode := DocNode.FindNode('modules');
   if Assigned(ModulesNode) then
     ModuleNode := ModulesNode.FirstChild

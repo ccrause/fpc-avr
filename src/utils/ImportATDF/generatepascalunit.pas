@@ -12,6 +12,10 @@ implementation
 uses
   sysutils, math;
 
+const
+  setPrefix = 'e_';
+  constMaskPrefix = 'm_';
+
 type
   TReg = record
     aname,
@@ -22,6 +26,28 @@ type
     bitFields: TBitFields;  // add bit fields in sorted order
   end;
   TSortedRegs = array of TReg;
+
+var
+  IDList: TStringList;  // list used to check uniqueness of identifier names
+
+// Check if ID is unique, append _ to make unique
+// then add to IDList
+function AddUniqueID(s: string): string;
+var
+  i: integer;
+begin
+  if s <> '' then
+  begin
+    i := IDList.IndexOf(s);
+    while not (i = -1) do
+    begin
+      s := s + '_';
+      i := IDList.IndexOf(s);
+    end;
+    IDList.Add(s);
+  end;
+  Result := s;
+end;
 
 function findPeriphModule(constref device: TDevice; nameInModule, nameInRegGroup: string): PPeriphRegGroup;
 var
@@ -83,7 +109,7 @@ end;
 
 function sortedRegisters(constref device: TDevice): TSortedRegs;
 var
-  i, j, k, l, reg_offset, reg_size, len: integer;
+  i, j, k, l, reg_offset, len: integer;
   reg: ^TReg;
   prg: PPeriphRegGroup;
   portChar: char;
@@ -245,9 +271,9 @@ end;
 
 procedure generateStandardDeclarationFromRegisterInfo(constref reg: TReg; var  typeStr, varStr, constStr: string);
 var
-  i, j, k, bitsInMask: integer;
+  j, k, bitsInMask, bitIndex, bitmask, bitnumber: integer;
   b: TBitField;
-  comment: string;
+  comment, s: string;
   typeList, varList, constList: TStringList;
 begin
   typeList := TStringList.Create;
@@ -279,20 +305,28 @@ begin
     raise Exception.Create('Unexpected register size:: $' + IntToHex(reg.size, 2));
 
     // Bit fields
+    bitmask := 0;
     if length(reg.bitFields) > 0 then
     begin
       for j := 0 to length(reg.bitFields)-1 do
       begin
+        b := reg.bitFields[j];
+        if b.caption = '' then
+          comment := ''
+        else
+          comment := '  // ' + b.caption;
+
         // check if single bit value
         if reg.bitFields[j].mask in [1, 2, 4, 8, 16, 32, 64, 128] then
         begin
-          b := reg.bitFields[j];
-          if b.caption = '' then
-            constList.Add(format('  %s = %d;',
-                          [b.aname, round(log2(b.mask))]))
-          else
-            constList.Add(format('  %s = %d;  // %s',
-                          [b.aname, round(log2(b.mask)), b.caption]));
+          if (bitmask and reg.bitFields[j].mask) = 0 then
+          begin
+            // const name and mask name handled together
+            s := AddUniqueID(b.aname);
+            constList.Add(format('  %s = %d;  ' + constMaskPrefix + '%s = %d;%s',
+                          [s, round(log2(b.mask)), s, b.mask, comment]));
+            bitmask := bitmask or reg.bitFields[j].mask;
+          end;
         end
         else // expand mask into several bit definitions
         begin
@@ -301,12 +335,16 @@ begin
             if ((1 shl k) and reg.bitFields[j].mask) > 0 then
             begin
               inc(bitsInMask);  // zero based
-              if reg.bitFields[j].caption = '' then
-                constList.Add(format('  %s = %d;',
-                  [reg.bitFields[j].aname + IntToStr(bitsInMask + reg.bitFields[j].lsb), k]))
-              else
-                constList.Add(format('  %s = %d;  // %s',
-                  [reg.bitFields[j].aname + IntToStr(bitsInMask + reg.bitFields[j].lsb), k, reg.bitFields[j].caption]));
+              bitnumber := bitsInMask + reg.bitFields[j].lsb;
+              if (bitmask and (1 shl k)) = 0 then
+              begin
+                // const name and mask name handled together
+                s := reg.bitFields[j].aname + IntToStr(bitnumber);
+                s := AddUniqueID(s);
+                constList.Add(format('  %s = %d;  ' + constMaskPrefix + '%s = %d;%s',
+                  [s, k, s, 1 shl k, comment]));
+                bitmask := bitmask or (1 shl k);
+              end;
             end;
         end;
       end;
@@ -338,9 +376,8 @@ end;
 
 procedure generateRecordDeclarationFromRegisterInfo(constref reg: TReg; var typeStr, varStr, constStr: string);
 var
-  i, j, k, bitsInMask, dummycount: integer;
-  comment, s, recdef: string;
-  skippedbit: boolean;
+  j, k, bitsInMask, dummycount: integer;
+  s, recdef: string;
   typeList, varList, constList, bitList: TStringList;
   b: TBitField;
 begin
@@ -349,12 +386,7 @@ begin
   constList  := TStringList.Create;
   bitList := TStringList.Create;
 
-  //if reg.caption <> '' then
-  //  comment := '  // ' + reg.caption
-  //else
-    comment := '';
-
-  if (reg.aname <> '') and (Length(reg.bitFields) > 0) then // no bitfields, use generic definitions
+  if (reg.aname <> '') and (Length(reg.bitFields) > 0) and (reg.size = 1) then // no bitfields, use generic definitions
   begin
     // Sort Bits from 0 to 7
     bitlist.Clear;
@@ -380,7 +412,6 @@ begin
       end;
     end;
 
-    skippedbit := false;
     recdef := format('  T%srec = bitpacked record', [reg.aname]);
     dummycount := -1;
     for j := 0 to 7 do
@@ -391,7 +422,7 @@ begin
       else // skip missing bit,
       begin
         inc(dummycount);
-        recdef := recdef + bitList.LineBreak + '    reserved' + IntToStr(dummycount) + ',';
+        recdef := recdef + bitList.LineBreak + '    ReservedBit' + IntToStr(j) + ',';
       end;
     end;
 
@@ -402,10 +433,7 @@ begin
       typeList.Add(recdef);
     end;
 
-    if reg.size = 1 then
-    begin
-      varList.Add(format('  %srec: T%srec absolute $%.2x;%s', [reg.aname, reg.aname, reg.address, comment]));
-    end;
+    varList.Add(format('  %srec: T%srec absolute $%.2x;', [reg.aname, reg.aname, reg.address]));
   end
   else if (reg.aname <> '') then
   begin
@@ -438,8 +466,8 @@ end;
 
 procedure generateSetDeclarationFromRegisterInfo(constref reg: TReg; var typeStr, varStr, constStr: string);
 var
-  i, j, k, bitsInMask: integer;
-  comment, s, setdef: string;
+  j, k, bitsInMask: integer;
+  s, sID, setdef: string;
   skippedbit: boolean;
   typeList, varList, constList, bitList: TStringList;
   b: TBitField;
@@ -449,12 +477,7 @@ begin
   constList  := TStringList.Create;
   bitList := TStringList.Create;
 
-  //if reg.caption <> '' then
-  //  comment := '  // ' + reg.caption
-  //else
-    comment := '';
-
-  if (reg.aname <> '') and (Length(reg.bitFields) > 0) then // no bitfields, use generic definitions
+  if (reg.aname <> '') and (Length(reg.bitFields) > 0) and (reg.size = 1) then // no bitfields, use generic definitions
   begin
     // Sort Bits from 0 to 7
     bitlist.Clear;
@@ -484,17 +507,26 @@ begin
     setdef := format('  T%sset = bitpacked set of (', [reg.aname]);
     for j := 0 to 7 do
     begin
+      s := '';
+      sID := '';
       k := bitlist.IndexOfName(IntToStr(j));
       if k > -1 then
       begin
-        setdef := setdef + 's';  // s prefix = set element prefix
+        //setdef := setdef + 'e';  // e prefix = set element prefix
+        //s := 'e';
         if skippedbit then
         begin
           skippedbit := false;
-          setdef := setdef + bitlist.ValueFromIndex[k] + '=' +IntToStr(j) + ', '
+          //setdef := setdef + bitlist.ValueFromIndex[k] + '=' +IntToStr(j) + ', '
+          s := setPrefix + bitlist.ValueFromIndex[k];
+          sID := '=' + IntToStr(j);
         end
         else
-          setdef := setdef + bitlist.ValueFromIndex[k] + ', ';
+          //setdef := setdef + bitlist.ValueFromIndex[k] + ', ';
+          s := setPrefix + bitlist.ValueFromIndex[k];
+
+        s := AddUniqueID(s);
+        setdef := setdef + s + sID + ', ';
       end
       else // skip missing bit,
       begin
@@ -509,10 +541,7 @@ begin
       typeList.Add(setdef);
     end;
 
-    if reg.size = 1 then
-    begin
-      varList.Add(format('  %sset: T%sset absolute $%.2x;%s', [reg.aname, reg.aname, reg.address, comment]));
-    end;
+    varList.Add(format('  %sset: T%sset absolute $%.2x;', [reg.aname, reg.aname, reg.address]));
   end;
 
   if typeList.Count > 0 then
@@ -541,18 +570,18 @@ end;
 
 procedure generateDeclarationsOpt2(constref device: TDevice; var List: TStrings);
 var
-  i, j, k, bitsInMask: integer;
+  i, typedefcount: integer;
   sortedRegs: TSortedRegs;
   r: TReg;
-  b: TBitField;
-  previousVar, previousType, skippedbit: boolean;
-  s, s1, s2, sType, sVar, sConst, comment, setdef, bitrecorddef: string;
-  bitlist: TStringList;
+  previousVar, previousType: boolean;
+  s, sType, sVar, sConst: string;
 begin
+  IDList := TStringList.Create;
+  IDList.CaseSensitive := false;
+  typedefcount := 0;
   List.Add('{$bitpacking on}{$packset 1}{$packenum 1}');
   List.Add('type');
   List.Add('  TBitField = 0..1;');
-  List.Add('');
 
   sortedRegs := sortedRegisters(device);
 
@@ -566,6 +595,7 @@ begin
       sType := '';
       sVar := '';
       sConst := '';
+      // First standard declarations so that conventional identifiers are used afap for the plain const names
       generateStandardDeclarationFromRegisterInfo(r, sType, sVar, sConst);
       generateSetDeclarationFromRegisterInfo(r, sType, sVar, sConst);
       generateRecordDeclarationFromRegisterInfo(r, sType, sVar, sConst);
@@ -574,9 +604,11 @@ begin
       begin
         if not previousType then
         begin
+          List.Add('');
           List.Add('type');
           previousVar := false;
           previousType := true;
+          Inc(typedefcount);
         end;
 
         List.Add(sType);
@@ -586,6 +618,8 @@ begin
       begin
         if not previousVar then
         begin
+          if not previousType then
+            List.Add('');
           List.Add('var');
           previousVar := true;
           previousType := false;
@@ -600,9 +634,7 @@ begin
         previousVar := false;
         previousType := false;
         List.Add(sConst);
-//        List.Add('');
       end;
-
     end
     else
       s := '';
@@ -610,6 +642,8 @@ begin
     if s <> '' then
       List.Add(s);
   end;
+  List.Add('  // typedefs = ' + IntToStr(typedefcount));
+  FreeAndNil(IDList);
 end;
 
 procedure generateUnitFromATDFInfo(constref device: TDevice; var SL: TStrings);
@@ -647,7 +681,10 @@ begin
     //generateDeclarationsOpt1(device, SL);
     generateDeclarationsOpt2(device, SL);
 
-    SL.Add(#13#10'implementation'#13#10#13#10'{$i avrcommon.inc}'#13#10);
+    if pgmsize > 8192 then
+      SL.Add(#13#10'implementation'#13#10#13#10'{$i avrcommon.inc}'#13#10)
+    else
+      SL.Add(#13#10'implementation'#13#10'{$define RELBRANCHES}'#13#10'{$i avrcommon.inc}'#13#10);
 
     for i := 0 to High(device.Interrupts) do
     begin
