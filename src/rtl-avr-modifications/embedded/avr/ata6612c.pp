@@ -1,4 +1,4 @@
-unit ATmega328P;
+unit ATA6612C;
 
 {$goto on}
 interface
@@ -9,7 +9,32 @@ type
 
 var
   PINB: byte absolute $23;  // Port B Input Pins
+
+type
+  TDDRBset = bitpacked set of (e_DDB0, e_DDB1, e_DDB2, e_DDB3, e_DDB4, e_DDB5, e_DDB6, e_DDB7);
+  TDDRBrec = bitpacked record
+    DDB0,
+    DDB1,
+    DDB2,
+    DDB3,
+    DDB4,
+    DDB5,
+    DDB6,
+    DDB7: TBitField;
+  end;
+var
   DDRB: byte absolute $24;  // Port B Data Direction Register
+  DDRBset: TDDRBset absolute $24;
+  DDRBrec: TDDRBrec absolute $24;
+const
+  DDB0 = 0;  m_DDB0 = 1;  // Port B Data Direction Register bits
+  DDB1 = 1;  m_DDB1 = 2;  // Port B Data Direction Register bits
+  DDB2 = 2;  m_DDB2 = 4;  // Port B Data Direction Register bits
+  DDB3 = 3;  m_DDB3 = 8;  // Port B Data Direction Register bits
+  DDB4 = 4;  m_DDB4 = 16;  // Port B Data Direction Register bits
+  DDB5 = 5;  m_DDB5 = 32;  // Port B Data Direction Register bits
+  DDB6 = 6;  m_DDB6 = 64;  // Port B Data Direction Register bits
+  DDB7 = 7;  m_DDB7 = 128;  // Port B Data Direction Register bits
 
 type
   TPORTBset = bitpacked set of (e_PB0, e_PB1, e_PB2, e_PB3, e_PB4, e_PB5, e_PB6, e_PB7);
@@ -39,7 +64,31 @@ const
 
 var
   PINC: byte absolute $26;  // Port C Input Pins
+
+type
+  TDDRCset = bitpacked set of (e_DDC0, e_DDC1, e_DDC2, e_DDC3, e_DDC4, e_DDC5, e_DDC6);
+  TDDRCrec = bitpacked record
+    DDC0,
+    DDC1,
+    DDC2,
+    DDC3,
+    DDC4,
+    DDC5,
+    DDC6,
+    ReservedBit7: TBitField;
+  end;
+var
   DDRC: byte absolute $27;  // Port C Data Direction Register
+  DDRCset: TDDRCset absolute $27;
+  DDRCrec: TDDRCrec absolute $27;
+const
+  DDC0 = 0;  m_DDC0 = 1;  // Port C Data Direction Register bits
+  DDC1 = 1;  m_DDC1 = 2;  // Port C Data Direction Register bits
+  DDC2 = 2;  m_DDC2 = 4;  // Port C Data Direction Register bits
+  DDC3 = 3;  m_DDC3 = 8;  // Port C Data Direction Register bits
+  DDC4 = 4;  m_DDC4 = 16;  // Port C Data Direction Register bits
+  DDC5 = 5;  m_DDC5 = 32;  // Port C Data Direction Register bits
+  DDC6 = 6;  m_DDC6 = 64;  // Port C Data Direction Register bits
 
 type
   TPORTCset = bitpacked set of (e_PC0, e_PC1, e_PC2, e_PC3, e_PC4, e_PC5, e_PC6);
@@ -68,7 +117,32 @@ const
 
 var
   PIND: byte absolute $29;  // Port D Input Pins
+
+type
+  TDDRDset = bitpacked set of (e_DDD0, e_DDD1, e_DDD2, e_DDD3, e_DDD4, e_DDD5, e_DDD6, e_DDD7);
+  TDDRDrec = bitpacked record
+    DDD0,
+    DDD1,
+    DDD2,
+    DDD3,
+    DDD4,
+    DDD5,
+    DDD6,
+    DDD7: TBitField;
+  end;
+var
   DDRD: byte absolute $2A;  // Port D Data Direction Register
+  DDRDset: TDDRDset absolute $2A;
+  DDRDrec: TDDRDrec absolute $2A;
+const
+  DDD0 = 0;  m_DDD0 = 1;  // Port D Data Direction Register bits
+  DDD1 = 1;  m_DDD1 = 2;  // Port D Data Direction Register bits
+  DDD2 = 2;  m_DDD2 = 4;  // Port D Data Direction Register bits
+  DDD3 = 3;  m_DDD3 = 8;  // Port D Data Direction Register bits
+  DDD4 = 4;  m_DDD4 = 16;  // Port D Data Direction Register bits
+  DDD5 = 5;  m_DDD5 = 32;  // Port D Data Direction Register bits
+  DDD6 = 6;  m_DDD6 = 64;  // Port D Data Direction Register bits
+  DDD7 = 7;  m_DDD7 = 128;  // Port D Data Direction Register bits
 
 type
   TPORTDset = bitpacked set of (e_PD0, e_PD1, e_PD2, e_PD3, e_PD4, e_PD5, e_PD6, e_PD7);
@@ -419,14 +493,14 @@ type
     ReservedBit7: TBitField;
   end;
 var
-  SMCR: byte absolute $53;  // Sleep Mode Control Register
+  SMCR: byte absolute $53;
   SMCRset: TSMCRset absolute $53;
   SMCRrec: TSMCRrec absolute $53;
 const
-  SE = 0;  m_SE = 1;  // Sleep Enable
-  SM0 = 1;  m_SM0 = 2;  // Sleep Mode Select Bits
-  SM1 = 2;  m_SM1 = 4;  // Sleep Mode Select Bits
-  SM2 = 3;  m_SM2 = 8;  // Sleep Mode Select Bits
+  SE = 0;  m_SE = 1;
+  SM0 = 1;  m_SM0 = 2;
+  SM1 = 2;  m_SM1 = 4;
+  SM2 = 3;  m_SM2 = 8;
 
 type
   TMCUSRset = bitpacked set of (e_PORF, e_EXTRF, e_BORF, e_WDRF);
@@ -451,15 +525,15 @@ const
   WDRF = 3;  m_WDRF = 8;  // Watchdog Reset Flag
 
 type
-  TMCUCRset = bitpacked set of (e_IVCE, e_IVSEL, e_PUD=4, e_BODSE, e_BODS);
+  TMCUCRset = bitpacked set of (e_IVCE, e_IVSEL, e_PUD=4);
   TMCUCRrec = bitpacked record
     IVCE,
     IVSEL,
     ReservedBit2,
     ReservedBit3,
     PUD,
-    BODSE,
-    BODS,
+    ReservedBit5,
+    ReservedBit6,
     ReservedBit7: TBitField;
   end;
 var
@@ -470,18 +544,16 @@ const
   IVCE = 0;  m_IVCE = 1;
   IVSEL = 1;  m_IVSEL = 2;
   PUD = 4;  m_PUD = 16;
-  BODSE = 5;  m_BODSE = 32;  // BOD Sleep Enable
-  BODS = 6;  m_BODS = 64;  // BOD Sleep
 
 type
-  TSPMCSRset = bitpacked set of (e_SPMEN, e_PGERS, e_PGWRT, e_BLBSET, e_RWWSRE, e_SIGRD, e_RWWSB, e_SPMIE);
+  TSPMCSRset = bitpacked set of (e_SELFPRGEN, e_PGERS, e_PGWRT, e_BLBSET, e_RWWSRE, e_RWWSB=6, e_SPMIE);
   TSPMCSRrec = bitpacked record
-    SPMEN,
+    SELFPRGEN,
     PGERS,
     PGWRT,
     BLBSET,
     RWWSRE,
-    SIGRD,
+    ReservedBit5,
     RWWSB,
     SPMIE: TBitField;
   end;
@@ -490,12 +562,11 @@ var
   SPMCSRset: TSPMCSRset absolute $57;
   SPMCSRrec: TSPMCSRrec absolute $57;
 const
-  SPMEN = 0;  m_SPMEN = 1;  // Store Program Memory
+  SELFPRGEN = 0;  m_SELFPRGEN = 1;  // Self Programming Enable
   PGERS = 1;  m_PGERS = 2;  // Page Erase
   PGWRT = 2;  m_PGWRT = 4;  // Page Write
   BLBSET = 3;  m_BLBSET = 8;  // Boot Lock Bit Set
   RWWSRE = 4;  m_RWWSRE = 16;  // Read-While-Write section read enable
-  SIGRD = 5;  m_SIGRD = 32;  // Signature Row Read
   RWWSB = 6;  m_RWWSB = 64;  // Read-While-Write Section Busy
   SPMIE = 7;  m_SPMIE = 128;  // SPM Interrupt Enable
 
@@ -837,10 +908,10 @@ var
   ADMUXset: TADMUXset absolute $7C;
   ADMUXrec: TADMUXrec absolute $7C;
 const
-  MUX0 = 0;  m_MUX0 = 1;  // Analog Channel Selection Bits
-  MUX1 = 1;  m_MUX1 = 2;  // Analog Channel Selection Bits
-  MUX2 = 2;  m_MUX2 = 4;  // Analog Channel Selection Bits
-  MUX3 = 3;  m_MUX3 = 8;  // Analog Channel Selection Bits
+  MUX0 = 0;  m_MUX0 = 1;  // Analog Channel and Gain Selection Bits
+  MUX1 = 1;  m_MUX1 = 2;  // Analog Channel and Gain Selection Bits
+  MUX2 = 2;  m_MUX2 = 4;  // Analog Channel and Gain Selection Bits
+  MUX3 = 3;  m_MUX3 = 8;  // Analog Channel and Gain Selection Bits
   ADLAR = 5;  m_ADLAR = 32;  // Left Adjust Result
   REFS0 = 6;  m_REFS0 = 64;  // Reference Selection Bits
   REFS1 = 7;  m_REFS1 = 128;  // Reference Selection Bits
@@ -1208,11 +1279,11 @@ const
   RXCIE0 = 7;  m_RXCIE0 = 128;  // RX Complete Interrupt Enable
 
 type
-  TUCSR0Cset = bitpacked set of (e_UCPOL0, e_UCSZ00, e_UCSZ01, e_USBS0, e_UPM00, e_UPM01, e_UMSEL00, e_UMSEL01);
+  TUCSR0Cset = bitpacked set of (e_UCPOL0, e_UCPHA0, e_UDORD0, e_USBS0, e_UPM00, e_UPM01, e_UMSEL00, e_UMSEL01);
   TUCSR0Crec = bitpacked record
     UCPOL0,
-    UCSZ00,
-    UCSZ01,
+    UCPHA0,
+    UDORD0,
     USBS0,
     UPM00,
     UPM01,
@@ -1225,8 +1296,8 @@ var
   UCSR0Crec: TUCSR0Crec absolute $C2;
 const
   UCPOL0 = 0;  m_UCPOL0 = 1;  // Clock Polarity
-  UCSZ00 = 1;  m_UCSZ00 = 2;  // Character Size
-  UCSZ01 = 2;  m_UCSZ01 = 4;  // Character Size
+  UCPHA0 = 1;  m_UCPHA0 = 2;  // Clock phase
+  UDORD0 = 2;  m_UDORD0 = 4;  // Data order
   USBS0 = 3;  m_USBS0 = 8;  // Stop Bit Select
   UPM00 = 4;  m_UPM00 = 16;  // Parity Mode Bits
   UPM01 = 5;  m_UPM01 = 32;  // Parity Mode Bits
@@ -1234,24 +1305,24 @@ const
   UMSEL01 = 7;  m_UMSEL01 = 128;  // USART Mode Select
 
 var
-  UBRR0: word absolute $C4;  // USART Baud Rate Register Bytes
+  UBRR0: word absolute $C4;  // USART Baud Rate Register  Bytes
   UBRR0L: byte absolute $C4;
   UBRR0H: byte absolute $C5;
   UDR0: byte absolute $C6;  // USART I/O Data Register
-  // typedefs = 49
+  // typedefs = 52
 
 implementation
-
+{$define RELBRANCHES}
 {$i avrcommon.inc}
 
 procedure INT0_ISR; external name 'INT0_ISR'; // Interrupt 1 External Interrupt Request 0
 procedure INT1_ISR; external name 'INT1_ISR'; // Interrupt 2 External Interrupt Request 1
 procedure PCINT0_ISR; external name 'PCINT0_ISR'; // Interrupt 3 Pin Change Interrupt Request 0
-procedure PCINT1_ISR; external name 'PCINT1_ISR'; // Interrupt 4 Pin Change Interrupt Request 1
-procedure PCINT2_ISR; external name 'PCINT2_ISR'; // Interrupt 5 Pin Change Interrupt Request 2
+procedure PCINT1_ISR; external name 'PCINT1_ISR'; // Interrupt 4 Pin Change Interrupt Request 0
+procedure PCINT2_ISR; external name 'PCINT2_ISR'; // Interrupt 5 Pin Change Interrupt Request 1
 procedure WDT_ISR; external name 'WDT_ISR'; // Interrupt 6 Watchdog Time-out Interrupt
 procedure TIMER2_COMPA_ISR; external name 'TIMER2_COMPA_ISR'; // Interrupt 7 Timer/Counter2 Compare Match A
-procedure TIMER2_COMPB_ISR; external name 'TIMER2_COMPB_ISR'; // Interrupt 8 Timer/Counter2 Compare Match B
+procedure TIMER2_COMPB_ISR; external name 'TIMER2_COMPB_ISR'; // Interrupt 8 Timer/Counter2 Compare Match A
 procedure TIMER2_OVF_ISR; external name 'TIMER2_OVF_ISR'; // Interrupt 9 Timer/Counter2 Overflow
 procedure TIMER1_CAPT_ISR; external name 'TIMER1_CAPT_ISR'; // Interrupt 10 Timer/Counter1 Capture Event
 procedure TIMER1_COMPA_ISR; external name 'TIMER1_COMPA_ISR'; // Interrupt 11 Timer/Counter1 Compare Match A
@@ -1277,32 +1348,32 @@ asm
   .init
   .globl _start
 
-  jmp _start
-  jmp INT0_ISR
-  jmp INT1_ISR
-  jmp PCINT0_ISR
-  jmp PCINT1_ISR
-  jmp PCINT2_ISR
-  jmp WDT_ISR
-  jmp TIMER2_COMPA_ISR
-  jmp TIMER2_COMPB_ISR
-  jmp TIMER2_OVF_ISR
-  jmp TIMER1_CAPT_ISR
-  jmp TIMER1_COMPA_ISR
-  jmp TIMER1_COMPB_ISR
-  jmp TIMER1_OVF_ISR
-  jmp TIMER0_COMPA_ISR
-  jmp TIMER0_COMPB_ISR
-  jmp TIMER0_OVF_ISR
-  jmp SPI_STC_ISR
-  jmp USART_RX_ISR
-  jmp USART_UDRE_ISR
-  jmp USART_TX_ISR
-  jmp ADC_ISR
-  jmp EE_READY_ISR
-  jmp ANALOG_COMP_ISR
-  jmp TWI_ISR
-  jmp SPM_Ready_ISR
+  rjmp _start
+  rjmp INT0_ISR
+  rjmp INT1_ISR
+  rjmp PCINT0_ISR
+  rjmp PCINT1_ISR
+  rjmp PCINT2_ISR
+  rjmp WDT_ISR
+  rjmp TIMER2_COMPA_ISR
+  rjmp TIMER2_COMPB_ISR
+  rjmp TIMER2_OVF_ISR
+  rjmp TIMER1_CAPT_ISR
+  rjmp TIMER1_COMPA_ISR
+  rjmp TIMER1_COMPB_ISR
+  rjmp TIMER1_OVF_ISR
+  rjmp TIMER0_COMPA_ISR
+  rjmp TIMER0_COMPB_ISR
+  rjmp TIMER0_OVF_ISR
+  rjmp SPI_STC_ISR
+  rjmp USART_RX_ISR
+  rjmp USART_UDRE_ISR
+  rjmp USART_TX_ISR
+  rjmp ADC_ISR
+  rjmp EE_READY_ISR
+  rjmp ANALOG_COMP_ISR
+  rjmp TWI_ISR
+  rjmp SPM_Ready_ISR
 
   {$i start.inc}
 

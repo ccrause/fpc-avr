@@ -1,4 +1,4 @@
-unit ATmega328P;
+unit ATmega168P;
 
 {$goto on}
 interface
@@ -474,14 +474,14 @@ const
   BODS = 6;  m_BODS = 64;  // BOD Sleep
 
 type
-  TSPMCSRset = bitpacked set of (e_SPMEN, e_PGERS, e_PGWRT, e_BLBSET, e_RWWSRE, e_SIGRD, e_RWWSB, e_SPMIE);
+  TSPMCSRset = bitpacked set of (e_SELFPRGEN, e_PGERS, e_PGWRT, e_BLBSET, e_RWWSRE, e_RWWSB=6, e_SPMIE);
   TSPMCSRrec = bitpacked record
-    SPMEN,
+    SELFPRGEN,
     PGERS,
     PGWRT,
     BLBSET,
     RWWSRE,
-    SIGRD,
+    ReservedBit5,
     RWWSB,
     SPMIE: TBitField;
   end;
@@ -490,12 +490,11 @@ var
   SPMCSRset: TSPMCSRset absolute $57;
   SPMCSRrec: TSPMCSRrec absolute $57;
 const
-  SPMEN = 0;  m_SPMEN = 1;  // Store Program Memory
+  SELFPRGEN = 0;  m_SELFPRGEN = 1;  // Self Programming Enable
   PGERS = 1;  m_PGERS = 2;  // Page Erase
   PGWRT = 2;  m_PGWRT = 4;  // Page Write
   BLBSET = 3;  m_BLBSET = 8;  // Boot Lock Bit Set
   RWWSRE = 4;  m_RWWSRE = 16;  // Read-While-Write section read enable
-  SIGRD = 5;  m_SIGRD = 32;  // Signature Row Read
   RWWSB = 6;  m_RWWSB = 64;  // Read-While-Write Section Busy
   SPMIE = 7;  m_SPMIE = 128;  // SPM Interrupt Enable
 
@@ -1234,7 +1233,7 @@ const
   UMSEL01 = 7;  m_UMSEL01 = 128;  // USART Mode Select
 
 var
-  UBRR0: word absolute $C4;  // USART Baud Rate Register Bytes
+  UBRR0: word absolute $C4;  // USART Baud Rate Register  Bytes
   UBRR0L: byte absolute $C4;
   UBRR0H: byte absolute $C5;
   UDR0: byte absolute $C6;  // USART I/O Data Register
@@ -1247,11 +1246,11 @@ implementation
 procedure INT0_ISR; external name 'INT0_ISR'; // Interrupt 1 External Interrupt Request 0
 procedure INT1_ISR; external name 'INT1_ISR'; // Interrupt 2 External Interrupt Request 1
 procedure PCINT0_ISR; external name 'PCINT0_ISR'; // Interrupt 3 Pin Change Interrupt Request 0
-procedure PCINT1_ISR; external name 'PCINT1_ISR'; // Interrupt 4 Pin Change Interrupt Request 1
-procedure PCINT2_ISR; external name 'PCINT2_ISR'; // Interrupt 5 Pin Change Interrupt Request 2
+procedure PCINT1_ISR; external name 'PCINT1_ISR'; // Interrupt 4 Pin Change Interrupt Request 0
+procedure PCINT2_ISR; external name 'PCINT2_ISR'; // Interrupt 5 Pin Change Interrupt Request 1
 procedure WDT_ISR; external name 'WDT_ISR'; // Interrupt 6 Watchdog Time-out Interrupt
 procedure TIMER2_COMPA_ISR; external name 'TIMER2_COMPA_ISR'; // Interrupt 7 Timer/Counter2 Compare Match A
-procedure TIMER2_COMPB_ISR; external name 'TIMER2_COMPB_ISR'; // Interrupt 8 Timer/Counter2 Compare Match B
+procedure TIMER2_COMPB_ISR; external name 'TIMER2_COMPB_ISR'; // Interrupt 8 Timer/Counter2 Compare Match A
 procedure TIMER2_OVF_ISR; external name 'TIMER2_OVF_ISR'; // Interrupt 9 Timer/Counter2 Overflow
 procedure TIMER1_CAPT_ISR; external name 'TIMER1_CAPT_ISR'; // Interrupt 10 Timer/Counter1 Capture Event
 procedure TIMER1_COMPA_ISR; external name 'TIMER1_COMPA_ISR'; // Interrupt 11 Timer/Counter1 Compare Match A

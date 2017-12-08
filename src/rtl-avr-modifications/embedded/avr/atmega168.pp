@@ -1,4 +1,4 @@
-unit ATmega328P;
+unit ATmega168;
 
 {$goto on}
 interface
@@ -424,9 +424,9 @@ var
   SMCRrec: TSMCRrec absolute $53;
 const
   SE = 0;  m_SE = 1;  // Sleep Enable
-  SM0 = 1;  m_SM0 = 2;  // Sleep Mode Select Bits
-  SM1 = 2;  m_SM1 = 4;  // Sleep Mode Select Bits
-  SM2 = 3;  m_SM2 = 8;  // Sleep Mode Select Bits
+  SM0 = 1;  m_SM0 = 2;  // Sleep Mode
+  SM1 = 2;  m_SM1 = 4;  // Sleep Mode
+  SM2 = 3;  m_SM2 = 8;  // Sleep Mode
 
 type
   TMCUSRset = bitpacked set of (e_PORF, e_EXTRF, e_BORF, e_WDRF);
@@ -451,15 +451,15 @@ const
   WDRF = 3;  m_WDRF = 8;  // Watchdog Reset Flag
 
 type
-  TMCUCRset = bitpacked set of (e_IVCE, e_IVSEL, e_PUD=4, e_BODSE, e_BODS);
+  TMCUCRset = bitpacked set of (e_IVCE, e_IVSEL, e_PUD=4);
   TMCUCRrec = bitpacked record
     IVCE,
     IVSEL,
     ReservedBit2,
     ReservedBit3,
     PUD,
-    BODSE,
-    BODS,
+    ReservedBit5,
+    ReservedBit6,
     ReservedBit7: TBitField;
   end;
 var
@@ -467,21 +467,19 @@ var
   MCUCRset: TMCUCRset absolute $55;
   MCUCRrec: TMCUCRrec absolute $55;
 const
-  IVCE = 0;  m_IVCE = 1;
-  IVSEL = 1;  m_IVSEL = 2;
-  PUD = 4;  m_PUD = 16;
-  BODSE = 5;  m_BODSE = 32;  // BOD Sleep Enable
-  BODS = 6;  m_BODS = 64;  // BOD Sleep
+  IVCE = 0;  m_IVCE = 1;  // Interrupt Vector Change Enable
+  IVSEL = 1;  m_IVSEL = 2;  // Interrupt Vector Select
+  PUD = 4;  m_PUD = 16;  // Pull-up Disable
 
 type
-  TSPMCSRset = bitpacked set of (e_SPMEN, e_PGERS, e_PGWRT, e_BLBSET, e_RWWSRE, e_SIGRD, e_RWWSB, e_SPMIE);
+  TSPMCSRset = bitpacked set of (e_SELFPRGEN, e_PGERS, e_PGWRT, e_BLBSET, e_RWWSRE, e_RWWSB=6, e_SPMIE);
   TSPMCSRrec = bitpacked record
-    SPMEN,
+    SELFPRGEN,
     PGERS,
     PGWRT,
     BLBSET,
     RWWSRE,
-    SIGRD,
+    ReservedBit5,
     RWWSB,
     SPMIE: TBitField;
   end;
@@ -490,12 +488,11 @@ var
   SPMCSRset: TSPMCSRset absolute $57;
   SPMCSRrec: TSPMCSRrec absolute $57;
 const
-  SPMEN = 0;  m_SPMEN = 1;  // Store Program Memory
+  SELFPRGEN = 0;  m_SELFPRGEN = 1;  // Self Programming Enable
   PGERS = 1;  m_PGERS = 2;  // Page Erase
   PGWRT = 2;  m_PGWRT = 4;  // Page Write
   BLBSET = 3;  m_BLBSET = 8;  // Boot Lock Bit Set
   RWWSRE = 4;  m_RWWSRE = 16;  // Read-While-Write section read enable
-  SIGRD = 5;  m_SIGRD = 32;  // Signature Row Read
   RWWSB = 6;  m_RWWSB = 64;  // Read-While-Write Section Busy
   SPMIE = 7;  m_SPMIE = 128;  // SPM Interrupt Enable
 
@@ -1234,7 +1231,7 @@ const
   UMSEL01 = 7;  m_UMSEL01 = 128;  // USART Mode Select
 
 var
-  UBRR0: word absolute $C4;  // USART Baud Rate Register Bytes
+  UBRR0: word absolute $C4;  // USART Baud Rate Register  Bytes
   UBRR0L: byte absolute $C4;
   UBRR0H: byte absolute $C5;
   UDR0: byte absolute $C6;  // USART I/O Data Register
@@ -1247,11 +1244,11 @@ implementation
 procedure INT0_ISR; external name 'INT0_ISR'; // Interrupt 1 External Interrupt Request 0
 procedure INT1_ISR; external name 'INT1_ISR'; // Interrupt 2 External Interrupt Request 1
 procedure PCINT0_ISR; external name 'PCINT0_ISR'; // Interrupt 3 Pin Change Interrupt Request 0
-procedure PCINT1_ISR; external name 'PCINT1_ISR'; // Interrupt 4 Pin Change Interrupt Request 1
-procedure PCINT2_ISR; external name 'PCINT2_ISR'; // Interrupt 5 Pin Change Interrupt Request 2
+procedure PCINT1_ISR; external name 'PCINT1_ISR'; // Interrupt 4 Pin Change Interrupt Request 0
+procedure PCINT2_ISR; external name 'PCINT2_ISR'; // Interrupt 5 Pin Change Interrupt Request 1
 procedure WDT_ISR; external name 'WDT_ISR'; // Interrupt 6 Watchdog Time-out Interrupt
 procedure TIMER2_COMPA_ISR; external name 'TIMER2_COMPA_ISR'; // Interrupt 7 Timer/Counter2 Compare Match A
-procedure TIMER2_COMPB_ISR; external name 'TIMER2_COMPB_ISR'; // Interrupt 8 Timer/Counter2 Compare Match B
+procedure TIMER2_COMPB_ISR; external name 'TIMER2_COMPB_ISR'; // Interrupt 8 Timer/Counter2 Compare Match A
 procedure TIMER2_OVF_ISR; external name 'TIMER2_OVF_ISR'; // Interrupt 9 Timer/Counter2 Overflow
 procedure TIMER1_CAPT_ISR; external name 'TIMER1_CAPT_ISR'; // Interrupt 10 Timer/Counter1 Capture Event
 procedure TIMER1_COMPA_ISR; external name 'TIMER1_COMPA_ISR'; // Interrupt 11 Timer/Counter1 Compare Match A
@@ -1268,7 +1265,7 @@ procedure ADC_ISR; external name 'ADC_ISR'; // Interrupt 21 ADC Conversion Compl
 procedure EE_READY_ISR; external name 'EE_READY_ISR'; // Interrupt 22 EEPROM Ready
 procedure ANALOG_COMP_ISR; external name 'ANALOG_COMP_ISR'; // Interrupt 23 Analog Comparator
 procedure TWI_ISR; external name 'TWI_ISR'; // Interrupt 24 Two-wire Serial Interface
-procedure SPM_Ready_ISR; external name 'SPM_Ready_ISR'; // Interrupt 25 Store Program Memory Read
+procedure SPM_READY_ISR; external name 'SPM_READY_ISR'; // Interrupt 25 Store Program Memory Read
 
 procedure _FPC_start; assembler; nostackframe;
 label
@@ -1302,7 +1299,7 @@ asm
   jmp EE_READY_ISR
   jmp ANALOG_COMP_ISR
   jmp TWI_ISR
-  jmp SPM_Ready_ISR
+  jmp SPM_READY_ISR
 
   {$i start.inc}
 
@@ -1330,7 +1327,7 @@ asm
   .weak EE_READY_ISR
   .weak ANALOG_COMP_ISR
   .weak TWI_ISR
-  .weak SPM_Ready_ISR
+  .weak SPM_READY_ISR
 
   .set INT0_ISR, Default_IRQ_handler
   .set INT1_ISR, Default_IRQ_handler
@@ -1356,7 +1353,7 @@ asm
   .set EE_READY_ISR, Default_IRQ_handler
   .set ANALOG_COMP_ISR, Default_IRQ_handler
   .set TWI_ISR, Default_IRQ_handler
-  .set SPM_Ready_ISR, Default_IRQ_handler
+  .set SPM_READY_ISR, Default_IRQ_handler
 end;
 
 end.

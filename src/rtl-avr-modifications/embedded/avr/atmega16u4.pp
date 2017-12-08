@@ -1,4 +1,4 @@
-unit ATmega32U4;
+unit ATmega16U4;
 
 {$goto on}
 interface
@@ -353,11 +353,45 @@ const
   EEPM0 = 4;  m_EEPM0 = 16;  // EEPROM Programming Mode Bits
   EEPM1 = 5;  m_EEPM1 = 32;  // EEPROM Programming Mode Bits
 
+type
+  TEEDRset = bitpacked set of (e_EEDR0, e_EEDR1, e_EEDR2, e_EEDR3, e_EEDR4, e_EEDR5, e_EEDR6, e_EEDR7);
+  TEEDRrec = bitpacked record
+    EEDR0,
+    EEDR1,
+    EEDR2,
+    EEDR3,
+    EEDR4,
+    EEDR5,
+    EEDR6,
+    EEDR7: TBitField;
+  end;
 var
   EEDR: byte absolute $40;  // EEPROM Data Register
+  EEDRset: TEEDRset absolute $40;
+  EEDRrec: TEEDRrec absolute $40;
+const
+  EEDR0 = 0;  m_EEDR0 = 1;  // EEPROM Data Bits
+  EEDR1 = 1;  m_EEDR1 = 2;  // EEPROM Data Bits
+  EEDR2 = 2;  m_EEDR2 = 4;  // EEPROM Data Bits
+  EEDR3 = 3;  m_EEDR3 = 8;  // EEPROM Data Bits
+  EEDR4 = 4;  m_EEDR4 = 16;  // EEPROM Data Bits
+  EEDR5 = 5;  m_EEDR5 = 32;  // EEPROM Data Bits
+  EEDR6 = 6;  m_EEDR6 = 64;  // EEPROM Data Bits
+  EEDR7 = 7;  m_EEDR7 = 128;  // EEPROM Data Bits
+
+var
   EEAR: word absolute $41;  // EEPROM Address Register Low Bytes
   EEARL: byte absolute $41;
   EEARH: byte absolute $42;
+const
+  EEAR0 = 0;  m_EEAR0 = 1;  // EEPROM Address Bits
+  EEAR1 = 1;  m_EEAR1 = 2;  // EEPROM Address Bits
+  EEAR2 = 2;  m_EEAR2 = 4;  // EEPROM Address Bits
+  EEAR3 = 3;  m_EEAR3 = 8;  // EEPROM Address Bits
+  EEAR4 = 4;  m_EEAR4 = 16;  // EEPROM Address Bits
+  EEAR5 = 5;  m_EEAR5 = 32;  // EEPROM Address Bits
+  EEAR6 = 6;  m_EEAR6 = 64;  // EEPROM Address Bits
+  EEAR7 = 7;  m_EEAR7 = 128;  // EEPROM Address Bits
 
 type
   TGTCCRset = bitpacked set of (e_PSRSYNC, e_TSM=7);
@@ -427,10 +461,83 @@ const
   FOC0B = 6;  m_FOC0B = 64;  // Force Output Compare B
   FOC0A = 7;  m_FOC0A = 128;  // Force Output Compare A
 
+type
+  TTCNT0set = bitpacked set of (e_TCNT00, e_TCNT01, e_TCNT02, e_TCNT03, e_TCNT04, e_TCNT05, e_TCNT06, e_TCNT07);
+  TTCNT0rec = bitpacked record
+    TCNT00,
+    TCNT01,
+    TCNT02,
+    TCNT03,
+    TCNT04,
+    TCNT05,
+    TCNT06,
+    TCNT07: TBitField;
+  end;
 var
   TCNT0: byte absolute $46;  // Timer/Counter0
+  TCNT0set: TTCNT0set absolute $46;
+  TCNT0rec: TTCNT0rec absolute $46;
+const
+  TCNT00 = 0;  m_TCNT00 = 1;  // Timer/Counter0 bits
+  TCNT01 = 1;  m_TCNT01 = 2;  // Timer/Counter0 bits
+  TCNT02 = 2;  m_TCNT02 = 4;  // Timer/Counter0 bits
+  TCNT03 = 3;  m_TCNT03 = 8;  // Timer/Counter0 bits
+  TCNT04 = 4;  m_TCNT04 = 16;  // Timer/Counter0 bits
+  TCNT05 = 5;  m_TCNT05 = 32;  // Timer/Counter0 bits
+  TCNT06 = 6;  m_TCNT06 = 64;  // Timer/Counter0 bits
+  TCNT07 = 7;  m_TCNT07 = 128;  // Timer/Counter0 bits
+
+type
+  TOCR0Aset = bitpacked set of (e_OCR0A0, e_OCR0A1, e_OCR0A2, e_OCR0A3, e_OCR0A4, e_OCR0A5, e_OCR0A6, e_OCR0A7);
+  TOCR0Arec = bitpacked record
+    OCR0A0,
+    OCR0A1,
+    OCR0A2,
+    OCR0A3,
+    OCR0A4,
+    OCR0A5,
+    OCR0A6,
+    OCR0A7: TBitField;
+  end;
+var
   OCR0A: byte absolute $47;  // Timer/Counter0 Output Compare Register
+  OCR0Aset: TOCR0Aset absolute $47;
+  OCR0Arec: TOCR0Arec absolute $47;
+const
+  OCR0A0 = 0;  m_OCR0A0 = 1;  // Timer/Counter0 Output Compare A bits
+  OCR0A1 = 1;  m_OCR0A1 = 2;  // Timer/Counter0 Output Compare A bits
+  OCR0A2 = 2;  m_OCR0A2 = 4;  // Timer/Counter0 Output Compare A bits
+  OCR0A3 = 3;  m_OCR0A3 = 8;  // Timer/Counter0 Output Compare A bits
+  OCR0A4 = 4;  m_OCR0A4 = 16;  // Timer/Counter0 Output Compare A bits
+  OCR0A5 = 5;  m_OCR0A5 = 32;  // Timer/Counter0 Output Compare A bits
+  OCR0A6 = 6;  m_OCR0A6 = 64;  // Timer/Counter0 Output Compare A bits
+  OCR0A7 = 7;  m_OCR0A7 = 128;  // Timer/Counter0 Output Compare A bits
+
+type
+  TOCR0Bset = bitpacked set of (e_OCR0B0, e_OCR0B1, e_OCR0B2, e_OCR0B3, e_OCR0B4, e_OCR0B5, e_OCR0B6, e_OCR0B7);
+  TOCR0Brec = bitpacked record
+    OCR0B0,
+    OCR0B1,
+    OCR0B2,
+    OCR0B3,
+    OCR0B4,
+    OCR0B5,
+    OCR0B6,
+    OCR0B7: TBitField;
+  end;
+var
   OCR0B: byte absolute $48;  // Timer/Counter0 Output Compare Register
+  OCR0Bset: TOCR0Bset absolute $48;
+  OCR0Brec: TOCR0Brec absolute $48;
+const
+  OCR0B0 = 0;  m_OCR0B0 = 1;  // Timer/Counter0 Output Compare B bits
+  OCR0B1 = 1;  m_OCR0B1 = 2;  // Timer/Counter0 Output Compare B bits
+  OCR0B2 = 2;  m_OCR0B2 = 4;  // Timer/Counter0 Output Compare B bits
+  OCR0B3 = 3;  m_OCR0B3 = 8;  // Timer/Counter0 Output Compare B bits
+  OCR0B4 = 4;  m_OCR0B4 = 16;  // Timer/Counter0 Output Compare B bits
+  OCR0B5 = 5;  m_OCR0B5 = 32;  // Timer/Counter0 Output Compare B bits
+  OCR0B6 = 6;  m_OCR0B6 = 64;  // Timer/Counter0 Output Compare B bits
+  OCR0B7 = 7;  m_OCR0B7 = 128;  // Timer/Counter0 Output Compare B bits
 
 type
   TPLLCSRset = bitpacked set of (e_PLOCK, e_PLLE, e_PINDIV=4);
@@ -529,8 +636,31 @@ const
   WCOL = 6;  m_WCOL = 64;  // Write Collision Flag
   SPIF = 7;  m_SPIF = 128;  // SPI Interrupt Flag
 
+type
+  TSPDRset = bitpacked set of (e_SPDR0, e_SPDR1, e_SPDR2, e_SPDR3, e_SPDR4, e_SPDR5, e_SPDR6, e_SPDR7);
+  TSPDRrec = bitpacked record
+    SPDR0,
+    SPDR1,
+    SPDR2,
+    SPDR3,
+    SPDR4,
+    SPDR5,
+    SPDR6,
+    SPDR7: TBitField;
+  end;
 var
   SPDR: byte absolute $4E;  // SPI Data Register
+  SPDRset: TSPDRset absolute $4E;
+  SPDRrec: TSPDRrec absolute $4E;
+const
+  SPDR0 = 0;  m_SPDR0 = 1;  // SPI Data bits
+  SPDR1 = 1;  m_SPDR1 = 2;  // SPI Data bits
+  SPDR2 = 2;  m_SPDR2 = 4;  // SPI Data bits
+  SPDR3 = 3;  m_SPDR3 = 8;  // SPI Data bits
+  SPDR4 = 4;  m_SPDR4 = 16;  // SPI Data bits
+  SPDR5 = 5;  m_SPDR5 = 32;  // SPI Data bits
+  SPDR6 = 6;  m_SPDR6 = 64;  // SPI Data bits
+  SPDR7 = 7;  m_SPDR7 = 128;  // SPI Data bits
 
 type
   TACSRset = bitpacked set of (e_ACIS0, e_ACIS1, e_ACIC, e_ACIE, e_ACI, e_ACO, e_ACBG, e_ACD);
@@ -681,16 +811,16 @@ const
   SPMIE = 7;  m_SPMIE = 128;  // SPM Interrupt Enable
 
 type
-  TRAMPZset = bitpacked set of (e_RAMPZ0, e_RAMPZ1, e_Res0, e_Res1, e_Res2, e_Res3, e_Res4, e_Res5);
+  TRAMPZset = bitpacked set of (e_RAMPZ0, e_RAMPZ1);
   TRAMPZrec = bitpacked record
     RAMPZ0,
     RAMPZ1,
-    Res0,
-    Res1,
-    Res2,
-    Res3,
-    Res4,
-    Res5: TBitField;
+    ReservedBit2,
+    ReservedBit3,
+    ReservedBit4,
+    ReservedBit5,
+    ReservedBit6,
+    ReservedBit7: TBitField;
   end;
 var
   RAMPZ: byte absolute $5B;  // Extended Z-pointer Register for ELPM/SPM
@@ -699,12 +829,6 @@ var
 const
   RAMPZ0 = 0;  m_RAMPZ0 = 1;  // Extended Z-Pointer Value
   RAMPZ1 = 1;  m_RAMPZ1 = 2;  // Extended Z-Pointer Value
-  Res0 = 2;  m_Res0 = 4;  // Reserved
-  Res1 = 3;  m_Res1 = 8;  // Reserved
-  Res2 = 4;  m_Res2 = 16;  // Reserved
-  Res3 = 5;  m_Res3 = 32;  // Reserved
-  Res4 = 6;  m_Res4 = 64;  // Reserved
-  Res5 = 7;  m_Res5 = 128;  // Reserved
 
 var
   EIND: byte absolute $5C;  // Extended Indirect Register
@@ -949,8 +1073,31 @@ const
   ISC70 = 6;  m_ISC70 = 64;  // External Interrupt 7-4 Sense Control Bit
   ISC71 = 7;  m_ISC71 = 128;  // External Interrupt 7-4 Sense Control Bit
 
+type
+  TPCMSK0set = bitpacked set of (e_PCINT0, e_PCINT1, e_PCINT2, e_PCINT3, e_PCINT4, e_PCINT5, e_PCINT6, e_PCINT7);
+  TPCMSK0rec = bitpacked record
+    PCINT0,
+    PCINT1,
+    PCINT2,
+    PCINT3,
+    PCINT4,
+    PCINT5,
+    PCINT6,
+    PCINT7: TBitField;
+  end;
 var
   PCMSK0: byte absolute $6B;  // Pin Change Mask Register 0
+  PCMSK0set: TPCMSK0set absolute $6B;
+  PCMSK0rec: TPCMSK0rec absolute $6B;
+const
+  PCINT0 = 0;  m_PCINT0 = 1;  // Pin Change Mask 0
+  PCINT1 = 1;  m_PCINT1 = 2;  // Pin Change Mask 0
+  PCINT2 = 2;  m_PCINT2 = 4;  // Pin Change Mask 0
+  PCINT3 = 3;  m_PCINT3 = 8;  // Pin Change Mask 0
+  PCINT4 = 4;  m_PCINT4 = 16;  // Pin Change Mask 0
+  PCINT5 = 5;  m_PCINT5 = 32;  // Pin Change Mask 0
+  PCINT6 = 6;  m_PCINT6 = 64;  // Pin Change Mask 0
+  PCINT7 = 7;  m_PCINT7 = 128;  // Pin Change Mask 0
 
 type
   TTIMSK0set = bitpacked set of (e_TOIE0, e_OCIE0A, e_OCIE0B);
@@ -1045,6 +1192,15 @@ var
   ADC: word absolute $78;  // ADC Data Register  Bytes
   ADCL: byte absolute $78;
   ADCH: byte absolute $79;
+const
+  ADC0 = 0;  m_ADC0 = 1;  // ADC Data Bits
+  ADC1 = 1;  m_ADC1 = 2;  // ADC Data Bits
+  ADC2 = 2;  m_ADC2 = 4;  // ADC Data Bits
+  ADC3 = 3;  m_ADC3 = 8;  // ADC Data Bits
+  ADC4 = 4;  m_ADC4 = 16;  // ADC Data Bits
+  ADC5 = 5;  m_ADC5 = 32;  // ADC Data Bits
+  ADC6 = 6;  m_ADC6 = 64;  // ADC Data Bits
+  ADC7 = 7;  m_ADC7 = 128;  // ADC Data Bits
 
 type
   TADCSRAset = bitpacked set of (e_ADPS0, e_ADPS1, e_ADPS2, e_ADIE, e_ADIF, e_ADATE, e_ADSC, e_ADEN);
@@ -1073,13 +1229,13 @@ const
   ADEN = 7;  m_ADEN = 128;  // ADC Enable
 
 type
-  TADCSRBset = bitpacked set of (e_ADTS0, e_ADTS1, e_ADTS2, e_ADTS3=4, e_MUX5, e_ACME, e_ADHSM);
+  TADCSRBset = bitpacked set of (e_ADTS0, e_ADTS1, e_ADTS2, e_ADTS3, e_MUX5=5, e_ACME, e_ADHSM);
   TADCSRBrec = bitpacked record
     ADTS0,
     ADTS1,
     ADTS2,
-    ReservedBit3,
     ADTS3,
+    ReservedBit4,
     MUX5,
     ACME,
     ADHSM: TBitField;
@@ -1092,7 +1248,7 @@ const
   ADTS0 = 0;  m_ADTS0 = 1;  // ADC Auto Trigger Sources
   ADTS1 = 1;  m_ADTS1 = 2;  // ADC Auto Trigger Sources
   ADTS2 = 2;  m_ADTS2 = 4;  // ADC Auto Trigger Sources
-  ADTS3 = 4;  m_ADTS3 = 16;  // ADC Auto Trigger Sources
+  ADTS3 = 3;  m_ADTS3 = 8;  // ADC Auto Trigger Sources
   MUX5 = 5;  m_MUX5 = 32;  // Analog Channel and Gain Selection Bits
   ACME = 6;  m_ACME = 64;  // Analog Comparator Multiplexer Enable
   ADHSM = 7;  m_ADHSM = 128;  // ADC High Speed Mode
@@ -1136,7 +1292,7 @@ type
     ReservedBit7: TBitField;
   end;
 var
-  DIDR2: byte absolute $7D;  // Digital Input Disable Register 2
+  DIDR2: byte absolute $7D;  // Digital Input Disable Register 1
   DIDR2set: TDIDR2set absolute $7D;
   DIDR2rec: TDIDR2rec absolute $7D;
 const
@@ -1160,7 +1316,7 @@ type
     ADC7D: TBitField;
   end;
 var
-  DIDR0: byte absolute $7E;  // Digital Input Disable Register 0
+  DIDR0: byte absolute $7E;  // Digital Input Disable Register 1
   DIDR0set: TDIDR0set absolute $7E;
   DIDR0rec: TDIDR0rec absolute $7E;
 const
@@ -1264,21 +1420,74 @@ const
   FOC1A = 7;  m_FOC1A = 128;  // Force Output Compare 1A
 
 var
-  TCNT1: word absolute $84;  // Timer/Counter1  Bytes
+  TCNT1: word absolute $84;  // Timer/Counter1 Bytes
   TCNT1L: byte absolute $84;
   TCNT1H: byte absolute $85;
-  ICR1: word absolute $86;  // Timer/Counter1 Input Capture Register  Bytes
+const
+  TCNT10 = 0;  m_TCNT10 = 1;  // Timer/Counter1 bits
+  TCNT11 = 1;  m_TCNT11 = 2;  // Timer/Counter1 bits
+  TCNT12 = 2;  m_TCNT12 = 4;  // Timer/Counter1 bits
+  TCNT13 = 3;  m_TCNT13 = 8;  // Timer/Counter1 bits
+  TCNT14 = 4;  m_TCNT14 = 16;  // Timer/Counter1 bits
+  TCNT15 = 5;  m_TCNT15 = 32;  // Timer/Counter1 bits
+  TCNT16 = 6;  m_TCNT16 = 64;  // Timer/Counter1 bits
+  TCNT17 = 7;  m_TCNT17 = 128;  // Timer/Counter1 bits
+
+var
+  ICR1: word absolute $86;  // Timer/Counter1 Input Capture Register Bytes
   ICR1L: byte absolute $86;
   ICR1H: byte absolute $87;
-  OCR1A: word absolute $88;  // Timer/Counter1 Output Compare Register A  Bytes
+const
+  ICR10 = 0;  m_ICR10 = 1;  // Timer/Counter1 Input Capture bits
+  ICR11 = 1;  m_ICR11 = 2;  // Timer/Counter1 Input Capture bits
+  ICR12 = 2;  m_ICR12 = 4;  // Timer/Counter1 Input Capture bits
+  ICR13 = 3;  m_ICR13 = 8;  // Timer/Counter1 Input Capture bits
+  ICR14 = 4;  m_ICR14 = 16;  // Timer/Counter1 Input Capture bits
+  ICR15 = 5;  m_ICR15 = 32;  // Timer/Counter1 Input Capture bits
+  ICR16 = 6;  m_ICR16 = 64;  // Timer/Counter1 Input Capture bits
+  ICR17 = 7;  m_ICR17 = 128;  // Timer/Counter1 Input Capture bits
+
+var
+  OCR1A: word absolute $88;  // Timer/Counter1 Output Compare Register A Bytes
   OCR1AL: byte absolute $88;
   OCR1AH: byte absolute $89;
-  OCR1B: word absolute $8A;  // Timer/Counter1 Output Compare Register B  Bytes
+const
+  OCR1A0 = 0;  m_OCR1A0 = 1;  // Timer/Counter1 Output Compare A bits
+  OCR1A1 = 1;  m_OCR1A1 = 2;  // Timer/Counter1 Output Compare A bits
+  OCR1A2 = 2;  m_OCR1A2 = 4;  // Timer/Counter1 Output Compare A bits
+  OCR1A3 = 3;  m_OCR1A3 = 8;  // Timer/Counter1 Output Compare A bits
+  OCR1A4 = 4;  m_OCR1A4 = 16;  // Timer/Counter1 Output Compare A bits
+  OCR1A5 = 5;  m_OCR1A5 = 32;  // Timer/Counter1 Output Compare A bits
+  OCR1A6 = 6;  m_OCR1A6 = 64;  // Timer/Counter1 Output Compare A bits
+  OCR1A7 = 7;  m_OCR1A7 = 128;  // Timer/Counter1 Output Compare A bits
+
+var
+  OCR1B: word absolute $8A;  // Timer/Counter1 Output Compare Register B Bytes
   OCR1BL: byte absolute $8A;
   OCR1BH: byte absolute $8B;
-  OCR1C: word absolute $8C;  // Timer/Counter1 Output Compare Register C  Bytes
+const
+  OCR1B0 = 0;  m_OCR1B0 = 1;  // Timer/Counter1 Output Compare B bits
+  OCR1B1 = 1;  m_OCR1B1 = 2;  // Timer/Counter1 Output Compare B bits
+  OCR1B2 = 2;  m_OCR1B2 = 4;  // Timer/Counter1 Output Compare B bits
+  OCR1B3 = 3;  m_OCR1B3 = 8;  // Timer/Counter1 Output Compare B bits
+  OCR1B4 = 4;  m_OCR1B4 = 16;  // Timer/Counter1 Output Compare B bits
+  OCR1B5 = 5;  m_OCR1B5 = 32;  // Timer/Counter1 Output Compare B bits
+  OCR1B6 = 6;  m_OCR1B6 = 64;  // Timer/Counter1 Output Compare B bits
+  OCR1B7 = 7;  m_OCR1B7 = 128;  // Timer/Counter1 Output Compare B bits
+
+var
+  OCR1C: word absolute $8C;  // Timer/Counter1 Output Compare Register C Bytes
   OCR1CL: byte absolute $8C;
   OCR1CH: byte absolute $8D;
+const
+  OCR1C0 = 0;  m_OCR1C0 = 1;  // Timer/Counter1 Output Compare C bits
+  OCR1C1 = 1;  m_OCR1C1 = 2;  // Timer/Counter1 Output Compare C bits
+  OCR1C2 = 2;  m_OCR1C2 = 4;  // Timer/Counter1 Output Compare C bits
+  OCR1C3 = 3;  m_OCR1C3 = 8;  // Timer/Counter1 Output Compare C bits
+  OCR1C4 = 4;  m_OCR1C4 = 16;  // Timer/Counter1 Output Compare C bits
+  OCR1C5 = 5;  m_OCR1C5 = 32;  // Timer/Counter1 Output Compare C bits
+  OCR1C6 = 6;  m_OCR1C6 = 64;  // Timer/Counter1 Output Compare C bits
+  OCR1C7 = 7;  m_OCR1C7 = 128;  // Timer/Counter1 Output Compare C bits
 
 type
   TTCCR3Aset = bitpacked set of (e_WGM30, e_WGM31, e_COM3C0, e_COM3C1, e_COM3B0, e_COM3B1, e_COM3A0, e_COM3A1);
@@ -1351,21 +1560,76 @@ const
   FOC3A = 7;  m_FOC3A = 128;  // Force Output Compare 3A
 
 var
-  TCNT3: word absolute $94;  // Timer/Counter3  Bytes
+  TCNT3: word absolute $94;  // Timer/Counter3 Bytes
   TCNT3L: byte absolute $94;
   TCNT3H: byte absolute $95;
+const
+  TCNT30 = 0;  m_TCNT30 = 1;  // Timer/Counter3 bits
+  TCNT31 = 1;  m_TCNT31 = 2;  // Timer/Counter3 bits
+  TCNT32 = 2;  m_TCNT32 = 4;  // Timer/Counter3 bits
+  TCNT33 = 3;  m_TCNT33 = 8;  // Timer/Counter3 bits
+  TCNT34 = 4;  m_TCNT34 = 16;  // Timer/Counter3 bits
+  TCNT35 = 5;  m_TCNT35 = 32;  // Timer/Counter3 bits
+  TCNT36 = 6;  m_TCNT36 = 64;  // Timer/Counter3 bits
+  TCNT37 = 7;  m_TCNT37 = 128;  // Timer/Counter3 bits
+
+var
   ICR3: word absolute $96;  // Timer/Counter3 Input Capture Register  Bytes
   ICR3L: byte absolute $96;
   ICR3H: byte absolute $97;
+const
+  ICR30 = 0;  m_ICR30 = 1;  // Timer/Counter3 Input Capture bits
+  ICR31 = 1;  m_ICR31 = 2;  // Timer/Counter3 Input Capture bits
+  ICR32 = 2;  m_ICR32 = 4;  // Timer/Counter3 Input Capture bits
+  ICR33 = 3;  m_ICR33 = 8;  // Timer/Counter3 Input Capture bits
+  ICR34 = 4;  m_ICR34 = 16;  // Timer/Counter3 Input Capture bits
+  ICR35 = 5;  m_ICR35 = 32;  // Timer/Counter3 Input Capture bits
+  ICR36 = 6;  m_ICR36 = 64;  // Timer/Counter3 Input Capture bits
+  ICR37 = 7;  m_ICR37 = 128;  // Timer/Counter3 Input Capture bits
+
+var
   OCR3A: word absolute $98;  // Timer/Counter3 Output Compare Register A  Bytes
   OCR3AL: byte absolute $98;
   OCR3AH: byte absolute $99;
-  OCR3B: word absolute $9A;  // Timer/Counter3 Output Compare Register B  Bytes
+const
+  OCR3A0 = 0;  m_OCR3A0 = 1;  // Timer/Counter3 Output Compare A bits
+  OCR3A1 = 1;  m_OCR3A1 = 2;  // Timer/Counter3 Output Compare A bits
+  OCR3A2 = 2;  m_OCR3A2 = 4;  // Timer/Counter3 Output Compare A bits
+  OCR3A3 = 3;  m_OCR3A3 = 8;  // Timer/Counter3 Output Compare A bits
+  OCR3A4 = 4;  m_OCR3A4 = 16;  // Timer/Counter3 Output Compare A bits
+  OCR3A5 = 5;  m_OCR3A5 = 32;  // Timer/Counter3 Output Compare A bits
+  OCR3A6 = 6;  m_OCR3A6 = 64;  // Timer/Counter3 Output Compare A bits
+  OCR3A7 = 7;  m_OCR3A7 = 128;  // Timer/Counter3 Output Compare A bits
+
+var
+  OCR3B: word absolute $9A;  // Timer/Counter3 Output Compare Register B Bytes
   OCR3BL: byte absolute $9A;
   OCR3BH: byte absolute $9B;
-  OCR3C: word absolute $9C;  // Timer/Counter3 Output Compare Register B  Bytes
+const
+  OCR3B0 = 0;  m_OCR3B0 = 1;  // Timer/Counter3 Output Compare B bits
+  OCR3B1 = 1;  m_OCR3B1 = 2;  // Timer/Counter3 Output Compare B bits
+  OCR3B2 = 2;  m_OCR3B2 = 4;  // Timer/Counter3 Output Compare B bits
+  OCR3B3 = 3;  m_OCR3B3 = 8;  // Timer/Counter3 Output Compare B bits
+  OCR3B4 = 4;  m_OCR3B4 = 16;  // Timer/Counter3 Output Compare B bits
+  OCR3B5 = 5;  m_OCR3B5 = 32;  // Timer/Counter3 Output Compare B bits
+  OCR3B6 = 6;  m_OCR3B6 = 64;  // Timer/Counter3 Output Compare B bits
+  OCR3B7 = 7;  m_OCR3B7 = 128;  // Timer/Counter3 Output Compare B bits
+
+var
+  OCR3C: word absolute $9C;  // Timer/Counter3 Output Compare Register C Bytes
   OCR3CL: byte absolute $9C;
   OCR3CH: byte absolute $9D;
+const
+  OCR3C0 = 0;  m_OCR3C0 = 1;  // Timer/Counter3 Output Compare C bits
+  OCR3C1 = 1;  m_OCR3C1 = 2;  // Timer/Counter3 Output Compare C bits
+  OCR3C2 = 2;  m_OCR3C2 = 4;  // Timer/Counter3 Output Compare C bits
+  OCR3C3 = 3;  m_OCR3C3 = 8;  // Timer/Counter3 Output Compare C bits
+  OCR3C4 = 4;  m_OCR3C4 = 16;  // Timer/Counter3 Output Compare C bits
+  OCR3C5 = 5;  m_OCR3C5 = 32;  // Timer/Counter3 Output Compare C bits
+  OCR3C6 = 6;  m_OCR3C6 = 64;  // Timer/Counter3 Output Compare C bits
+  OCR3C7 = 7;  m_OCR3C7 = 128;  // Timer/Counter3 Output Compare C bits
+
+var
   TWBR: byte absolute $B8;  // TWI Bit Rate register
 
 type
@@ -1472,8 +1736,33 @@ const
   TWAM5 = 6;  m_TWAM5 = 64;
   TWAM6 = 7;  m_TWAM6 = 128;
 
+type
+  TTCNT4set = bitpacked set of (e_TC40, e_TC41, e_TC42, e_TC43, e_TC44, e_TC45, e_TC46, e_TC47);
+  TTCNT4rec = bitpacked record
+    TC40,
+    TC41,
+    TC42,
+    TC43,
+    TC44,
+    TC45,
+    TC46,
+    TC47: TBitField;
+  end;
 var
   TCNT4: byte absolute $BE;  // Timer/Counter4 Low Bytes
+  TCNT4set: TTCNT4set absolute $BE;
+  TCNT4rec: TTCNT4rec absolute $BE;
+const
+  TC40 = 0;  m_TC40 = 1;  // Timer/Counter4 bits
+  TC41 = 1;  m_TC41 = 2;  // Timer/Counter4 bits
+  TC42 = 2;  m_TC42 = 4;  // Timer/Counter4 bits
+  TC43 = 3;  m_TC43 = 8;  // Timer/Counter4 bits
+  TC44 = 4;  m_TC44 = 16;  // Timer/Counter4 bits
+  TC45 = 5;  m_TC45 = 32;  // Timer/Counter4 bits
+  TC46 = 6;  m_TC46 = 64;  // Timer/Counter4 bits
+  TC47 = 7;  m_TC47 = 128;  // Timer/Counter4 bits
+
+var
   TC4H: byte absolute $BF;  // Timer/Counter4
 
 type
@@ -1779,11 +2068,136 @@ var
   UBRR1: word absolute $CC;  // USART Baud Rate Register  Bytes
   UBRR1L: byte absolute $CC;
   UBRR1H: byte absolute $CD;
+
+type
+  TUDR1set = bitpacked set of (e_UDR10, e_UDR11, e_UDR12, e_UDR13, e_UDR14, e_UDR15, e_UDR16, e_UDR17);
+  TUDR1rec = bitpacked record
+    UDR10,
+    UDR11,
+    UDR12,
+    UDR13,
+    UDR14,
+    UDR15,
+    UDR16,
+    UDR17: TBitField;
+  end;
+var
   UDR1: byte absolute $CE;  // USART I/O Data Register
+  UDR1set: TUDR1set absolute $CE;
+  UDR1rec: TUDR1rec absolute $CE;
+const
+  UDR10 = 0;  m_UDR10 = 1;  // USART I/O Data bits
+  UDR11 = 1;  m_UDR11 = 2;  // USART I/O Data bits
+  UDR12 = 2;  m_UDR12 = 4;  // USART I/O Data bits
+  UDR13 = 3;  m_UDR13 = 8;  // USART I/O Data bits
+  UDR14 = 4;  m_UDR14 = 16;  // USART I/O Data bits
+  UDR15 = 5;  m_UDR15 = 32;  // USART I/O Data bits
+  UDR16 = 6;  m_UDR16 = 64;  // USART I/O Data bits
+  UDR17 = 7;  m_UDR17 = 128;  // USART I/O Data bits
+
+type
+  TOCR4Aset = bitpacked set of (e_OCR4A0, e_OCR4A1, e_OCR4A2, e_OCR4A3, e_OCR4A4, e_OCR4A5, e_OCR4A6, e_OCR4A7);
+  TOCR4Arec = bitpacked record
+    OCR4A0,
+    OCR4A1,
+    OCR4A2,
+    OCR4A3,
+    OCR4A4,
+    OCR4A5,
+    OCR4A6,
+    OCR4A7: TBitField;
+  end;
+var
   OCR4A: byte absolute $CF;  // Timer/Counter4 Output Compare Register A
+  OCR4Aset: TOCR4Aset absolute $CF;
+  OCR4Arec: TOCR4Arec absolute $CF;
+const
+  OCR4A0 = 0;  m_OCR4A0 = 1;  // Timer/Counter4 Output Compare A bits
+  OCR4A1 = 1;  m_OCR4A1 = 2;  // Timer/Counter4 Output Compare A bits
+  OCR4A2 = 2;  m_OCR4A2 = 4;  // Timer/Counter4 Output Compare A bits
+  OCR4A3 = 3;  m_OCR4A3 = 8;  // Timer/Counter4 Output Compare A bits
+  OCR4A4 = 4;  m_OCR4A4 = 16;  // Timer/Counter4 Output Compare A bits
+  OCR4A5 = 5;  m_OCR4A5 = 32;  // Timer/Counter4 Output Compare A bits
+  OCR4A6 = 6;  m_OCR4A6 = 64;  // Timer/Counter4 Output Compare A bits
+  OCR4A7 = 7;  m_OCR4A7 = 128;  // Timer/Counter4 Output Compare A bits
+
+type
+  TOCR4Bset = bitpacked set of (e_OCR4B0, e_OCR4B1, e_OCR4B2, e_OCR4B3, e_OCR4B4, e_OCR4B5, e_OCR4B6, e_OCR4B7);
+  TOCR4Brec = bitpacked record
+    OCR4B0,
+    OCR4B1,
+    OCR4B2,
+    OCR4B3,
+    OCR4B4,
+    OCR4B5,
+    OCR4B6,
+    OCR4B7: TBitField;
+  end;
+var
   OCR4B: byte absolute $D0;  // Timer/Counter4 Output Compare Register B
+  OCR4Bset: TOCR4Bset absolute $D0;
+  OCR4Brec: TOCR4Brec absolute $D0;
+const
+  OCR4B0 = 0;  m_OCR4B0 = 1;  // Timer/Counter4 Output Compare B bits
+  OCR4B1 = 1;  m_OCR4B1 = 2;  // Timer/Counter4 Output Compare B bits
+  OCR4B2 = 2;  m_OCR4B2 = 4;  // Timer/Counter4 Output Compare B bits
+  OCR4B3 = 3;  m_OCR4B3 = 8;  // Timer/Counter4 Output Compare B bits
+  OCR4B4 = 4;  m_OCR4B4 = 16;  // Timer/Counter4 Output Compare B bits
+  OCR4B5 = 5;  m_OCR4B5 = 32;  // Timer/Counter4 Output Compare B bits
+  OCR4B6 = 6;  m_OCR4B6 = 64;  // Timer/Counter4 Output Compare B bits
+  OCR4B7 = 7;  m_OCR4B7 = 128;  // Timer/Counter4 Output Compare B bits
+
+type
+  TOCR4Cset = bitpacked set of (e_OCR4C0, e_OCR4C1, e_OCR4C2, e_OCR4C3, e_OCR4C4, e_OCR4C5, e_OCR4C6, e_OCR4C7);
+  TOCR4Crec = bitpacked record
+    OCR4C0,
+    OCR4C1,
+    OCR4C2,
+    OCR4C3,
+    OCR4C4,
+    OCR4C5,
+    OCR4C6,
+    OCR4C7: TBitField;
+  end;
+var
   OCR4C: byte absolute $D1;  // Timer/Counter4 Output Compare Register C
+  OCR4Cset: TOCR4Cset absolute $D1;
+  OCR4Crec: TOCR4Crec absolute $D1;
+const
+  OCR4C0 = 0;  m_OCR4C0 = 1;  // Timer/Counter4 Output Compare C bits
+  OCR4C1 = 1;  m_OCR4C1 = 2;  // Timer/Counter4 Output Compare C bits
+  OCR4C2 = 2;  m_OCR4C2 = 4;  // Timer/Counter4 Output Compare C bits
+  OCR4C3 = 3;  m_OCR4C3 = 8;  // Timer/Counter4 Output Compare C bits
+  OCR4C4 = 4;  m_OCR4C4 = 16;  // Timer/Counter4 Output Compare C bits
+  OCR4C5 = 5;  m_OCR4C5 = 32;  // Timer/Counter4 Output Compare C bits
+  OCR4C6 = 6;  m_OCR4C6 = 64;  // Timer/Counter4 Output Compare C bits
+  OCR4C7 = 7;  m_OCR4C7 = 128;  // Timer/Counter4 Output Compare C bits
+
+type
+  TOCR4Dset = bitpacked set of (e_OCR4D0, e_OCR4D1, e_OCR4D2, e_OCR4D3, e_OCR4D4, e_OCR4D5, e_OCR4D6, e_OCR4D7);
+  TOCR4Drec = bitpacked record
+    OCR4D0,
+    OCR4D1,
+    OCR4D2,
+    OCR4D3,
+    OCR4D4,
+    OCR4D5,
+    OCR4D6,
+    OCR4D7: TBitField;
+  end;
+var
   OCR4D: byte absolute $D2;  // Timer/Counter4 Output Compare Register D
+  OCR4Dset: TOCR4Dset absolute $D2;
+  OCR4Drec: TOCR4Drec absolute $D2;
+const
+  OCR4D0 = 0;  m_OCR4D0 = 1;  // Timer/Counter4 Output Compare D bits
+  OCR4D1 = 1;  m_OCR4D1 = 2;  // Timer/Counter4 Output Compare D bits
+  OCR4D2 = 2;  m_OCR4D2 = 4;  // Timer/Counter4 Output Compare D bits
+  OCR4D3 = 3;  m_OCR4D3 = 8;  // Timer/Counter4 Output Compare D bits
+  OCR4D4 = 4;  m_OCR4D4 = 16;  // Timer/Counter4 Output Compare D bits
+  OCR4D5 = 5;  m_OCR4D5 = 32;  // Timer/Counter4 Output Compare D bits
+  OCR4D6 = 6;  m_OCR4D6 = 64;  // Timer/Counter4 Output Compare D bits
+  OCR4D7 = 7;  m_OCR4D7 = 128;  // Timer/Counter4 Output Compare D bits
 
 type
   TDT4set = bitpacked set of (e_DT4L0, e_DT4L1, e_DT4L2, e_DT4L3, e_DT4L4, e_DT4L5, e_DT4L6, e_DT4L7);
@@ -1991,6 +2405,15 @@ var
   UDFNUM: word absolute $E4;
   UDFNUML: byte absolute $E4;
   UDFNUMH: byte absolute $E5;
+const
+  FNUM0 = 0;  m_FNUM0 = 1;  // Frame number value
+  FNUM1 = 1;  m_FNUM1 = 2;  // Frame number value
+  FNUM2 = 2;  m_FNUM2 = 4;  // Frame number value
+  FNUM3 = 3;  m_FNUM3 = 8;  // Frame number value
+  FNUM4 = 4;  m_FNUM4 = 16;  // Frame number value
+  FNUM5 = 5;  m_FNUM5 = 32;  // Frame number value
+  FNUM6 = 6;  m_FNUM6 = 64;  // Frame number value
+  FNUM7 = 7;  m_FNUM7 = 128;  // Frame number value
 
 type
   TUDMFNset = bitpacked set of (e_FNCERR=4);
@@ -2037,8 +2460,26 @@ const
   NAKINI = 6;  m_NAKINI = 64;
   FIFOCON = 7;  m_FIFOCON = 128;
 
+type
+  TUENUMset = bitpacked set of (e_UENUM0, e_UENUM1, e_UENUM2);
+  TUENUMrec = bitpacked record
+    UENUM0,
+    UENUM1,
+    UENUM2,
+    ReservedBit3,
+    ReservedBit4,
+    ReservedBit5,
+    ReservedBit6,
+    ReservedBit7: TBitField;
+  end;
 var
   UENUM: byte absolute $E9;
+  UENUMset: TUENUMset absolute $E9;
+  UENUMrec: TUENUMrec absolute $E9;
+const
+  UENUM0 = 0;  m_UENUM0 = 1;
+  UENUM1 = 1;  m_UENUM1 = 2;
+  UENUM2 = 2;  m_UENUM2 = 4;
 
 type
   TUERSTset = bitpacked set of (e_EPRST0, e_EPRST1, e_EPRST2, e_EPRST3, e_EPRST4, e_EPRST5, e_EPRST6);
@@ -2231,9 +2672,53 @@ const
 
 var
   UEBCLX: byte absolute $F2;
+
+type
+  TUEBCHXset = bitpacked set of (e_BYCT8, e_BYCT9, e_BYCT10);
+  TUEBCHXrec = bitpacked record
+    BYCT8,
+    BYCT9,
+    BYCT10,
+    ReservedBit3,
+    ReservedBit4,
+    ReservedBit5,
+    ReservedBit6,
+    ReservedBit7: TBitField;
+  end;
+var
   UEBCHX: byte absolute $F3;
+  UEBCHXset: TUEBCHXset absolute $F3;
+  UEBCHXrec: TUEBCHXrec absolute $F3;
+const
+  BYCT8 = 0;  m_BYCT8 = 1;  // Byte count bits
+  BYCT9 = 1;  m_BYCT9 = 2;  // Byte count bits
+  BYCT10 = 2;  m_BYCT10 = 4;  // Byte count bits
+
+type
+  TUEINTset = bitpacked set of (e_EPINT0, e_EPINT1, e_EPINT2, e_EPINT3, e_EPINT4, e_EPINT5, e_EPINT6);
+  TUEINTrec = bitpacked record
+    EPINT0,
+    EPINT1,
+    EPINT2,
+    EPINT3,
+    EPINT4,
+    EPINT5,
+    EPINT6,
+    ReservedBit7: TBitField;
+  end;
+var
   UEINT: byte absolute $F4;
-  // typedefs = 89
+  UEINTset: TUEINTset absolute $F4;
+  UEINTrec: TUEINTrec absolute $F4;
+const
+  EPINT0 = 0;  m_EPINT0 = 1;  // Endpoint interrupt bits
+  EPINT1 = 1;  m_EPINT1 = 2;  // Endpoint interrupt bits
+  EPINT2 = 2;  m_EPINT2 = 4;  // Endpoint interrupt bits
+  EPINT3 = 3;  m_EPINT3 = 8;  // Endpoint interrupt bits
+  EPINT4 = 4;  m_EPINT4 = 16;  // Endpoint interrupt bits
+  EPINT5 = 5;  m_EPINT5 = 32;  // Endpoint interrupt bits
+  EPINT6 = 6;  m_EPINT6 = 64;  // Endpoint interrupt bits
+  // typedefs = 104
 
 implementation
 

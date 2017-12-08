@@ -1,4 +1,4 @@
-unit ATmega328P;
+unit ATmega168PB;
 
 {$goto on}
 interface
@@ -95,6 +95,32 @@ const
   PD5 = 5;  m_PD5 = 32;
   PD6 = 6;  m_PD6 = 64;
   PD7 = 7;  m_PD7 = 128;
+
+var
+  PINE: byte absolute $2C;  // Port E Input Pins
+  DDRE: byte absolute $2D;  // Port E Data Direction Register
+
+type
+  TPORTEset = bitpacked set of (e_PE0, e_PE1, e_PE2, e_PE3);
+  TPORTErec = bitpacked record
+    PE0,
+    PE1,
+    PE2,
+    PE3,
+    ReservedBit4,
+    ReservedBit5,
+    ReservedBit6,
+    ReservedBit7: TBitField;
+  end;
+var
+  PORTE: byte absolute $2E;  // Port E Data Register
+  PORTEset: TPORTEset absolute $2E;
+  PORTErec: TPORTErec absolute $2E;
+const
+  PE0 = 0;  m_PE0 = 1;
+  PE1 = 1;  m_PE1 = 2;
+  PE2 = 2;  m_PE2 = 4;
+  PE3 = 3;  m_PE3 = 8;
 
 type
   TTIFR0set = bitpacked set of (e_TOV0, e_OCF0A, e_OCF0B);
@@ -379,6 +405,25 @@ const
 
 var
   SPDR: byte absolute $4E;  // SPI Data Register
+
+type
+  TACSRBset = bitpacked set of (e_ACOE);
+  TACSRBrec = bitpacked record
+    ACOE,
+    ReservedBit1,
+    ReservedBit2,
+    ReservedBit3,
+    ReservedBit4,
+    ReservedBit5,
+    ReservedBit6,
+    ReservedBit7: TBitField;
+  end;
+var
+  ACSRB: byte absolute $4F;  // Analog Comparator Status Register B
+  ACSRBset: TACSRBset absolute $4F;
+  ACSRBrec: TACSRBrec absolute $4F;
+const
+  ACOE = 0;  m_ACOE = 1;  // Analog Comparator Output Enable
 
 type
   TACSRset = bitpacked set of (e_ACIS0, e_ACIS1, e_ACIC, e_ACIE, e_ACI, e_ACO, e_ACBG, e_ACD);
@@ -1233,12 +1278,42 @@ const
   UMSEL00 = 6;  m_UMSEL00 = 64;  // USART Mode Select
   UMSEL01 = 7;  m_UMSEL01 = 128;  // USART Mode Select
 
+type
+  TUCSR0Dset = bitpacked set of (e_SFDE=5, e_RXS, e_RXSIE);
+  TUCSR0Drec = bitpacked record
+    ReservedBit0,
+    ReservedBit1,
+    ReservedBit2,
+    ReservedBit3,
+    ReservedBit4,
+    SFDE,
+    RXS,
+    RXSIE: TBitField;
+  end;
+var
+  UCSR0D: byte absolute $C3;  // USART Control and Status Register D
+  UCSR0Dset: TUCSR0Dset absolute $C3;
+  UCSR0Drec: TUCSR0Drec absolute $C3;
+const
+  SFDE = 5;  m_SFDE = 32;  // Start Frame Detection Enable
+  RXS = 6;  m_RXS = 64;  // RX Start
+  RXSIE = 7;  m_RXSIE = 128;  // RX Start Interrupt Enable
+
 var
   UBRR0: word absolute $C4;  // USART Baud Rate Register Bytes
   UBRR0L: byte absolute $C4;
   UBRR0H: byte absolute $C5;
   UDR0: byte absolute $C6;  // USART I/O Data Register
-  // typedefs = 49
+  DEVID0: byte absolute $F0;
+  DEVID1: byte absolute $F1;
+  DEVID2: byte absolute $F2;
+  DEVID3: byte absolute $F3;
+  DEVID4: byte absolute $F4;
+  DEVID5: byte absolute $F5;
+  DEVID6: byte absolute $F6;
+  DEVID7: byte absolute $F7;
+  DEVID8: byte absolute $F8;
+  // typedefs = 52
 
 implementation
 
@@ -1247,11 +1322,11 @@ implementation
 procedure INT0_ISR; external name 'INT0_ISR'; // Interrupt 1 External Interrupt Request 0
 procedure INT1_ISR; external name 'INT1_ISR'; // Interrupt 2 External Interrupt Request 1
 procedure PCINT0_ISR; external name 'PCINT0_ISR'; // Interrupt 3 Pin Change Interrupt Request 0
-procedure PCINT1_ISR; external name 'PCINT1_ISR'; // Interrupt 4 Pin Change Interrupt Request 1
-procedure PCINT2_ISR; external name 'PCINT2_ISR'; // Interrupt 5 Pin Change Interrupt Request 2
+procedure PCINT1_ISR; external name 'PCINT1_ISR'; // Interrupt 4 Pin Change Interrupt Request 0
+procedure PCINT2_ISR; external name 'PCINT2_ISR'; // Interrupt 5 Pin Change Interrupt Request 1
 procedure WDT_ISR; external name 'WDT_ISR'; // Interrupt 6 Watchdog Time-out Interrupt
 procedure TIMER2_COMPA_ISR; external name 'TIMER2_COMPA_ISR'; // Interrupt 7 Timer/Counter2 Compare Match A
-procedure TIMER2_COMPB_ISR; external name 'TIMER2_COMPB_ISR'; // Interrupt 8 Timer/Counter2 Compare Match B
+procedure TIMER2_COMPB_ISR; external name 'TIMER2_COMPB_ISR'; // Interrupt 8 Timer/Counter2 Compare Match A
 procedure TIMER2_OVF_ISR; external name 'TIMER2_OVF_ISR'; // Interrupt 9 Timer/Counter2 Overflow
 procedure TIMER1_CAPT_ISR; external name 'TIMER1_CAPT_ISR'; // Interrupt 10 Timer/Counter1 Capture Event
 procedure TIMER1_COMPA_ISR; external name 'TIMER1_COMPA_ISR'; // Interrupt 11 Timer/Counter1 Compare Match A
@@ -1269,6 +1344,7 @@ procedure EE_READY_ISR; external name 'EE_READY_ISR'; // Interrupt 22 EEPROM Rea
 procedure ANALOG_COMP_ISR; external name 'ANALOG_COMP_ISR'; // Interrupt 23 Analog Comparator
 procedure TWI_ISR; external name 'TWI_ISR'; // Interrupt 24 Two-wire Serial Interface
 procedure SPM_Ready_ISR; external name 'SPM_Ready_ISR'; // Interrupt 25 Store Program Memory Read
+procedure USART_START_ISR; external name 'USART_START_ISR'; // Interrupt 26 USART Start Edge Interrupt
 
 procedure _FPC_start; assembler; nostackframe;
 label
@@ -1303,6 +1379,7 @@ asm
   jmp ANALOG_COMP_ISR
   jmp TWI_ISR
   jmp SPM_Ready_ISR
+  jmp USART_START_ISR
 
   {$i start.inc}
 
@@ -1331,6 +1408,7 @@ asm
   .weak ANALOG_COMP_ISR
   .weak TWI_ISR
   .weak SPM_Ready_ISR
+  .weak USART_START_ISR
 
   .set INT0_ISR, Default_IRQ_handler
   .set INT1_ISR, Default_IRQ_handler
@@ -1357,6 +1435,7 @@ asm
   .set ANALOG_COMP_ISR, Default_IRQ_handler
   .set TWI_ISR, Default_IRQ_handler
   .set SPM_Ready_ISR, Default_IRQ_handler
+  .set USART_START_ISR, Default_IRQ_handler
 end;
 
 end.

@@ -1,4 +1,4 @@
-unit ATmega328P;
+unit ATtiny48;
 
 {$goto on}
 interface
@@ -42,7 +42,7 @@ var
   DDRC: byte absolute $27;  // Port C Data Direction Register
 
 type
-  TPORTCset = bitpacked set of (e_PC0, e_PC1, e_PC2, e_PC3, e_PC4, e_PC5, e_PC6);
+  TPORTCset = bitpacked set of (e_PC0, e_PC1, e_PC2, e_PC3, e_PC4, e_PC5, e_PC6, e_PC7);
   TPORTCrec = bitpacked record
     PC0,
     PC1,
@@ -51,7 +51,7 @@ type
     PC4,
     PC5,
     PC6,
-    ReservedBit7: TBitField;
+    PC7: TBitField;
   end;
 var
   PORTC: byte absolute $28;  // Port C Data Register
@@ -65,6 +65,7 @@ const
   PC4 = 4;  m_PC4 = 16;
   PC5 = 5;  m_PC5 = 32;
   PC6 = 6;  m_PC6 = 64;
+  PC7 = 7;  m_PC7 = 128;
 
 var
   PIND: byte absolute $29;  // Port D Input Pins
@@ -95,6 +96,58 @@ const
   PD5 = 5;  m_PD5 = 32;
   PD6 = 6;  m_PD6 = 64;
   PD7 = 7;  m_PD7 = 128;
+
+var
+  PINA: byte absolute $2C;  // Port A Input Pins
+  DDRA: byte absolute $2D;  // Port A Data Direction Register
+
+type
+  TPORTAset = bitpacked set of (e_PA0, e_PA1, e_PA2, e_PA3);
+  TPORTArec = bitpacked record
+    PA0,
+    PA1,
+    PA2,
+    PA3,
+    ReservedBit4,
+    ReservedBit5,
+    ReservedBit6,
+    ReservedBit7: TBitField;
+  end;
+var
+  PORTA: byte absolute $2E;  // Port A Data Register
+  PORTAset: TPORTAset absolute $2E;
+  PORTArec: TPORTArec absolute $2E;
+const
+  PA0 = 0;  m_PA0 = 1;
+  PA1 = 1;  m_PA1 = 2;
+  PA2 = 2;  m_PA2 = 4;
+  PA3 = 3;  m_PA3 = 8;
+
+type
+  TPORTCRset = bitpacked set of (e_PUDA, e_PUDB, e_PUDC, e_PUDD, e_BBMA, e_BBMB, e_BBMC, e_BBMD);
+  TPORTCRrec = bitpacked record
+    PUDA,
+    PUDB,
+    PUDC,
+    PUDD,
+    BBMA,
+    BBMB,
+    BBMC,
+    BBMD: TBitField;
+  end;
+var
+  PORTCR: byte absolute $32;  // Port Configuration Register
+  PORTCRset: TPORTCRset absolute $32;
+  PORTCRrec: TPORTCRrec absolute $32;
+const
+  PUDA = 0;  m_PUDA = 1;
+  PUDB = 1;  m_PUDB = 2;
+  PUDC = 2;  m_PUDC = 4;
+  PUDD = 3;  m_PUDD = 8;
+  BBMA = 4;  m_BBMA = 16;
+  BBMB = 5;  m_BBMB = 32;
+  BBMC = 6;  m_BBMC = 64;
+  BBMD = 7;  m_BBMD = 128;
 
 type
   TTIFR0set = bitpacked set of (e_TOV0, e_OCF0A, e_OCF0B);
@@ -140,33 +193,12 @@ const
   ICF1 = 5;  m_ICF1 = 32;  // Input Capture Flag 1
 
 type
-  TTIFR2set = bitpacked set of (e_TOV2, e_OCF2A, e_OCF2B);
-  TTIFR2rec = bitpacked record
-    TOV2,
-    OCF2A,
-    OCF2B,
-    ReservedBit3,
-    ReservedBit4,
-    ReservedBit5,
-    ReservedBit6,
-    ReservedBit7: TBitField;
-  end;
-var
-  TIFR2: byte absolute $37;  // Timer/Counter Interrupt Flag Register
-  TIFR2set: TTIFR2set absolute $37;
-  TIFR2rec: TTIFR2rec absolute $37;
-const
-  TOV2 = 0;  m_TOV2 = 1;  // Timer/Counter2 Overflow Flag
-  OCF2A = 1;  m_OCF2A = 2;  // Output Compare Flag 2A
-  OCF2B = 2;  m_OCF2B = 4;  // Output Compare Flag 2B
-
-type
-  TPCIFRset = bitpacked set of (e_PCIF0, e_PCIF1, e_PCIF2);
+  TPCIFRset = bitpacked set of (e_PCIF0, e_PCIF1, e_PCIF2, e_PCIF3);
   TPCIFRrec = bitpacked record
     PCIF0,
     PCIF1,
     PCIF2,
-    ReservedBit3,
+    PCIF3,
     ReservedBit4,
     ReservedBit5,
     ReservedBit6,
@@ -180,6 +212,7 @@ const
   PCIF0 = 0;  m_PCIF0 = 1;  // Pin Change Interrupt Flags
   PCIF1 = 1;  m_PCIF1 = 2;  // Pin Change Interrupt Flags
   PCIF2 = 2;  m_PCIF2 = 4;  // Pin Change Interrupt Flags
+  PCIF3 = 3;  m_PCIF3 = 8;  // Pin Change Interrupt Flags
 
 type
   TEIFRset = bitpacked set of (e_INTF0, e_INTF1);
@@ -250,15 +283,13 @@ const
 
 var
   EEDR: byte absolute $40;  // EEPROM Data Register
-  EEAR: word absolute $41;  // EEPROM Address Register  Bytes
-  EEARL: byte absolute $41;
-  EEARH: byte absolute $42;
+  EEARL: byte absolute $41;  // EEPROM Address Register Low Byte
 
 type
-  TGTCCRset = bitpacked set of (e_PSRSYNC, e_PSRASY, e_TSM=7);
+  TGTCCRset = bitpacked set of (e_PSRSYNC, e_TSM=7);
   TGTCCRrec = bitpacked record
     PSRSYNC,
-    PSRASY,
+    ReservedBit1,
     ReservedBit2,
     ReservedBit3,
     ReservedBit4,
@@ -272,56 +303,29 @@ var
   GTCCRrec: TGTCCRrec absolute $43;
 const
   PSRSYNC = 0;  m_PSRSYNC = 1;  // Prescaler Reset Timer/Counter1 and Timer/Counter0
-  PSRASY = 1;  m_PSRASY = 2;  // Prescaler Reset Timer/Counter2
   TSM = 7;  m_TSM = 128;  // Timer/Counter Synchronization Mode
 
 type
-  TTCCR0Aset = bitpacked set of (e_WGM00, e_WGM01, e_COM0B0=4, e_COM0B1, e_COM0A0, e_COM0A1);
+  TTCCR0Aset = bitpacked set of (e_CS00, e_CS01, e_CS02, e_CTC0);
   TTCCR0Arec = bitpacked record
-    WGM00,
-    WGM01,
-    ReservedBit2,
-    ReservedBit3,
-    COM0B0,
-    COM0B1,
-    COM0A0,
-    COM0A1: TBitField;
-  end;
-var
-  TCCR0A: byte absolute $44;  // Timer/Counter  Control Register A
-  TCCR0Aset: TTCCR0Aset absolute $44;
-  TCCR0Arec: TTCCR0Arec absolute $44;
-const
-  WGM00 = 0;  m_WGM00 = 1;  // Waveform Generation Mode
-  WGM01 = 1;  m_WGM01 = 2;  // Waveform Generation Mode
-  COM0B0 = 4;  m_COM0B0 = 16;  // Compare Output Mode, Fast PWm
-  COM0B1 = 5;  m_COM0B1 = 32;  // Compare Output Mode, Fast PWm
-  COM0A0 = 6;  m_COM0A0 = 64;  // Compare Output Mode, Phase Correct PWM Mode
-  COM0A1 = 7;  m_COM0A1 = 128;  // Compare Output Mode, Phase Correct PWM Mode
-
-type
-  TTCCR0Bset = bitpacked set of (e_CS00, e_CS01, e_CS02, e_WGM02, e_FOC0B=6, e_FOC0A);
-  TTCCR0Brec = bitpacked record
     CS00,
     CS01,
     CS02,
-    WGM02,
+    CTC0,
     ReservedBit4,
     ReservedBit5,
-    FOC0B,
-    FOC0A: TBitField;
+    ReservedBit6,
+    ReservedBit7: TBitField;
   end;
 var
-  TCCR0B: byte absolute $45;  // Timer/Counter Control Register B
-  TCCR0Bset: TTCCR0Bset absolute $45;
-  TCCR0Brec: TTCCR0Brec absolute $45;
+  TCCR0A: byte absolute $45;  // Timer/Counter  Control Register A
+  TCCR0Aset: TTCCR0Aset absolute $45;
+  TCCR0Arec: TTCCR0Arec absolute $45;
 const
   CS00 = 0;  m_CS00 = 1;  // Clock Select
   CS01 = 1;  m_CS01 = 2;  // Clock Select
   CS02 = 2;  m_CS02 = 4;  // Clock Select
-  WGM02 = 3;  m_WGM02 = 8;
-  FOC0B = 6;  m_FOC0B = 64;  // Force Output Compare B
-  FOC0A = 7;  m_FOC0A = 128;  // Force Output Compare A
+  CTC0 = 3;  m_CTC0 = 8;  // Clear Timer on Compare Match
 
 var
   TCNT0: byte absolute $46;  // Timer/Counter0
@@ -407,12 +411,12 @@ const
   ACD = 7;  m_ACD = 128;  // Analog Comparator Disable
 
 type
-  TSMCRset = bitpacked set of (e_SE, e_SM0, e_SM1, e_SM2);
+  TSMCRset = bitpacked set of (e_SE, e_SM0, e_SM1);
   TSMCRrec = bitpacked record
     SE,
     SM0,
     SM1,
-    SM2,
+    ReservedBit3,
     ReservedBit4,
     ReservedBit5,
     ReservedBit6,
@@ -424,9 +428,8 @@ var
   SMCRrec: TSMCRrec absolute $53;
 const
   SE = 0;  m_SE = 1;  // Sleep Enable
-  SM0 = 1;  m_SM0 = 2;  // Sleep Mode Select Bits
-  SM1 = 2;  m_SM1 = 4;  // Sleep Mode Select Bits
-  SM2 = 3;  m_SM2 = 8;  // Sleep Mode Select Bits
+  SM0 = 1;  m_SM0 = 2;  // Sleep Mode
+  SM1 = 2;  m_SM1 = 4;  // Sleep Mode
 
 type
   TMCUSRset = bitpacked set of (e_PORF, e_EXTRF, e_BORF, e_WDRF);
@@ -451,10 +454,10 @@ const
   WDRF = 3;  m_WDRF = 8;  // Watchdog Reset Flag
 
 type
-  TMCUCRset = bitpacked set of (e_IVCE, e_IVSEL, e_PUD=4, e_BODSE, e_BODS);
+  TMCUCRset = bitpacked set of (e_PUD=4, e_BODSE, e_BODS);
   TMCUCRrec = bitpacked record
-    IVCE,
-    IVSEL,
+    ReservedBit0,
+    ReservedBit1,
     ReservedBit2,
     ReservedBit3,
     PUD,
@@ -467,42 +470,37 @@ var
   MCUCRset: TMCUCRset absolute $55;
   MCUCRrec: TMCUCRrec absolute $55;
 const
-  IVCE = 0;  m_IVCE = 1;
-  IVSEL = 1;  m_IVSEL = 2;
-  PUD = 4;  m_PUD = 16;
+  PUD = 4;  m_PUD = 16;  // Pull-up Disable
   BODSE = 5;  m_BODSE = 32;  // BOD Sleep Enable
   BODS = 6;  m_BODS = 64;  // BOD Sleep
 
 type
-  TSPMCSRset = bitpacked set of (e_SPMEN, e_PGERS, e_PGWRT, e_BLBSET, e_RWWSRE, e_SIGRD, e_RWWSB, e_SPMIE);
+  TSPMCSRset = bitpacked set of (e_SELFPRGEN, e_PGERS, e_PGWRT, e_RFLB, e_CTPB, e_RWWSB=6);
   TSPMCSRrec = bitpacked record
-    SPMEN,
+    SELFPRGEN,
     PGERS,
     PGWRT,
-    BLBSET,
-    RWWSRE,
-    SIGRD,
+    RFLB,
+    CTPB,
+    ReservedBit5,
     RWWSB,
-    SPMIE: TBitField;
+    ReservedBit7: TBitField;
   end;
 var
-  SPMCSR: byte absolute $57;  // Store Program Memory Control and Status Register
+  SPMCSR: byte absolute $57;  // Store Program Memory Control Register
   SPMCSRset: TSPMCSRset absolute $57;
   SPMCSRrec: TSPMCSRrec absolute $57;
 const
-  SPMEN = 0;  m_SPMEN = 1;  // Store Program Memory
+  SELFPRGEN = 0;  m_SELFPRGEN = 1;  // Self Programming Enable
   PGERS = 1;  m_PGERS = 2;  // Page Erase
   PGWRT = 2;  m_PGWRT = 4;  // Page Write
-  BLBSET = 3;  m_BLBSET = 8;  // Boot Lock Bit Set
-  RWWSRE = 4;  m_RWWSRE = 16;  // Read-While-Write section read enable
-  SIGRD = 5;  m_SIGRD = 32;  // Signature Row Read
+  RFLB = 3;  m_RFLB = 8;  // Read Fuse and Lock Bits
+  CTPB = 4;  m_CTPB = 16;  // Clear Temporary Page Buffer
   RWWSB = 6;  m_RWWSB = 64;  // Read-While-Write Section Busy
-  SPMIE = 7;  m_SPMIE = 128;  // SPM Interrupt Enable
 
 var
-  SP: word absolute $5D;  // Stack Pointer 
-  SPL: byte absolute $5D;
-  SPH: byte absolute $5E;
+  SPL: byte absolute $5D;  // Stack Pointer Low
+  SPH: byte absolute $5E;  // Stack Pointer High
 
 type
   TSREGset = bitpacked set of (e_C, e_Z, e_N, e_V, e_S, e_H, e_T, e_I);
@@ -580,15 +578,15 @@ const
   CLKPCE = 7;  m_CLKPCE = 128;  // Clock Prescaler Change Enable
 
 type
-  TPRRset = bitpacked set of (e_PRADC, e_PRUSART0, e_PRSPI, e_PRTIM1, e_PRTIM0=5, e_PRTIM2, e_PRTWI);
+  TPRRset = bitpacked set of (e_PRADC, e_PRSPI=2, e_PRTIM1, e_PRTIM0=5, e_PRTWI=7);
   TPRRrec = bitpacked record
     PRADC,
-    PRUSART0,
+    ReservedBit1,
     PRSPI,
     PRTIM1,
     ReservedBit4,
     PRTIM0,
-    PRTIM2,
+    ReservedBit6,
     PRTWI: TBitField;
   end;
 var
@@ -597,11 +595,9 @@ var
   PRRrec: TPRRrec absolute $64;
 const
   PRADC = 0;  m_PRADC = 1;  // Power Reduction ADC
-  PRUSART0 = 1;  m_PRUSART0 = 2;  // Power Reduction USART
   PRSPI = 2;  m_PRSPI = 4;  // Power Reduction Serial Peripheral Interface
   PRTIM1 = 3;  m_PRTIM1 = 8;  // Power Reduction Timer/Counter1
   PRTIM0 = 5;  m_PRTIM0 = 32;  // Power Reduction Timer/Counter0
-  PRTIM2 = 6;  m_PRTIM2 = 64;  // Power Reduction Timer/Counter2
   PRTWI = 7;  m_PRTWI = 128;  // Power Reduction TWI
 
 type
@@ -631,25 +627,26 @@ const
   OSCCAL7 = 7;  m_OSCCAL7 = 128;  // Oscillator Calibration
 
 type
-  TPCICRset = bitpacked set of (e_PCIE0, e_PCIE1, e_PCIE2);
+  TPCICRset = bitpacked set of (e_PCIE0, e_PCIE1, e_PCIE2, e_PCIE3);
   TPCICRrec = bitpacked record
     PCIE0,
     PCIE1,
     PCIE2,
-    ReservedBit3,
+    PCIE3,
     ReservedBit4,
     ReservedBit5,
     ReservedBit6,
     ReservedBit7: TBitField;
   end;
 var
-  PCICR: byte absolute $68;  // Pin Change Interrupt Control Register
+  PCICR: byte absolute $68;
   PCICRset: TPCICRset absolute $68;
   PCICRrec: TPCICRrec absolute $68;
 const
-  PCIE0 = 0;  m_PCIE0 = 1;  // Pin Change Interrupt Enables
-  PCIE1 = 1;  m_PCIE1 = 2;  // Pin Change Interrupt Enables
-  PCIE2 = 2;  m_PCIE2 = 4;  // Pin Change Interrupt Enables
+  PCIE0 = 0;  m_PCIE0 = 1;
+  PCIE1 = 1;  m_PCIE1 = 2;
+  PCIE2 = 2;  m_PCIE2 = 4;
+  PCIE3 = 3;  m_PCIE3 = 8;
 
 type
   TEICRAset = bitpacked set of (e_ISC00, e_ISC01, e_ISC10, e_ISC11);
@@ -673,35 +670,32 @@ const
   ISC10 = 2;  m_ISC10 = 4;  // External Interrupt Sense Control 1 Bits
   ISC11 = 3;  m_ISC11 = 8;  // External Interrupt Sense Control 1 Bits
 
+type
+  TPCMSK3set = bitpacked set of (e_PCINT24, e_PCINT25, e_PCINT26, e_PCINT27);
+  TPCMSK3rec = bitpacked record
+    PCINT24,
+    PCINT25,
+    PCINT26,
+    PCINT27,
+    ReservedBit4,
+    ReservedBit5,
+    ReservedBit6,
+    ReservedBit7: TBitField;
+  end;
+var
+  PCMSK3: byte absolute $6A;  // Pin Change Mask Register 3
+  PCMSK3set: TPCMSK3set absolute $6A;
+  PCMSK3rec: TPCMSK3rec absolute $6A;
+const
+  PCINT24 = 0;  m_PCINT24 = 1;  // Pin Change Enable Masks
+  PCINT25 = 1;  m_PCINT25 = 2;  // Pin Change Enable Masks
+  PCINT26 = 2;  m_PCINT26 = 4;  // Pin Change Enable Masks
+  PCINT27 = 3;  m_PCINT27 = 8;  // Pin Change Enable Masks
+
 var
   PCMSK0: byte absolute $6B;  // Pin Change Mask Register 0
   PCMSK1: byte absolute $6C;  // Pin Change Mask Register 1
-
-type
-  TPCMSK2set = bitpacked set of (e_PCINT16, e_PCINT17, e_PCINT18, e_PCINT19, e_PCINT20, e_PCINT21, e_PCINT22, e_PCINT23);
-  TPCMSK2rec = bitpacked record
-    PCINT16,
-    PCINT17,
-    PCINT18,
-    PCINT19,
-    PCINT20,
-    PCINT21,
-    PCINT22,
-    PCINT23: TBitField;
-  end;
-var
   PCMSK2: byte absolute $6D;  // Pin Change Mask Register 2
-  PCMSK2set: TPCMSK2set absolute $6D;
-  PCMSK2rec: TPCMSK2rec absolute $6D;
-const
-  PCINT16 = 0;  m_PCINT16 = 1;  // Pin Change Enable Masks
-  PCINT17 = 1;  m_PCINT17 = 2;  // Pin Change Enable Masks
-  PCINT18 = 2;  m_PCINT18 = 4;  // Pin Change Enable Masks
-  PCINT19 = 3;  m_PCINT19 = 8;  // Pin Change Enable Masks
-  PCINT20 = 4;  m_PCINT20 = 16;  // Pin Change Enable Masks
-  PCINT21 = 5;  m_PCINT21 = 32;  // Pin Change Enable Masks
-  PCINT22 = 6;  m_PCINT22 = 64;  // Pin Change Enable Masks
-  PCINT23 = 7;  m_PCINT23 = 128;  // Pin Change Enable Masks
 
 type
   TTIMSK0set = bitpacked set of (e_TOIE0, e_OCIE0A, e_OCIE0B);
@@ -745,27 +739,6 @@ const
   OCIE1A = 1;  m_OCIE1A = 2;  // Timer/Counter1 Output CompareA Match Interrupt Enable
   OCIE1B = 2;  m_OCIE1B = 4;  // Timer/Counter1 Output CompareB Match Interrupt Enable
   ICIE1 = 5;  m_ICIE1 = 32;  // Timer/Counter1 Input Capture Interrupt Enable
-
-type
-  TTIMSK2set = bitpacked set of (e_TOIE2, e_OCIE2A, e_OCIE2B);
-  TTIMSK2rec = bitpacked record
-    TOIE2,
-    OCIE2A,
-    OCIE2B,
-    ReservedBit3,
-    ReservedBit4,
-    ReservedBit5,
-    ReservedBit6,
-    ReservedBit7: TBitField;
-  end;
-var
-  TIMSK2: byte absolute $70;  // Timer/Counter Interrupt Mask register
-  TIMSK2set: TTIMSK2set absolute $70;
-  TIMSK2rec: TTIMSK2rec absolute $70;
-const
-  TOIE2 = 0;  m_TOIE2 = 1;  // Timer/Counter2 Overflow Interrupt Enable
-  OCIE2A = 1;  m_OCIE2A = 2;  // Timer/Counter2 Output Compare Match A Interrupt Enable
-  OCIE2B = 2;  m_OCIE2B = 4;  // Timer/Counter2 Output Compare Match B Interrupt Enable
 
 var
   ADC: word absolute $78;  // ADC Data Register  Bytes
@@ -821,7 +794,7 @@ const
   ACME = 6;  m_ACME = 64;
 
 type
-  TADMUXset = bitpacked set of (e_MUX0, e_MUX1, e_MUX2, e_MUX3, e_ADLAR=5, e_REFS0, e_REFS1);
+  TADMUXset = bitpacked set of (e_MUX0, e_MUX1, e_MUX2, e_MUX3, e_ADLAR=5, e_REFS0);
   TADMUXrec = bitpacked record
     MUX0,
     MUX1,
@@ -830,23 +803,22 @@ type
     ReservedBit4,
     ADLAR,
     REFS0,
-    REFS1: TBitField;
+    ReservedBit7: TBitField;
   end;
 var
   ADMUX: byte absolute $7C;  // The ADC multiplexer Selection Register
   ADMUXset: TADMUXset absolute $7C;
   ADMUXrec: TADMUXrec absolute $7C;
 const
-  MUX0 = 0;  m_MUX0 = 1;  // Analog Channel Selection Bits
-  MUX1 = 1;  m_MUX1 = 2;  // Analog Channel Selection Bits
-  MUX2 = 2;  m_MUX2 = 4;  // Analog Channel Selection Bits
-  MUX3 = 3;  m_MUX3 = 8;  // Analog Channel Selection Bits
+  MUX0 = 0;  m_MUX0 = 1;  // Analog Channel and Gain Selection Bits
+  MUX1 = 1;  m_MUX1 = 2;  // Analog Channel and Gain Selection Bits
+  MUX2 = 2;  m_MUX2 = 4;  // Analog Channel and Gain Selection Bits
+  MUX3 = 3;  m_MUX3 = 8;  // Analog Channel and Gain Selection Bits
   ADLAR = 5;  m_ADLAR = 32;  // Left Adjust Result
-  REFS0 = 6;  m_REFS0 = 64;  // Reference Selection Bits
-  REFS1 = 7;  m_REFS1 = 128;  // Reference Selection Bits
+  REFS0 = 6;  m_REFS0 = 64;  // Reference Selection Bit 0
 
 type
-  TDIDR0set = bitpacked set of (e_ADC0D, e_ADC1D, e_ADC2D, e_ADC3D, e_ADC4D, e_ADC5D);
+  TDIDR0set = bitpacked set of (e_ADC0D, e_ADC1D, e_ADC2D, e_ADC3D, e_ADC4D, e_ADC5D, e_ADC6D, e_ADC7D);
   TDIDR0rec = bitpacked record
     ADC0D,
     ADC1D,
@@ -854,11 +826,11 @@ type
     ADC3D,
     ADC4D,
     ADC5D,
-    ReservedBit6,
-    ReservedBit7: TBitField;
+    ADC6D,
+    ADC7D: TBitField;
   end;
 var
-  DIDR0: byte absolute $7E;  // Digital Input Disable Register
+  DIDR0: byte absolute $7E;  // Digital Input Disable Register 0
   DIDR0set: TDIDR0set absolute $7E;
   DIDR0rec: TDIDR0rec absolute $7E;
 const
@@ -868,6 +840,8 @@ const
   ADC3D = 3;  m_ADC3D = 8;
   ADC4D = 4;  m_ADC4D = 16;
   ADC5D = 5;  m_ADC5D = 32;
+  ADC6D = 6;  m_ADC6D = 64;
+  ADC7D = 7;  m_ADC7D = 128;
 
 type
   TDIDR1set = bitpacked set of (e_AIN0D, e_AIN1D);
@@ -969,86 +943,6 @@ var
   OCR1B: word absolute $8A;  // Timer/Counter1 Output Compare Register  Bytes
   OCR1BL: byte absolute $8A;
   OCR1BH: byte absolute $8B;
-
-type
-  TTCCR2Aset = bitpacked set of (e_WGM20, e_WGM21, e_COM2B0=4, e_COM2B1, e_COM2A0, e_COM2A1);
-  TTCCR2Arec = bitpacked record
-    WGM20,
-    WGM21,
-    ReservedBit2,
-    ReservedBit3,
-    COM2B0,
-    COM2B1,
-    COM2A0,
-    COM2A1: TBitField;
-  end;
-var
-  TCCR2A: byte absolute $B0;  // Timer/Counter2 Control Register A
-  TCCR2Aset: TTCCR2Aset absolute $B0;
-  TCCR2Arec: TTCCR2Arec absolute $B0;
-const
-  WGM20 = 0;  m_WGM20 = 1;  // Waveform Genration Mode
-  WGM21 = 1;  m_WGM21 = 2;  // Waveform Genration Mode
-  COM2B0 = 4;  m_COM2B0 = 16;  // Compare Output Mode bits
-  COM2B1 = 5;  m_COM2B1 = 32;  // Compare Output Mode bits
-  COM2A0 = 6;  m_COM2A0 = 64;  // Compare Output Mode bits
-  COM2A1 = 7;  m_COM2A1 = 128;  // Compare Output Mode bits
-
-type
-  TTCCR2Bset = bitpacked set of (e_CS20, e_CS21, e_CS22, e_WGM22, e_FOC2B=6, e_FOC2A);
-  TTCCR2Brec = bitpacked record
-    CS20,
-    CS21,
-    CS22,
-    WGM22,
-    ReservedBit4,
-    ReservedBit5,
-    FOC2B,
-    FOC2A: TBitField;
-  end;
-var
-  TCCR2B: byte absolute $B1;  // Timer/Counter2 Control Register B
-  TCCR2Bset: TTCCR2Bset absolute $B1;
-  TCCR2Brec: TTCCR2Brec absolute $B1;
-const
-  CS20 = 0;  m_CS20 = 1;  // Clock Select bits
-  CS21 = 1;  m_CS21 = 2;  // Clock Select bits
-  CS22 = 2;  m_CS22 = 4;  // Clock Select bits
-  WGM22 = 3;  m_WGM22 = 8;  // Waveform Generation Mode
-  FOC2B = 6;  m_FOC2B = 64;  // Force Output Compare B
-  FOC2A = 7;  m_FOC2A = 128;  // Force Output Compare A
-
-var
-  TCNT2: byte absolute $B2;  // Timer/Counter2
-  OCR2A: byte absolute $B3;  // Timer/Counter2 Output Compare Register A
-  OCR2B: byte absolute $B4;  // Timer/Counter2 Output Compare Register B
-
-type
-  TASSRset = bitpacked set of (e_TCR2BUB, e_TCR2AUB, e_OCR2BUB, e_OCR2AUB, e_TCN2UB, e_AS2, e_EXCLK);
-  TASSRrec = bitpacked record
-    TCR2BUB,
-    TCR2AUB,
-    OCR2BUB,
-    OCR2AUB,
-    TCN2UB,
-    AS2,
-    EXCLK,
-    ReservedBit7: TBitField;
-  end;
-var
-  ASSR: byte absolute $B6;  // Asynchronous Status Register
-  ASSRset: TASSRset absolute $B6;
-  ASSRrec: TASSRrec absolute $B6;
-const
-  TCR2BUB = 0;  m_TCR2BUB = 1;  // Timer/Counter Control Register2 Update Busy
-  TCR2AUB = 1;  m_TCR2AUB = 2;  // Timer/Counter Control Register2 Update Busy
-  OCR2BUB = 2;  m_OCR2BUB = 4;  // Output Compare Register 2 Update Busy
-  OCR2AUB = 3;  m_OCR2AUB = 8;  // Output Compare Register2 Update Busy
-  TCN2UB = 4;  m_TCN2UB = 16;  // Timer/Counter2 Update Busy
-  AS2 = 5;  m_AS2 = 32;  // Asynchronous Timer/Counter2
-  EXCLK = 6;  m_EXCLK = 64;  // Enable External Clock Input
-
-var
   TWBR: byte absolute $B8;  // TWI Bit Rate register
 
 type
@@ -1156,92 +1050,27 @@ const
   TWAM6 = 7;  m_TWAM6 = 128;
 
 type
-  TUCSR0Aset = bitpacked set of (e_MPCM0, e_U2X0, e_UPE0, e_DOR0, e_FE0, e_UDRE0, e_TXC0, e_RXC0);
-  TUCSR0Arec = bitpacked record
-    MPCM0,
-    U2X0,
-    UPE0,
-    DOR0,
-    FE0,
-    UDRE0,
-    TXC0,
-    RXC0: TBitField;
+  TTWHSRset = bitpacked set of (e_TWHS);
+  TTWHSRrec = bitpacked record
+    TWHS,
+    ReservedBit1,
+    ReservedBit2,
+    ReservedBit3,
+    ReservedBit4,
+    ReservedBit5,
+    ReservedBit6,
+    ReservedBit7: TBitField;
   end;
 var
-  UCSR0A: byte absolute $C0;  // USART Control and Status Register A
-  UCSR0Aset: TUCSR0Aset absolute $C0;
-  UCSR0Arec: TUCSR0Arec absolute $C0;
+  TWHSR: byte absolute $BE;  // TWHSR
+  TWHSRset: TTWHSRset absolute $BE;
+  TWHSRrec: TTWHSRrec absolute $BE;
 const
-  MPCM0 = 0;  m_MPCM0 = 1;  // Multi-processor Communication Mode
-  U2X0 = 1;  m_U2X0 = 2;  // Double the USART transmission speed
-  UPE0 = 2;  m_UPE0 = 4;  // Parity Error
-  DOR0 = 3;  m_DOR0 = 8;  // Data overRun
-  FE0 = 4;  m_FE0 = 16;  // Framing Error
-  UDRE0 = 5;  m_UDRE0 = 32;  // USART Data Register Empty
-  TXC0 = 6;  m_TXC0 = 64;  // USART Transmitt Complete
-  RXC0 = 7;  m_RXC0 = 128;  // USART Receive Complete
-
-type
-  TUCSR0Bset = bitpacked set of (e_TXB80, e_RXB80, e_UCSZ02, e_TXEN0, e_RXEN0, e_UDRIE0, e_TXCIE0, e_RXCIE0);
-  TUCSR0Brec = bitpacked record
-    TXB80,
-    RXB80,
-    UCSZ02,
-    TXEN0,
-    RXEN0,
-    UDRIE0,
-    TXCIE0,
-    RXCIE0: TBitField;
-  end;
-var
-  UCSR0B: byte absolute $C1;  // USART Control and Status Register B
-  UCSR0Bset: TUCSR0Bset absolute $C1;
-  UCSR0Brec: TUCSR0Brec absolute $C1;
-const
-  TXB80 = 0;  m_TXB80 = 1;  // Transmit Data Bit 8
-  RXB80 = 1;  m_RXB80 = 2;  // Receive Data Bit 8
-  UCSZ02 = 2;  m_UCSZ02 = 4;  // Character Size
-  TXEN0 = 3;  m_TXEN0 = 8;  // Transmitter Enable
-  RXEN0 = 4;  m_RXEN0 = 16;  // Receiver Enable
-  UDRIE0 = 5;  m_UDRIE0 = 32;  // USART Data register Empty Interrupt Enable
-  TXCIE0 = 6;  m_TXCIE0 = 64;  // TX Complete Interrupt Enable
-  RXCIE0 = 7;  m_RXCIE0 = 128;  // RX Complete Interrupt Enable
-
-type
-  TUCSR0Cset = bitpacked set of (e_UCPOL0, e_UCSZ00, e_UCSZ01, e_USBS0, e_UPM00, e_UPM01, e_UMSEL00, e_UMSEL01);
-  TUCSR0Crec = bitpacked record
-    UCPOL0,
-    UCSZ00,
-    UCSZ01,
-    USBS0,
-    UPM00,
-    UPM01,
-    UMSEL00,
-    UMSEL01: TBitField;
-  end;
-var
-  UCSR0C: byte absolute $C2;  // USART Control and Status Register C
-  UCSR0Cset: TUCSR0Cset absolute $C2;
-  UCSR0Crec: TUCSR0Crec absolute $C2;
-const
-  UCPOL0 = 0;  m_UCPOL0 = 1;  // Clock Polarity
-  UCSZ00 = 1;  m_UCSZ00 = 2;  // Character Size
-  UCSZ01 = 2;  m_UCSZ01 = 4;  // Character Size
-  USBS0 = 3;  m_USBS0 = 8;  // Stop Bit Select
-  UPM00 = 4;  m_UPM00 = 16;  // Parity Mode Bits
-  UPM01 = 5;  m_UPM01 = 32;  // Parity Mode Bits
-  UMSEL00 = 6;  m_UMSEL00 = 64;  // USART Mode Select
-  UMSEL01 = 7;  m_UMSEL01 = 128;  // USART Mode Select
-
-var
-  UBRR0: word absolute $C4;  // USART Baud Rate Register Bytes
-  UBRR0L: byte absolute $C4;
-  UBRR0H: byte absolute $C5;
-  UDR0: byte absolute $C6;  // USART I/O Data Register
-  // typedefs = 49
+  TWHS = 0;  m_TWHS = 1;
+  // typedefs = 43
 
 implementation
-
+{$define RELBRANCHES}
 {$i avrcommon.inc}
 
 procedure INT0_ISR; external name 'INT0_ISR'; // Interrupt 1 External Interrupt Request 0
@@ -1249,26 +1078,20 @@ procedure INT1_ISR; external name 'INT1_ISR'; // Interrupt 2 External Interrupt 
 procedure PCINT0_ISR; external name 'PCINT0_ISR'; // Interrupt 3 Pin Change Interrupt Request 0
 procedure PCINT1_ISR; external name 'PCINT1_ISR'; // Interrupt 4 Pin Change Interrupt Request 1
 procedure PCINT2_ISR; external name 'PCINT2_ISR'; // Interrupt 5 Pin Change Interrupt Request 2
-procedure WDT_ISR; external name 'WDT_ISR'; // Interrupt 6 Watchdog Time-out Interrupt
-procedure TIMER2_COMPA_ISR; external name 'TIMER2_COMPA_ISR'; // Interrupt 7 Timer/Counter2 Compare Match A
-procedure TIMER2_COMPB_ISR; external name 'TIMER2_COMPB_ISR'; // Interrupt 8 Timer/Counter2 Compare Match B
-procedure TIMER2_OVF_ISR; external name 'TIMER2_OVF_ISR'; // Interrupt 9 Timer/Counter2 Overflow
-procedure TIMER1_CAPT_ISR; external name 'TIMER1_CAPT_ISR'; // Interrupt 10 Timer/Counter1 Capture Event
-procedure TIMER1_COMPA_ISR; external name 'TIMER1_COMPA_ISR'; // Interrupt 11 Timer/Counter1 Compare Match A
-procedure TIMER1_COMPB_ISR; external name 'TIMER1_COMPB_ISR'; // Interrupt 12 Timer/Counter1 Compare Match B
-procedure TIMER1_OVF_ISR; external name 'TIMER1_OVF_ISR'; // Interrupt 13 Timer/Counter1 Overflow
-procedure TIMER0_COMPA_ISR; external name 'TIMER0_COMPA_ISR'; // Interrupt 14 TimerCounter0 Compare Match A
-procedure TIMER0_COMPB_ISR; external name 'TIMER0_COMPB_ISR'; // Interrupt 15 TimerCounter0 Compare Match B
-procedure TIMER0_OVF_ISR; external name 'TIMER0_OVF_ISR'; // Interrupt 16 Timer/Couner0 Overflow
-procedure SPI_STC_ISR; external name 'SPI_STC_ISR'; // Interrupt 17 SPI Serial Transfer Complete
-procedure USART_RX_ISR; external name 'USART_RX_ISR'; // Interrupt 18 USART Rx Complete
-procedure USART_UDRE_ISR; external name 'USART_UDRE_ISR'; // Interrupt 19 USART, Data Register Empty
-procedure USART_TX_ISR; external name 'USART_TX_ISR'; // Interrupt 20 USART Tx Complete
-procedure ADC_ISR; external name 'ADC_ISR'; // Interrupt 21 ADC Conversion Complete
-procedure EE_READY_ISR; external name 'EE_READY_ISR'; // Interrupt 22 EEPROM Ready
-procedure ANALOG_COMP_ISR; external name 'ANALOG_COMP_ISR'; // Interrupt 23 Analog Comparator
-procedure TWI_ISR; external name 'TWI_ISR'; // Interrupt 24 Two-wire Serial Interface
-procedure SPM_Ready_ISR; external name 'SPM_Ready_ISR'; // Interrupt 25 Store Program Memory Read
+procedure PCINT3_ISR; external name 'PCINT3_ISR'; // Interrupt 6 Pin Change Interrupt Request 3
+procedure WDT_ISR; external name 'WDT_ISR'; // Interrupt 7 Watchdog Time-out Interrupt
+procedure TIMER1_CAPT_ISR; external name 'TIMER1_CAPT_ISR'; // Interrupt 8 Timer/Counter1 Capture Event
+procedure TIMER1_COMPA_ISR; external name 'TIMER1_COMPA_ISR'; // Interrupt 9 Timer/Counter1 Compare Match A
+procedure TIMER1_COMPB_ISR; external name 'TIMER1_COMPB_ISR'; // Interrupt 10 Timer/Counter1 Compare Match B
+procedure TIMER1_OVF_ISR; external name 'TIMER1_OVF_ISR'; // Interrupt 11 Timer/Counter1 Overflow
+procedure TIMER0_COMPA_ISR; external name 'TIMER0_COMPA_ISR'; // Interrupt 12 TimerCounter0 Compare Match A
+procedure TIMER0_COMPB_ISR; external name 'TIMER0_COMPB_ISR'; // Interrupt 13 TimerCounter0 Compare Match B
+procedure TIMER0_OVF_ISR; external name 'TIMER0_OVF_ISR'; // Interrupt 14 Timer/Couner0 Overflow
+procedure SPI_STC_ISR; external name 'SPI_STC_ISR'; // Interrupt 15 SPI Serial Transfer Complete
+procedure ADC_ISR; external name 'ADC_ISR'; // Interrupt 16 ADC Conversion Complete
+procedure EE_RDY_ISR; external name 'EE_RDY_ISR'; // Interrupt 17 EEPROM Ready
+procedure ANALOG_COMP_ISR; external name 'ANALOG_COMP_ISR'; // Interrupt 18 Analog Comparator
+procedure TWI_ISR; external name 'TWI_ISR'; // Interrupt 19 Two-wire Serial Interface
 
 procedure _FPC_start; assembler; nostackframe;
 label
@@ -1277,32 +1100,26 @@ asm
   .init
   .globl _start
 
-  jmp _start
-  jmp INT0_ISR
-  jmp INT1_ISR
-  jmp PCINT0_ISR
-  jmp PCINT1_ISR
-  jmp PCINT2_ISR
-  jmp WDT_ISR
-  jmp TIMER2_COMPA_ISR
-  jmp TIMER2_COMPB_ISR
-  jmp TIMER2_OVF_ISR
-  jmp TIMER1_CAPT_ISR
-  jmp TIMER1_COMPA_ISR
-  jmp TIMER1_COMPB_ISR
-  jmp TIMER1_OVF_ISR
-  jmp TIMER0_COMPA_ISR
-  jmp TIMER0_COMPB_ISR
-  jmp TIMER0_OVF_ISR
-  jmp SPI_STC_ISR
-  jmp USART_RX_ISR
-  jmp USART_UDRE_ISR
-  jmp USART_TX_ISR
-  jmp ADC_ISR
-  jmp EE_READY_ISR
-  jmp ANALOG_COMP_ISR
-  jmp TWI_ISR
-  jmp SPM_Ready_ISR
+  rjmp _start
+  rjmp INT0_ISR
+  rjmp INT1_ISR
+  rjmp PCINT0_ISR
+  rjmp PCINT1_ISR
+  rjmp PCINT2_ISR
+  rjmp PCINT3_ISR
+  rjmp WDT_ISR
+  rjmp TIMER1_CAPT_ISR
+  rjmp TIMER1_COMPA_ISR
+  rjmp TIMER1_COMPB_ISR
+  rjmp TIMER1_OVF_ISR
+  rjmp TIMER0_COMPA_ISR
+  rjmp TIMER0_COMPB_ISR
+  rjmp TIMER0_OVF_ISR
+  rjmp SPI_STC_ISR
+  rjmp ADC_ISR
+  rjmp EE_RDY_ISR
+  rjmp ANALOG_COMP_ISR
+  rjmp TWI_ISR
 
   {$i start.inc}
 
@@ -1311,10 +1128,8 @@ asm
   .weak PCINT0_ISR
   .weak PCINT1_ISR
   .weak PCINT2_ISR
+  .weak PCINT3_ISR
   .weak WDT_ISR
-  .weak TIMER2_COMPA_ISR
-  .weak TIMER2_COMPB_ISR
-  .weak TIMER2_OVF_ISR
   .weak TIMER1_CAPT_ISR
   .weak TIMER1_COMPA_ISR
   .weak TIMER1_COMPB_ISR
@@ -1323,24 +1138,18 @@ asm
   .weak TIMER0_COMPB_ISR
   .weak TIMER0_OVF_ISR
   .weak SPI_STC_ISR
-  .weak USART_RX_ISR
-  .weak USART_UDRE_ISR
-  .weak USART_TX_ISR
   .weak ADC_ISR
-  .weak EE_READY_ISR
+  .weak EE_RDY_ISR
   .weak ANALOG_COMP_ISR
   .weak TWI_ISR
-  .weak SPM_Ready_ISR
 
   .set INT0_ISR, Default_IRQ_handler
   .set INT1_ISR, Default_IRQ_handler
   .set PCINT0_ISR, Default_IRQ_handler
   .set PCINT1_ISR, Default_IRQ_handler
   .set PCINT2_ISR, Default_IRQ_handler
+  .set PCINT3_ISR, Default_IRQ_handler
   .set WDT_ISR, Default_IRQ_handler
-  .set TIMER2_COMPA_ISR, Default_IRQ_handler
-  .set TIMER2_COMPB_ISR, Default_IRQ_handler
-  .set TIMER2_OVF_ISR, Default_IRQ_handler
   .set TIMER1_CAPT_ISR, Default_IRQ_handler
   .set TIMER1_COMPA_ISR, Default_IRQ_handler
   .set TIMER1_COMPB_ISR, Default_IRQ_handler
@@ -1349,14 +1158,10 @@ asm
   .set TIMER0_COMPB_ISR, Default_IRQ_handler
   .set TIMER0_OVF_ISR, Default_IRQ_handler
   .set SPI_STC_ISR, Default_IRQ_handler
-  .set USART_RX_ISR, Default_IRQ_handler
-  .set USART_UDRE_ISR, Default_IRQ_handler
-  .set USART_TX_ISR, Default_IRQ_handler
   .set ADC_ISR, Default_IRQ_handler
-  .set EE_READY_ISR, Default_IRQ_handler
+  .set EE_RDY_ISR, Default_IRQ_handler
   .set ANALOG_COMP_ISR, Default_IRQ_handler
   .set TWI_ISR, Default_IRQ_handler
-  .set SPM_Ready_ISR, Default_IRQ_handler
 end;
 
 end.

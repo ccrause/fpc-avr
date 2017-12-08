@@ -1,4 +1,4 @@
-unit ATmega328P;
+unit ATmega48PA;
 
 {$goto on}
 interface
@@ -250,9 +250,27 @@ const
 
 var
   EEDR: byte absolute $40;  // EEPROM Data Register
-  EEAR: word absolute $41;  // EEPROM Address Register  Bytes
-  EEARL: byte absolute $41;
-  EEARH: byte absolute $42;
+  EEARL: byte absolute $41;  // EEPROM Address Register Low Byte
+
+type
+  TEEARHset = bitpacked set of (e_EEAR8, e_EEAR9);
+  TEEARHrec = bitpacked record
+    EEAR8,
+    EEAR9,
+    ReservedBit2,
+    ReservedBit3,
+    ReservedBit4,
+    ReservedBit5,
+    ReservedBit6,
+    ReservedBit7: TBitField;
+  end;
+var
+  EEARH: byte absolute $42;  // EEPROM Address Register High Byte
+  EEARHset: TEEARHset absolute $42;
+  EEARHrec: TEEARHrec absolute $42;
+const
+  EEAR8 = 0;  m_EEAR8 = 1;
+  EEAR9 = 1;  m_EEAR9 = 2;
 
 type
   TGTCCRset = bitpacked set of (e_PSRSYNC, e_PSRASY, e_TSM=7);
@@ -467,9 +485,9 @@ var
   MCUCRset: TMCUCRset absolute $55;
   MCUCRrec: TMCUCRrec absolute $55;
 const
-  IVCE = 0;  m_IVCE = 1;
-  IVSEL = 1;  m_IVSEL = 2;
-  PUD = 4;  m_PUD = 16;
+  IVCE = 0;  m_IVCE = 1;  // Interrupt Vector Change Enable
+  IVSEL = 1;  m_IVSEL = 2;  // Interrupt Vector Select
+  PUD = 4;  m_PUD = 16;  // Pull-up Disable
   BODSE = 5;  m_BODSE = 32;  // BOD Sleep Enable
   BODS = 6;  m_BODS = 64;  // BOD Sleep
 
@@ -1234,24 +1252,24 @@ const
   UMSEL01 = 7;  m_UMSEL01 = 128;  // USART Mode Select
 
 var
-  UBRR0: word absolute $C4;  // USART Baud Rate Register Bytes
+  UBRR0: word absolute $C4;  // USART Baud Rate Register  Bytes
   UBRR0L: byte absolute $C4;
   UBRR0H: byte absolute $C5;
   UDR0: byte absolute $C6;  // USART I/O Data Register
-  // typedefs = 49
+  // typedefs = 50
 
 implementation
-
+{$define RELBRANCHES}
 {$i avrcommon.inc}
 
 procedure INT0_ISR; external name 'INT0_ISR'; // Interrupt 1 External Interrupt Request 0
 procedure INT1_ISR; external name 'INT1_ISR'; // Interrupt 2 External Interrupt Request 1
 procedure PCINT0_ISR; external name 'PCINT0_ISR'; // Interrupt 3 Pin Change Interrupt Request 0
-procedure PCINT1_ISR; external name 'PCINT1_ISR'; // Interrupt 4 Pin Change Interrupt Request 1
-procedure PCINT2_ISR; external name 'PCINT2_ISR'; // Interrupt 5 Pin Change Interrupt Request 2
+procedure PCINT1_ISR; external name 'PCINT1_ISR'; // Interrupt 4 Pin Change Interrupt Request 0
+procedure PCINT2_ISR; external name 'PCINT2_ISR'; // Interrupt 5 Pin Change Interrupt Request 1
 procedure WDT_ISR; external name 'WDT_ISR'; // Interrupt 6 Watchdog Time-out Interrupt
 procedure TIMER2_COMPA_ISR; external name 'TIMER2_COMPA_ISR'; // Interrupt 7 Timer/Counter2 Compare Match A
-procedure TIMER2_COMPB_ISR; external name 'TIMER2_COMPB_ISR'; // Interrupt 8 Timer/Counter2 Compare Match B
+procedure TIMER2_COMPB_ISR; external name 'TIMER2_COMPB_ISR'; // Interrupt 8 Timer/Counter2 Compare Match A
 procedure TIMER2_OVF_ISR; external name 'TIMER2_OVF_ISR'; // Interrupt 9 Timer/Counter2 Overflow
 procedure TIMER1_CAPT_ISR; external name 'TIMER1_CAPT_ISR'; // Interrupt 10 Timer/Counter1 Capture Event
 procedure TIMER1_COMPA_ISR; external name 'TIMER1_COMPA_ISR'; // Interrupt 11 Timer/Counter1 Compare Match A
@@ -1277,32 +1295,32 @@ asm
   .init
   .globl _start
 
-  jmp _start
-  jmp INT0_ISR
-  jmp INT1_ISR
-  jmp PCINT0_ISR
-  jmp PCINT1_ISR
-  jmp PCINT2_ISR
-  jmp WDT_ISR
-  jmp TIMER2_COMPA_ISR
-  jmp TIMER2_COMPB_ISR
-  jmp TIMER2_OVF_ISR
-  jmp TIMER1_CAPT_ISR
-  jmp TIMER1_COMPA_ISR
-  jmp TIMER1_COMPB_ISR
-  jmp TIMER1_OVF_ISR
-  jmp TIMER0_COMPA_ISR
-  jmp TIMER0_COMPB_ISR
-  jmp TIMER0_OVF_ISR
-  jmp SPI_STC_ISR
-  jmp USART_RX_ISR
-  jmp USART_UDRE_ISR
-  jmp USART_TX_ISR
-  jmp ADC_ISR
-  jmp EE_READY_ISR
-  jmp ANALOG_COMP_ISR
-  jmp TWI_ISR
-  jmp SPM_Ready_ISR
+  rjmp _start
+  rjmp INT0_ISR
+  rjmp INT1_ISR
+  rjmp PCINT0_ISR
+  rjmp PCINT1_ISR
+  rjmp PCINT2_ISR
+  rjmp WDT_ISR
+  rjmp TIMER2_COMPA_ISR
+  rjmp TIMER2_COMPB_ISR
+  rjmp TIMER2_OVF_ISR
+  rjmp TIMER1_CAPT_ISR
+  rjmp TIMER1_COMPA_ISR
+  rjmp TIMER1_COMPB_ISR
+  rjmp TIMER1_OVF_ISR
+  rjmp TIMER0_COMPA_ISR
+  rjmp TIMER0_COMPB_ISR
+  rjmp TIMER0_OVF_ISR
+  rjmp SPI_STC_ISR
+  rjmp USART_RX_ISR
+  rjmp USART_UDRE_ISR
+  rjmp USART_TX_ISR
+  rjmp ADC_ISR
+  rjmp EE_READY_ISR
+  rjmp ANALOG_COMP_ISR
+  rjmp TWI_ISR
+  rjmp SPM_Ready_ISR
 
   {$i start.inc}
 
