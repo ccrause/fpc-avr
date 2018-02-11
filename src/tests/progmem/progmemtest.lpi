@@ -36,7 +36,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="../$nameonly($(projfile))"/>
+      <Filename Value="$nameonly($(projfile))"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
@@ -46,6 +46,9 @@
       <TargetProcessor Value="AVR5"/>
       <TargetCPU Value="avr"/>
       <TargetOS Value="embedded"/>
+      <Optimizations>
+        <OptimizationLevel Value="3"/>
+      </Optimizations>
     </CodeGeneration>
     <Linking>
       <Debugging>
@@ -64,11 +67,11 @@
 -dF_CPU:=16000000"/>
       <CompilerPath Value="/home/christo/fpc/3.1.1/compiler/ppcrossavr"/>
       <ExecuteBefore>
-        <Command Value="../../../scripts/run-simavr.sh $(targetfile)"/>
+        <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
         <CompileReasons Compile="False" Build="False"/>
       </ExecuteBefore>
       <ExecuteAfter>
-        <Command Value="../../../scripts/listasm.sh $(targetfile)"/>
+        <Command Value="../../scripts/listasm.sh $(targetfile)"/>
         <CompileReasons Run="False"/>
       </ExecuteAfter>
     </Other>
