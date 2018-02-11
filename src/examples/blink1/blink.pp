@@ -19,7 +19,7 @@ begin
 
      pinport := pinport and not PB5;  // LED off
      for i := 0 to 19 do       // delay 20 x 50 ms = 1 second
-       delay_ms(50);
+       delay_us(50000);
   end;
 end.
 
