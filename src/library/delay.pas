@@ -1,12 +1,18 @@
 unit delay;
 
+{$define FPC_HAS_MUL}
+
 interface
 
 procedure delay_ms(t: uint16);
+
+{$ifdef CPUAVR_HAS_MUL}
 procedure delay_us(t: uint16);
+{$endif}
 
 implementation
 
+// delay_ms
 // Cycle count (assuming 16 bit PC)
 // inline doesn't work yet, so 4 cycles for call and 4 cycles for ret
 // 3 cycles zero check
@@ -23,11 +29,13 @@ implementation
 // Count: 3 + 4count = F_CPU/1000
 // count = (F_CPU/1000 - 3)/4
 // effective delay will be 10/F_CPU + t = 0.000625 ms + t  @ 16MHz
+
+// Use SBIW instruction if available, else use SBI + SBC
+// SBIW takes same number of cycles to process as SBI + SBC, but saves 2 bytes program space
+{$IFDEF CPUAVR_HAS_MOVW} // proxy check for sbiw
 procedure delay_ms(t: uint16); assembler;
 const
   count = ((F_CPU div 1000 - 3) div 4);
-  counth = count shr 8;
-  countL = count and $FF;
 label
   inner, outer, finish;
 asm
@@ -38,8 +46,8 @@ asm
 
 outer:
   // load 1 ms counter value
-  ldi R26, countL
-  ldi R27, countH
+  ldi R26, lo8(count)
+  ldi R27, hi8(count)
 
 inner:
   // inner loop, 1 ms  4cycles/loop + 1
@@ -52,6 +60,37 @@ inner:
 finish:
 end;
 
+{$ELSE}
+
+procedure delay_ms(t: uint16); assembler;
+const
+  count = ((F_CPU div 1000 - 3) div 4);
+label
+  inner, outer, finish;
+asm
+  // test if t = 0, jump to finish if true
+  cp R24, R1
+  cpc R25, R1
+  breq finish       // 2 cycles to branch, 1 to continue
+
+outer:
+  // load 1 ms counter value
+  ldi R26, lo8(count)
+  ldi R27, hi8(count)
+
+inner:
+  // inner loop, 1 ms  4cycles/loop + 1
+  subi R26, 1    // 1 cycle
+  sbc R27, R1    // 1 cycle
+  brne inner       // 2 cycles to branch, 1 to continue
+
+  // outer loop, count ms, 4 cycles/loop + 1
+  subi R24, 1      // 1 cycle
+  sbc R25, r1      // 1 cycle
+  brne outer       // 2 cycles to branch, 1 to continue
+finish:
+end;
+{$ENDIF CPUAVR_HAS_MOVW}
 
 // Cycle count
 // function overhead: 4 cycles for call and 4 cycles for ret = 8
@@ -67,7 +106,7 @@ end;
 // loopcounter = (cyclecount - 5)/4
 // 2nd correction
 // loopcounter = loopcounter - 3*(loopcounter shr 16)
-
+{$ifdef CPUAVR_HAS_MUL}
 procedure delay_us(t: uint16); assembler;
 const
   tickFreq = (F_CPU div 1000000); // only valid from 1 - 64 MHz clock
@@ -130,6 +169,6 @@ loop:
   brcc loop        // 2 cycles to branch, 1 to continue
 finish:
 end;
-
+{$endif}
 end.
 

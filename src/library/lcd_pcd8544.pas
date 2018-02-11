@@ -45,6 +45,10 @@ procedure lcd_init(Vop: TVopRange = 60; Tcoef: TTCControlValue = tcOne; Bias: TB
 
 procedure lcd_printChar(const character: char);
 procedure lcd_printString(const s: ShortString);
+
+// Compiler passes address to progmem in R24:25?
+procedure lcd_printString_P(const s_progmem: ShortString);
+
 procedure lcd_putc(const c:char);
 procedure lcd_puts(const s: shortstring);
 
@@ -292,6 +296,18 @@ var
 begin
   for i := 1 to length(s) do
     lcd_printChar(s[i]);
+end;
+
+// Compiler passes address to progmem in R24:25?
+
+function read_char_progmem(const progmem_char: pointer): char; assembler;
+asm
+
+end;
+
+procedure lcd_printString_P(const s_progmem: ShortString);
+begin
+
 end;
 
 procedure lcd_putc(const c: char); inline;

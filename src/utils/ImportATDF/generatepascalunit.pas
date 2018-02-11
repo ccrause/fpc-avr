@@ -13,8 +13,11 @@ uses
   sysutils, math;
 
 const
-  setPrefix = 'e_';
-  constMaskPrefix = 'm_';
+  // 's' clashes with attiny40 PSR
+  setPrefix = 's';
+
+  // 'm' clashes at90pwm316 MUBBR
+  constMaskPrefix = 'c';
 
 type
   TReg = record
