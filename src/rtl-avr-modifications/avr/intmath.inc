@@ -3,7 +3,7 @@
     This file is part of the Free Pascal run time library.
     Copyright (c) 2008 by the Free Pascal development team.
 
-    Implementation of mathematical Routines (only for real)
+    Implementation of mathematical Routines (only for integer types)
 
     See the file COPYING.FPC, included in this distribution,
     for details about the copyright.
@@ -28,19 +28,14 @@
 // Perhaps add the checks depending on optimization settings?
 
 // z (dividend) = q(result) x n(divisor) + p(remainder)
-
-// Tested and passed 13/08/2017 - CC
-function fpc_div_mod_byte(Dividend, Divisor: byte; out Remainder: byte): byte; assembler; nostackframe;
+{$define FPC_SYSTEM_HAS_DIV_BYTE}
+function fpc_div_byte(n, z: byte): byte; nostackframe; assembler; [public,alias: 'FPC_DIV_BYTE'];
 label
   start, div1, div2, div3, finish;
 asm
-  // Push pointer to Remainder variable
-  push R21
-  push R20
-
   // Symbol  Name        Register(s)
-// z (A)   dividend    R24 // also result
-// n (B)   divisor     R22
+// z (A)   dividend    R22 // also result
+// n (B)   divisor     R24
 // p (P)   remainder   R20
 // i	   counter     R18
 
@@ -49,57 +44,69 @@ start:
   ldi R18, 8      // iterate over 8 bits
 
 div1:
-  lsl R24         // shift left A
+  lsl R22         // shift left A
   rol R20         // shift left P with carry from A shift
-  sub R20, R22    // Subtract B from P, P <= P - B
+  sub R20, R24    // Subtract B from P, P <= P - B
   brlo div2
-  ori R24, 1      // Set A[0] = 1
+  ori R22, 1      // Set A[0] = 1
   rjmp div3
 div2:             // negative branch, A[0] = 0 (default after shift), restore P
-  add R20, R22    // restore old value of P
+  add R20, R24    // restore old value of P
 
 div3:
   dec R18
   brne div1
 
 finish:
-  // Copy remainder via pointer stored in pushed address
-  pop R30
-  pop R31
-  st  Z, R20
+  mov R24, R22
 end;
-
-{$define FPC_SYSTEM_HAS_DIV_BYTE}
-// This calling stub is bigger than the above algorithm,
-// probably shorter to duplicate division algorithm for div & mod
-function fpc_div_byte(n, z: byte): byte; [public,alias: 'FPC_DIV_BYTE'];
-var
-  remainder: byte;
-begin
-  fpc_div_byte := fpc_div_mod_byte(z, n, remainder);
-end;
+function fpc_div_byte(n, z: byte): byte; external name 'FPC_DIV_BYTE';
 
 {$define FPC_SYSTEM_HAS_MOD_BYTE}
-function fpc_mod_byte(n, z: byte): byte;  [public,alias: 'FPC_MOD_BYTE'];
-var
-  remainder: byte;
-begin
-  fpc_div_mod_byte(z, n, remainder);
-  fpc_mod_byte := remainder;
-end;
-
-function fpc_div_mod_word(Dividend, Divisor: word; out Remainder: word): word; assembler; nostackframe;
+function fpc_mod_byte(n, z: byte): byte; nostackframe; assembler;  [public,alias: 'FPC_MOD_BYTE'];
 label
   start, div1, div2, div3, finish;
 asm
-  // Push pointer to Remainder variable
-  push R21
-  push R20
+  // Symbol  Name        Register(s)
+// z (A)   dividend    R22
+// n (B)   divisor     R24
+// p (P)   remainder   R20 // also result
+// i	   counter     R18
+
+start:
+  clr R20         // clear remainder
+  ldi R18, 8      // iterate over 8 bits
+
+div1:
+  lsl R22         // shift left A
+  rol R20         // shift left P with carry from A shift
+  sub R20, R24    // Subtract B from P, P <= P - B
+  brlo div2
+  ori R22, 1      // Set A[0] = 1
+  rjmp div3
+div2:             // negative branch, A[0] = 0 (default after shift), restore P
+  add R20, R24    // restore old value of P
+
+div3:
+  dec R18
+  brne div1
+
+finish:
+  mov R24, R20
+end;
+function fpc_mod_byte(n, z: byte): byte; external name 'FPC_MOD_BYTE';
+
+
+{$define FPC_SYSTEM_HAS_DIV_WORD}
+function fpc_div_word(n, z: word): word; nostackframe; assembler; [public,alias: 'FPC_DIV_WORD'];
+label
+  start, div1, div2, div3, finish;
+asm
 // Symbol  Name        Register(s)
-// z (A)   dividend    R24, R25 // also result
-// n (B)   divisor     R22, R23
+// z (A)   dividend    R22, R23 // also result
+// n (B)   divisor     R24, R25
 // p (P)   remainder   R20, R21
-// i	   counter     R18, R19
+// i	   counter     R18
 
 start:            // Start of division...
   clr R20         // clear remainder low
@@ -107,72 +114,77 @@ start:            // Start of division...
   ldi R18, 16     // iterate over 8 bits
 
 div1:
-  lsl R24         // shift left A_L
-  rol R25
+  lsl R22         // shift left A_L
+  rol R23
   rol R20         // shift left P with carry from A shift
   rol R21
-  sub R20, R22    // Subtract B from P, P <= P - B
-  sbc R21, R23
+  sub R20, R24    // Subtract B from P, P <= P - B
+  sbc R21, R25
   brlo div2
-  ori R24, 1      // Set A[0] = 1
+  ori R22, 1      // Set A[0] = 1
   rjmp div3
 div2:             // negative branch, A[0] = 0 (default after shift), restore P
-  add R20, R22    // restore old value of P
-  adc R21, R23
+  add R20, R24    // restore old value of P
+  adc R21, R25
 
 div3:
   dec R18
   brne div1
 
 finish:
-  // Copy remainder via pointer stored in pushed address
-  pop R30
-  pop R31
-  // TODO: can potenially change to the following to prevent a change to register pair R30:R31
-  // this cannot be done until the following bug is fixed: https://bugs.freepascal.org/view.php?id=32016
-  // Not really required in this case
-  //st Z, R20
-  //std Z+1, R21
-  // Current work-around
-  st Z+, R20
-  st Z, R21
+  mov R24, R22
+  mov R25, R23
 end;
-
-{$define FPC_SYSTEM_HAS_DIV_WORD}
-function fpc_div_word(n, z: word): word; [public,alias: 'FPC_DIV_WORD'];
-var
-  remainder: word;
-begin
-  fpc_div_word := fpc_div_mod_word(z, n, remainder);
-end;
+function fpc_div_word(n, z: word): word; external name 'FPC_DIV_WORD';
 
 {$define FPC_SYSTEM_HAS_MOD_WORD}
-function fpc_mod_word(n, z: word): word; [public,alias: 'FPC_MOD_WORD'];
-var
-  remainder: word;
-begin
-  fpc_div_mod_word(z, n, remainder);
-  fpc_mod_word := remainder;
-end;
-
-function fpc_div_mod_dword(Dividend, Divisor: dword; out Remainder: dword): dword; assembler; nostackframe;
+function fpc_mod_word(n, z: word): word; nostackframe; assembler; [public,alias: 'FPC_MOD_WORD'];
 label
   start, div1, div2, div3, finish;
 asm
-  // Push call saved registers
-  push R14
-  push R15
-  push R16
-  push R17
-  // Push pointer to Remainder variable
-  // Could eliminate extra pushes if bug is fixed: https://bugs.freepascal.org/view.php?id=32016
-  // See epilogue at end of function
-  push R16
-  push R17
+// Symbol  Name        Register(s)
+// z (A)   dividend    R22, R23
+// n (B)   divisor     R24, R25
+// p (P)   remainder   R20, R21 // also result
+// i	   counter     R18
 
+start:            // Start of division...
+  clr R20         // clear remainder low
+  clr R21         // clear remainder hi
+  ldi R18, 16     // iterate over 8 bits
+
+div1:
+  lsl R22         // shift left A_L
+  rol R23
+  rol R20         // shift left P with carry from A shift
+  rol R21
+  sub R20, R24    // Subtract B from P, P <= P - B
+  sbc R21, R25
+  brlo div2
+  ori R22, 1      // Set A[0] = 1
+  rjmp div3
+div2:             // negative branch, A[0] = 0 (default after shift), restore P
+  add R20, R24    // restore old value of P
+  adc R21, R25
+
+div3:
+  dec R18
+  brne div1
+
+finish:
+  mov R24, R20
+  mov R25, R21
+end;
+function fpc_mod_word(n, z: word): word; external name 'FPC_MOD_WORD';
+
+{$define FPC_SYSTEM_HAS_DIV_DWORD}
+function fpc_div_dword(n, z: dword): dword; nostackframe; assembler; [public,alias: 'FPC_DIV_DWORD'];
+label
+  start, div1, div2, div3, finish;
+asm
   // Symbol  Name        Register(s)
-  // x (A)   dividend    R25, R24, R23, R22
-  // d (B)   divisor     R21, R20, R19, R18
+  // x (A)   dividend    R21, R20, R19, R18
+  // d (B)   divisor     R25, R24, R23, R22
   // p (P)   remainder   R17, R16, R15, R14
   // n	     counter     R26
 
@@ -184,181 +196,352 @@ start:            // Start of division...
   ldi R26, 32     // iterate over 32 bits
 
 div1:
-  lsl R22         // shift left A_L
-  rol R23
-  rol R24
-  rol R25
+  lsl R18         // shift left A_L
+  rol R19
+  rol R20
+  rol R21
   rol R14         // shift left P with carry from A shift
   rol R15
   rol R16
   rol R17
-  sub R14, R18    // Subtract B from P, P <= P - B
-  sbc R15, R19
-  sbc R16, R20
-  sbc R17, R21
+  sub R14, R22    // Subtract B from P, P <= P - B
+  sbc R15, R23
+  sbc R16, R24
+  sbc R17, R25
   brlo div2
-  ori R22, 1      // Set A[0] = 1
+  ori R18, 1      // Set A[0] = 1
   rjmp div3
 div2:             // negative branch, A[0] = 0 (default after shift), restore P
-  add R14, R18    // restore old value of P
-  adc R15, R19
-  adc R16, R20
-  adc R17, R21
+  add R14, R22    // restore old value of P
+  adc R15, R23
+  adc R16, R24
+  adc R17, R25
 
 div3:
   dec R26
   brne div1
 
 finish:
-  // Copy remainder via pointer stored in pushed address
-  pop R31
-  pop R30
-  // TODO: can potenially change to the following to prevent a change to register pair R30:R31
-  // this cannot be done until the following bug is fixed: https://bugs.freepascal.org/view.php?id=32016
-  // Not really required in this case
-  //st Z, R14
-  //std Z+1, R15
-  //etc
-  // then movw R16, R30
-  // This would save stack space
-  // Current work-around
-  st Z+, R14
-  st Z+, R15
-  st Z+, R16
-  st Z, R17
-
-  pop R17
-  pop R16
-  pop R15
-  pop R14
+  mov R25, R21
+  mov R24, R20
+  mov R23, R19
+  mov R22, R18
 end;
-
-{$define FPC_SYSTEM_HAS_DIV_DWORD}
-function fpc_div_dword(n, z: dword): dword; [public,alias: 'FPC_DIV_DWORD'];
-var
-  remainder: dword;
-begin
-  fpc_div_dword := fpc_div_mod_dword(z, n, remainder);
-end;
+function fpc_div_dword(n, z: dword): dword; external name 'FPC_DIV_DWORD';
 
 {$define FPC_SYSTEM_HAS_MOD_DWORD}
-function fpc_mod_dword(n, z: dword): dword; [public,alias: 'FPC_MOD_DWORD'];
-var
-   remainder: dword;
-begin
-  fpc_div_mod_dword(z, n, remainder);
-  fpc_mod_dword := remainder;
+function fpc_mod_dword(n, z: dword): dword; nostackframe; assembler; [public,alias: 'FPC_MOD_DWORD'];
+label
+  start, div1, div2, div3, finish;
+asm
+  // Symbol  Name        Register(s)
+  // x (A)   dividend    R21, R20, R19, R18
+  // d (B)   divisor     R25, R24, R23, R22
+  // p (P)   remainder   R17, R16, R15, R14
+  // n	     counter     R26
+
+  push R17
+  push R16
+  push R15
+  push R14
+start:            // Start of division...
+  clr R14         // clear remainder
+  clr R15         // clear remainder
+  clr R16
+  clr R17
+  ldi R26, 32     // iterate over 32 bits
+
+div1:
+  lsl R18         // shift left A_L
+  rol R19
+  rol R20
+  rol R21
+  rol R14         // shift left P with carry from A shift
+  rol R15
+  rol R16
+  rol R17
+  sub R14, R22    // Subtract B from P, P <= P - B
+  sbc R15, R23
+  sbc R16, R24
+  sbc R17, R25
+  brlo div2
+  ori R18, 1      // Set A[0] = 1
+  rjmp div3
+div2:             // negative branch, A[0] = 0 (default after shift), restore P
+  add R14, R22    // restore old value of P
+  adc R15, R23
+  adc R16, R24
+  adc R17, R25
+
+div3:
+  dec R26
+  brne div1
+
+finish:
+  mov R25, R17    // Move remainder to R25..R22
+  mov R24, R16
+  mov R23, R15
+  mov R22, R14
+
+  pop R14
+  pop R15
+  pop R16
+  pop R17
 end;
+function fpc_mod_dword(n, z: dword): dword; external name 'FPC_MOD_DWORD';
 
 {$define FPC_SYSTEM_HAS_DIV_SHORTINT}
-function fpc_div_shortint(n,z : shortint) : shortint; [public,alias: 'FPC_DIV_SHORTINT']; compilerproc;
-var
-  sign: boolean;
-  b1, b2: byte;
-begin
-   if n = 0 then
-   begin
-     if z > 0 then
-       fpc_div_shortint := 127
-     else
-       fpc_div_shortint := -128;
-     exit;
-   end;
-   sign := false;
-   if z < 0 then
-     begin
-        sign := not(sign);
-        b1 := byte(-z);
-     end
-   else
-     b1 := z;
-   if n < 0 then
-     begin
-        sign := not(sign);
-        b2 := byte(-n);
-     end
-   else
-     b2 := n;
+// z (dividend) = q(result) x n(divisor) + p(remainder)
+function fpc_div_shortint(n,z : shortint) : shortint; nostackframe; assembler; [public,alias: 'FPC_DIV_SHORTINT']; compilerproc;
+label
+  pos1, pos2;
+asm
+// Convert to positive, then call mod_byte then restore to negative if appropriate
+// n       divisor     R24
+// z       dividend    R22
+//         neg_result  R30
 
-   { the div is coded by the compiler as call to divdword }
-   if sign then
-     result := -(b1 div b2)
-   else
-     result := b1 div b2;
+  // convert n to absolute
+  mov R30, R22    // store z
+  eor R30, R24    // z XOR n, answer must be negative if MSB set
+  sub R24, r1     // subtract 0, just to check sign flag
+  brpl pos1
+  neg R24
+  pos1:
+  sub R22, r1
+  brpl pos2
+  neg R22
+  pos2:
+
+  rcall fpc_div_byte
+
+  sbrc R30, 7     // skip if bit 7 is cleared (result should be positive)
+  neg R24         // result from FPC_DIV_BYTE in R24
+end;
+
+{$define FPC_SYSTEM_HAS_MOD_SHORTINT}
+// z (dividend) = q(result) x n(divisor) + p(remainder)
+function fpc_mod_shortint(n,z : shortint) : shortint; nostackframe; assembler; [public,alias: 'FPC_MOD_SHORTINT']; compilerproc;
+label
+  pos1, pos2;
+asm
+// Convert to positive, then call mod_byte then restore to negative if appropriate
+// n       divisor     R24
+// z       dividend    R22
+//         neg_result  R30
+
+  // convert n to absolute
+  mov R30, R22    // store z for sign check
+  sub R24, r1     // subtract 0, just to check sign flag
+  brpl pos1
+  neg R24
+  pos1:
+  sub R22, r1
+  brpl pos2
+  neg R22
+  pos2:
+
+  rcall fpc_mod_byte
+
+  sbrc R30, 7     // skip if bit 7 is cleared (result should be positive)
+  neg R24         // result from FPC_DIV_BYTE in R24
 end;
 
 {$define FPC_SYSTEM_HAS_DIV_SMALLINT}
-function fpc_div_smallint(n,z : smallint) : smallint; [public,alias: 'FPC_DIV_SMALLINT']; compilerproc;
-var
-  sign: boolean;
-  w1, w2: word;
-begin
-  if n = 0 then
-  begin
-    if z > 0 then
-      fpc_div_smallint := 32767
-    else
-      fpc_div_smallint := -32768;
-    exit;
-  end;
-  sign := false;
-  if z < 0 then
-  begin
-    sign := not(sign);
-    w1 := word(-z);
-  end
-  else
-    w1 := z;
+function fpc_div_smallint(n,z : smallint): smallint; nostackframe; assembler; [public,alias: 'FPC_DIV_SMALLINT']; compilerproc;
+label
+  pos1, pos2, fin;
+asm
+// Convert to positive, then call div_word then restore to negative if appropriate
+// n       divisor     R24, R25
+// z       dividend    R22, R23
+//         neg_result  R30
+//         one         R31
 
-  if n < 0 then
-  begin
-    sign := not(sign);
-    w2 := word(-n);
-  end
-  else
-    w2 := n;
+  mov R30, R23    // store hi8(z)
+  eor R30, R25    // hi8(z) XOR hi8(n), answer must be negative if MSB set
 
-   { the div is coded by the compiler as call to divdword }
-  if sign then
-    result := -(w1 div w2)
-  else
-    result := w1 div w2;
+  ldi R31, 1
+  // convert n to absolute
+  sub R25, r1     // subtract 0, just to check sign flag
+  brpl pos1
+  com R25
+  com R24
+  add R24, R31    // add 1
+  adc R25, R1     // add carry bit
+
+  pos1:
+  sub R23, R1
+  brpl pos2
+  com R22
+  com R23
+  add R22, R31
+  adc R23, R1
+  pos2:
+
+  rcall fpc_div_word
+
+  sbrs R30, 7     // skip if bit 7 is cleared (result should be positive)
+  rjmp fin
+  com R25         // result from FPC_DIV_WORD in R24, R25
+  com R24
+  //ldi R31, 1      // trashed by call to fpc_div
+  add R24, R31
+  adc R25, R1
+  fin:
+end;
+
+{$define FPC_SYSTEM_HAS_MOD_SMALLINT}
+function fpc_mod_smallint(n,z : smallint): smallint; nostackframe; assembler; [public,alias: 'FPC_MOD_SMALLINT']; compilerproc;
+label
+  pos1, pos2, fin;
+asm
+// Convert to positive, then call div_word then restore to negative if appropriate
+// n       divisor     R25, R24
+// z       dividend    R23, R22
+//         neg_result  R30
+//         one         R31
+
+  mov R30, R23    // store hi8(z)
+
+  ldi R31, 1
+  // convert n to absolute
+  sub R25, r1     // subtract 0, just to check sign flag
+  brpl pos1
+  com R25
+  com R24
+  add R24, R31    // add 1
+  adc R25, R1     // add carry bit
+
+  pos1:
+  sub R23, R1
+  brpl pos2
+  com R22
+  com R23
+  add R22, R31
+  adc R23, R1
+  pos2:
+
+  rcall fpc_mod_word
+
+  sbrs R30, 7     // skip if bit 7 is cleared (result should be positive)
+  rjmp fin
+  com R25         // result from FPC_DIV_WORD in R24, R25
+  com R24
+  //ldi R31, 1      // trashed by call to fpc_div
+  add R24, R31
+  adc R25, R1
+  fin:
 end;
 
 {$define FPC_SYSTEM_HAS_DIV_LONGINT}
-function fpc_div_longint(n,z : longint) : longint; [public,alias: 'FPC_DIV_LONGINT']; compilerproc;
-var
-  sign: boolean;
-  d1, d2: dword;
-begin
-  if n = 0 then
-  begin
-    if z > 0 then
-      fpc_div_longint := 2147483647
-    else
-      fpc_div_longint := -2147483648;
-    exit;
-  end;
-  sign := false;
-  if z < 0 then
-  begin
-    sign := not(sign);
-    d1 := dword(-z);
-  end
-  else
-    d1 := z;
-  if n < 0 then
-  begin
-    sign := not(sign);
-    d2 := dword(-n);
-  end
-  else
-    d2 := n;
+function fpc_div_longint(n,z : longint): longint; nostackframe; assembler; [public,alias: 'FPC_DIV_LONGINT']; compilerproc;
+label
+  pos1, pos2, fin;
+asm
+// Convert to positive, then call div_dword then restore to negative if appropriate
+// n       divisor     R25, R24, R23, R22
+// z       dividend    R21, R20, R19, R18
+//         neg_result  R30
+//         one         R31
 
-   { the div is coded by the compiler as call to divdword }
-  if sign then
-    result := -(d1 div d2)
-  else
-    result := d1 div d2;
+  mov R30, R21    // store hi8(z)
+  eor R30, R25    // hi8(z) AND hi8(n), answer must be negative if MSB set
+
+  // convert n to absolute
+  ldi R31, 1
+  sub R25, r1     // subtract 0, just to check sign flag
+  brpl pos1
+  com R25
+  com R24
+  com R23
+  com R22
+  add R22, R31    // add 1
+  adc R23, R1     // add carry bit
+  adc R24, R1
+  adc R25, R1
+
+  pos1:
+  sub R21, R1
+  brpl pos2
+  com R21
+  com R20
+  com R19
+  com R18
+  add R18, R31
+  adc R19, R1
+  adc R20, R1
+  adc R21, R1
+  pos2:
+
+  rcall fpc_div_dword
+
+  sbrs R30, 7     // skip if bit 7 is cleared (result should be positive)
+  rjmp fin
+  com R25         // result from FPC_DIV_WORD in R25 ... R22
+  com R24
+  com R23
+  com R22
+  //ldi R27, 1
+  add R22, R31
+  adc R23, R1
+  adc R24, R1
+  adc R25, R1
+  fin:
+end;
+
+{$define FPC_SYSTEM_HAS_MOD_LONGINT}
+function fpc_mod_longint(n,z : longint): longint; nostackframe; assembler; [public,alias: 'FPC_MOD_LONGINT']; compilerproc;
+label
+  pos1, pos2, fin;
+asm
+// Convert to positive, then call div_dword then restore to negative if appropriate
+// n       divisor     R25, R24, R23, R22
+// z       dividend    R21, R20, R19, R18
+//         neg_result  R30 26
+//         one         R31 27
+
+  mov R30, R21    // store hi8(z)
+
+  // convert n to absolute
+  ldi R31, 1
+  sub R25, r1     // subtract 0, just to check sign flag
+  brpl pos1
+  com R25
+  com R24
+  com R23
+  com R22
+  add R22, R31    // add 1
+  adc R23, R1     // add carry bit
+  adc R24, R1
+  adc R25, R1
+
+  pos1:
+  sub R21, R1
+  brpl pos2
+  com R21
+  com R20
+  com R19
+  com R18
+  add R18, R31
+  adc R19, R1
+  adc R20, R1
+  adc R21, R1
+  pos2:
+
+  rcall fpc_mod_dword
+
+  sbrs R30, 7     // skip if bit 7 is cleared (result should be positive)
+  rjmp fin
+  com R25         // result from FPC_DIV_WORD in R25 ... R22
+  com R24
+  com R23
+  com R22
+  //ldi R31, 1
+  add R22, R31
+  adc R23, R1
+  adc R24, R1
+  adc R25, R1
+  fin:
 end;
 
