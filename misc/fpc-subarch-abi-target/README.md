@@ -1,9 +1,9 @@
-== Background
+## Background
 Architectures such as AVR and ARM have different sub architectures.  ARM also have a default ABI and eabi, which potentially produce different compiled code.  Currently only one sub architecture (and ABI) can be handled by the current build system, building for a different sub architecture will overwrite the previous sub architecture files.  
 
 This a continuation of Florian's work in target-subdir branch, but based on a recent trunk.  
 
-== Approach
+## Approach
 General approach: include subarch and (if applicable) ABI to target 
 * In fpcmake.ini 
   * add SUBARCH_ABI_SUFFIX variable
@@ -15,5 +15,5 @@ General approach: include subarch and (if applicable) ABI to target
   * add --subarch and --abi options to FPC_TARGETOPT variable
   * remove -Cp%, -P%, -T% and -Ca% from FPCOPT variable
 
-== TODO
+## TODO
 Update fpcmkcfg once approach is accepted.
