@@ -11,6 +11,7 @@ General approach: include subarch and (if applicable) ABI to target
 * In fpmkunit.pp:
   * add support for new command line options subarch and abi
   * include subarch and abi in MakeTargetString function
+  * add -Cp and -Ca to TBuildEngine.GetCompilerCommand if subarch and ABI are defined respectively
 * In Makefile.fpc:
   * add --subarch and --abi options to FPC_TARGETOPT variable
   * remove -Cp%, -P%, -T% and -Ca% from FPCOPT variable

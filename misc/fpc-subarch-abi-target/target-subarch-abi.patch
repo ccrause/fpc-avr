@@ -1,6 +1,6 @@
 Index: utils/fpcm/fpcmake.ini
 ===================================================================
---- utils/fpcm/fpcmake.ini	(revision 39510)
+--- utils/fpcm/fpcmake.ini	(revision 39572)
 +++ utils/fpcm/fpcmake.ini	(working copy)
 @@ -252,6 +252,9 @@
  FULL_TARGET=$(CPU_TARGET)-$(OS_TARGET)
@@ -107,7 +107,7 @@ Index: utils/fpcm/fpcmake.ini
  # ZipTarget
 Index: packages/fpmkunit/src/fpmkunit.pp
 ===================================================================
---- packages/fpmkunit/src/fpmkunit.pp	(revision 39510)
+--- packages/fpmkunit/src/fpmkunit.pp	(revision 39572)
 +++ packages/fpmkunit/src/fpmkunit.pp	(working copy)
 @@ -970,6 +970,11 @@
      FOptions: TStrings;
@@ -201,9 +201,23 @@ Index: packages/fpmkunit/src/fpmkunit.pp
    LogArgOption('t','target',SHelpTarget);
    LogArgOption('P','prefix',SHelpPrefix);
    LogArgOption('B','baseinstalldir',SHelpBaseInstalldir);
+@@ -6677,6 +6719,13 @@
+   if ExtractFileName(GetCompiler) = 'fpc' then
+     Args.Add('-P'+CPUToString(Defaults.CPU));
+ 
++  // CC
++  // Add subarch and ABI if used
++  if Defaults.SubArch <> '' then
++    Args.Add('-Cp' + Defaults.SubArch);
++  if Defaults.ABI <> '' then
++    Args.Add('-Ca' + Defaults.ABI);
++
+   // Compile mode
+   If ATarget.Mode<>cmFPC then
+     Args.Add('-M'+ModeToString(ATarget.Mode))
 Index: packages/Makefile.fpc
 ===================================================================
---- packages/Makefile.fpc	(revision 39510)
+--- packages/Makefile.fpc	(revision 39572)
 +++ packages/Makefile.fpc	(working copy)
 @@ -27,6 +27,15 @@
  ifdef CPU_TARGET
@@ -237,7 +251,7 @@ Index: packages/Makefile.fpc
  # Compose general fpmake-parameters
 Index: packages/rtl-extra/Makefile.fpc
 ===================================================================
---- packages/rtl-extra/Makefile.fpc	(revision 39510)
+--- packages/rtl-extra/Makefile.fpc	(revision 39572)
 +++ packages/rtl-extra/Makefile.fpc	(working copy)
 @@ -23,6 +23,15 @@
  ifdef CPU_TARGET
