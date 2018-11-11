@@ -6,6 +6,7 @@ uses
   parsingATDF, classes;
 
 procedure generateUnitFromATDFInfo(constref device: TDevice; var SL: TStrings);
+procedure generateUnitXFromATDFInfo(constref device: TDevice; var SL: TStrings);
 
 implementation
 
@@ -29,6 +30,13 @@ type
     bitFields: TBitFields;  // add bit fields in sorted order
   end;
   TSortedRegs = array of TReg;
+
+  TRegGroup = record
+    aname,
+    atype: string;
+    offset: integer;
+  end;
+  TSortedRegGroups = array of TRegGroup;
 
 var
   IDList: TStringList;  // list used to check uniqueness of identifier names
@@ -713,6 +721,258 @@ begin
     for i := 0 to High(device.Interrupts) do
       if device.Interrupts[i].index <> 0 then
         SL.Add('  .set ' + device.Interrupts[i].name + '_ISR' + ', Default_IRQ_handler');
+
+    SL.Add('end;');
+    SL.Add('');
+    SL.Add('end.');
+  finally
+    FreeAndNil(cl);
+    FreeAndNil(vl);
+  end;
+end;
+
+procedure sortedRegGroupsX(constref device: TDevice; SL: TStrings);
+var
+  i, j, k: integer;
+  pms: TPeriphModules;
+  rg: TPeriphRegGroup;
+  typ, ref: string;
+  sortedList: TStringList;
+begin
+  pms := device.PeriphModules;
+  if length(pms) = 0 then
+  begin
+    Exception.Create('Error - no peripheral modules registered for device');
+    exit;
+  end;
+
+  sortedList := TStringList.Create;
+  for i := 0 to high(pms) do
+  begin
+    typ := pms[i].aname;
+    for j := 0 to high(pms[i].periphInstances) do
+    begin
+      for k := 0 to high(pms[i].periphInstances[j].RegGroup) do
+      begin
+        rg := pms[i].periphInstances[j].RegGroup[k];
+        ref := format('  %s: T%s absolute $%.4X;',[rg.aname, typ, rg.offset]);
+        sortedList.AddPair(IntToHex(rg.offset, 4), ref);
+      end;
+    end;
+  end;
+
+  sortedList.Sort;
+  SL.Add('var');
+  for i := 0 to sortedList.Count-1 do
+    SL.Add(sortedList.ValueFromIndex[i]);
+
+  sortedList.Free;
+end;
+
+// ATXmega style packed records
+function EscapeReservedWord(s: string): string;
+const
+  reservedwords: array of string = ('IN', 'OUT');
+var
+  i: integer;
+begin
+  result := s;
+  i := 0;
+
+  while (i < length(reservedwords)) and (s <> reservedwords[i]) do
+    inc(i);
+
+  if (i < length(reservedwords)) then
+    result := result + '_';
+end;
+
+procedure generateDeclarationsOptX(constref device: TDevice; var List: TStrings);
+var
+  i, j, k, bitsInMask: integer;
+  sortedRegs: TSortedRegs;
+  r: TRegister;
+  b: TBitField;
+  previousVar: boolean;
+  s, comment, type_: string;
+  pm: TPeriphModule;
+  m: TModule;
+
+  RegGroupArray: array of string;
+
+begin
+  if not Assigned(device.Modules) then
+    exit
+  else
+    List.Add('type');
+
+  for i := 0 to High(device.Modules) do
+  begin
+    m := device.Modules[i];
+    if not Assigned(m.registerGroups) then
+      Continue;
+    type_ := ': T'+m.aname+';';
+    for j := 0 to High(m.registerGroups) do
+    begin
+      List.Add('  T' + m.registerGroups[j].aname + ' = record //'+m.registerGroups[j].caption);
+
+      if m.registerGroups[j].class_ = '' then
+      begin
+        SetLength(RegGroupArray, m.registerGroups[j].size);
+        for k := 0 to high(RegGroupArray) do
+          RegGroupArray[k] := '';
+
+        for k := 0 to high(m.registerGroups[j].registers) do
+        begin
+          r := m.registerGroups[j].registers[k];
+          // Check if entry exceeds stated size (e.g. USERROW module which states size=32 but entries run to 63)
+          if r.offset >= length(RegGroupArray)-1 then
+            SetLength(RegGroupArray, r.offset+1);
+
+          if r.caption = '' then
+            comment := ''
+          else
+            comment := '  //' + r.caption;
+
+          s := EscapeReservedWord(r.aname);
+          case r.size of
+            1: RegGroupArray[r.offset] := '    '+s+': byte;'+comment;
+            2:
+            begin
+              RegGroupArray[r.offset] := '    '+s+': word;'+comment;
+              RegGroupArray[r.offset+1] := '_';
+            end;
+            4:
+            begin
+              RegGroupArray[r.offset] := '    '+s+': dword;'+comment;
+              RegGroupArray[r.offset+1] := '_';
+              RegGroupArray[r.offset+2] := '_';
+              RegGroupArray[r.offset+3] := '_';
+            end;
+            else
+              List.Add('################ Error unexpected register byte size...');
+          end;
+        end;
+        for k := 0 to high(RegGroupArray) do
+        begin
+          if RegGroupArray[k] = '' then
+            List.Add('    Reserved'+IntToStr(k)+': byte;')
+          else if RegGroupArray[k] <> '_' then
+            List.Add(RegGroupArray[k]);
+        end;
+        List.Add('  end;');
+        List.Add('');
+      end  // if
+      else if m.registerGroups[j].class_ = 'union' then
+      begin
+        List.Add('    case byte of');
+        for k := 0 to high(m.registerGroups[j].registers) do
+          List.Add(format('    %d: (%s: T%s);', [k, m.registerGroups[j].registers[k].aname, m.registerGroups[j].registers[k].caption]));
+
+        List.Add('    end;');
+        //List.Add('  end;');
+        List.Add('');
+      end
+      else
+        List.Add('Error unexpected class type: '+m.registerGroups[j].class_);
+    end;
+  end;
+
+  sortedRegGroupsX(device, List);
+end;
+
+
+procedure generateUnitXFromATDFInfo(constref device: TDevice; var SL: TStrings);
+var
+  jmpInstr: string;  // jmp/rjmp depending on target capability
+  startInc: string;  // start.inc/start_noram.inc depending on target RAM
+  i, prevID: integer;
+  pgmsize, sramsize: integer;
+  cl, vl: TStringList;
+begin
+  cl := TStringList.Create;
+  vl := TStringList.Create;
+  try
+    // device capability checks required later on
+    pgmsize := 0;
+    sramsize := 0;
+    i := 0;
+    while i < length(device.AddressSpaces) do
+    begin
+      if device.AddressSpaces[i].aname = 'prog' then
+        pgmsize := device.AddressSpaces[i].size;
+      if device.AddressSpaces[i].aname = 'data' then
+        sramsize := device.AddressSpaces[i].size;
+
+      inc(i);
+    end;
+
+    if pgmsize > 8192 then jmpInstr := 'jmp' else jmpInstr := 'rjmp';
+    if sramsize > 0 then startInc := 'start' else startInc := 'start_noram';
+
+    SL.Clear;
+    SL.Add('unit ' + device.deviceName + ';');
+    SL.Add(#13#10'{$goto on}'#13#10'interface'#13#10);
+
+    //generateDeclarationsOpt1(device, SL);
+    //generateDeclarationsOpt2(device, SL);
+    generateDeclarationsOptX(device, SL);
+    if pgmsize > 8192 then
+      SL.Add(#13#10'implementation'#13#10#13#10'{$i avrcommon.inc}'#13#10)
+    else
+      SL.Add(#13#10'implementation'#13#10'{$define RELBRANCHES}'#13#10'{$i avrcommon.inc}'#13#10);
+
+    prevID := 0;
+    for i := 0 to High(device.Interrupts) do
+    begin
+      if device.Interrupts[i].index <> prevID then
+        SL.Add(format('procedure %s_ISR; external name ''%s_ISR''; // Interrupt %d %s',
+            [device.Interrupts[i].name, device.Interrupts[i].name,
+             device.Interrupts[i].index, device.Interrupts[i].caption]))
+      else
+      SL.Add(format('//procedure %s_ISR; external name ''%s_ISR''; // Interrupt %d %s',
+          [device.Interrupts[i].name, device.Interrupts[i].name,
+           device.Interrupts[i].index, device.Interrupts[i].caption]));
+
+      prevID := device.Interrupts[i].index;
+    end;
+
+    SL.Add(#13#10'procedure _FPC_start; assembler; nostackframe;'#13#10'label'#13#10'  _start;'#13#10 +
+                    'asm'#13#10'  .init'#13#10'  .globl _start'#13#10#13#10'  '+jmpInstr+' _start');
+
+    prevID := 0;
+    for i := 0 to High(device.Interrupts) do
+    begin
+      if device.Interrupts[i].index <> prevID then
+        SL.Add('  '+jmpInstr+' ' + device.Interrupts[i].name + '_ISR')
+      else
+        SL.Add('//  '+jmpInstr+' ' + device.Interrupts[i].name + '_ISR');
+
+      prevID := device.Interrupts[i].index;
+    end;
+
+    SL.Add(#13#10'  {$i '+startInc+'.inc}'#13#10);
+    prevID := 0;
+    for i := 0 to High(device.Interrupts) do
+    begin
+      if device.Interrupts[i].index <> prevID then
+        SL.Add('  .weak ' + device.Interrupts[i].name + '_ISR')
+      else
+        SL.Add('//  .weak ' + device.Interrupts[i].name + '_ISR');
+
+      prevID := device.Interrupts[i].index;
+    end;
+
+    SL.Add('');
+    prevID := 0;
+    for i := 0 to High(device.Interrupts) do
+    begin
+      if device.Interrupts[i].index <> prevID then
+        SL.Add('  .set ' + device.Interrupts[i].name + '_ISR' + ', Default_IRQ_handler')
+      else
+        SL.Add('//  .set ' + device.Interrupts[i].name + '_ISR' + ', Default_IRQ_handler');
+
+      prevID := device.Interrupts[i].index;
+    end;
 
     SL.Add('end;');
     SL.Add('');

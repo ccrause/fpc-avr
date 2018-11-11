@@ -56,7 +56,8 @@ type
   TPeriphInstances = array of TPeriphInstance;
 
   TPeriphModule = record
-    aname: string;
+    aname,
+    ID: string;
     periphInstances: TPeriphInstances;
   end;
   TPeriphModules = array of TPeriphModule;
@@ -85,7 +86,9 @@ type
 
   TRegisterGroup = record
     aname,
-    caption: string;
+    caption,
+    class_: string;
+    size: integer;
     registers: TRegisters;
   end;
   TRegisterGroups = array of TRegisterGroup;
@@ -276,6 +279,7 @@ begin
     SetLength(Result, i+1);
 
     Result[i].aname := safeAttributeValue(periphModuleNode.Attributes.GetNamedItem('name'));
+    Result[i].ID := safeAttributeValue(periphModuleNode.Attributes.GetNamedItem('id'));
 
     periphInstNode := periphModuleNode.FirstChild;
     while Assigned(periphInstNode) do
@@ -371,49 +375,62 @@ begin
 
         Result[i].registerGroups[j].aname := safeAttributeValue(rgNode.Attributes.GetNamedItem('name'));
         Result[i].registerGroups[j].caption := safeAttributeValue(rgNode.Attributes.GetNamedItem('caption'));
+        Result[i].registerGroups[j].class_ := safeAttributeValue(rgNode.Attributes.GetNamedItem('class'));  // for union structures
+        Result[i].registerGroups[j].size := safeAttributeInteger(rgNode.Attributes.GetNamedItem('size'));
 
         rNode := rgNode.FirstChild;
-        while Assigned(rNode) and (rNode.NodeName = 'register') do
+        while Assigned(rNode) and
+          ((rNode.NodeName = 'register') or (rNode.NodeName = 'register-group')) do
         begin
           if rNode.NodeType <> COMMENT_NODE then
           begin
             k := Length(Result[i].registerGroups[j].registers);
             SetLength(Result[i].registerGroups[j].registers, k+1);
 
-            Result[i].registerGroups[j].registers[k].aname :=
-              safeAttributeValue(rNode.Attributes.GetNamedItem('name'));
-            Result[i].registerGroups[j].registers[k].caption :=
-              safeAttributeValue(rNode.Attributes.GetNamedItem('caption'));
-            Result[i].registerGroups[j].registers[k].offset :=
-              safeAttributeInteger(rNode.Attributes.GetNamedItem('offset'));
-            Result[i].registerGroups[j].registers[k].size :=
-              safeAttributeInteger(rNode.Attributes.GetNamedItem('size'));
-            Result[i].registerGroups[j].registers[k].mask :=
-              safeAttributeInteger(rNode.Attributes.GetNamedItem('mask'));
-            Result[i].registerGroups[j].registers[k].initVal :=
-              safeAttributeInteger(rNode.Attributes.GetNamedItem('initval'));
-
-            bfNode := rNode.FindNode('bitfield');
-            while Assigned(bfNode) and (bfNode.NodeName = 'bitfield') do
+            if (rNode.NodeName = 'register') then
             begin
-              if bfNode.NodeType <> COMMENT_NODE then
+              Result[i].registerGroups[j].registers[k].aname :=
+                safeAttributeValue(rNode.Attributes.GetNamedItem('name'));
+              Result[i].registerGroups[j].registers[k].caption :=
+                safeAttributeValue(rNode.Attributes.GetNamedItem('caption'));
+              Result[i].registerGroups[j].registers[k].offset :=
+                safeAttributeInteger(rNode.Attributes.GetNamedItem('offset'));
+              Result[i].registerGroups[j].registers[k].size :=
+                safeAttributeInteger(rNode.Attributes.GetNamedItem('size'));
+              Result[i].registerGroups[j].registers[k].mask :=
+                safeAttributeInteger(rNode.Attributes.GetNamedItem('mask'));
+              Result[i].registerGroups[j].registers[k].initVal :=
+                safeAttributeInteger(rNode.Attributes.GetNamedItem('initval'));
+
+              bfNode := rNode.FindNode('bitfield');
+              while Assigned(bfNode) and (bfNode.NodeName = 'bitfield') do
               begin
-                l := Length(Result[i].registerGroups[j].registers[k].bitFields);
-                SetLength(Result[i].registerGroups[j].registers[k].bitFields, l+1);
+                if bfNode.NodeType <> COMMENT_NODE then
+                begin
+                  l := Length(Result[i].registerGroups[j].registers[k].bitFields);
+                  SetLength(Result[i].registerGroups[j].registers[k].bitFields, l+1);
 
-                Result[i].registerGroups[j].registers[k].bitFields[l].aname :=
-                  safeAttributeValue(bfNode.Attributes.GetNamedItem('name'));
-                Result[i].registerGroups[j].registers[k].bitFields[l].caption :=
-                  safeAttributeValue(bfNode.Attributes.GetNamedItem('caption'));
-                Result[i].registerGroups[j].registers[k].bitFields[l].values :=
-                  safeAttributeValue(bfNode.Attributes.GetNamedItem('values'));
-                Result[i].registerGroups[j].registers[k].bitFields[l].lsb :=
-                  safeAttributeInteger(bfNode.Attributes.GetNamedItem('lsb'));
-                Result[i].registerGroups[j].registers[k].bitFields[l].mask :=
-                  safeAttributeInteger(bfNode.Attributes.GetNamedItem('mask'));
+                  Result[i].registerGroups[j].registers[k].bitFields[l].aname :=
+                    safeAttributeValue(bfNode.Attributes.GetNamedItem('name'));
+                  Result[i].registerGroups[j].registers[k].bitFields[l].caption :=
+                    safeAttributeValue(bfNode.Attributes.GetNamedItem('caption'));
+                  Result[i].registerGroups[j].registers[k].bitFields[l].values :=
+                    safeAttributeValue(bfNode.Attributes.GetNamedItem('values'));
+                  Result[i].registerGroups[j].registers[k].bitFields[l].lsb :=
+                    safeAttributeInteger(bfNode.Attributes.GetNamedItem('lsb'));
+                  Result[i].registerGroups[j].registers[k].bitFields[l].mask :=
+                    safeAttributeInteger(bfNode.Attributes.GetNamedItem('mask'));
+                end;
+
+                bfNode := bfNode.NextSibling;
               end;
-
-              bfNode := bfNode.NextSibling;
+            end
+            else if (rNode.NodeName = 'register-group') then
+            begin
+              Result[i].registerGroups[j].registers[k].aname :=
+                safeAttributeValue(rNode.Attributes.GetNamedItem('name'));  // refer to original reg-group name
+              Result[i].registerGroups[j].registers[k].caption :=
+                safeAttributeValue(rNode.Attributes.GetNamedItem('name-in-module'));  // refer to original reg-group name
             end;
           end;
 
@@ -495,7 +512,13 @@ begin
     SetLength(Result, i+1);
 
     Result[i].caption := safeAttributeValue(node.Attributes.GetNamedItem('caption'));
-    Result[i].name:= safeAttributeValue(node.Attributes.GetNamedItem('name'));
+
+    Result[i].name:= safeAttributeValue(node.Attributes.GetNamedItem('module-instance'));
+    if Result[i].name = '' then  // not xmega
+      Result[i].name:= safeAttributeValue(node.Attributes.GetNamedItem('name'))
+    else
+      Result[i].name:= Result[i].name+'_'+safeAttributeValue(node.Attributes.GetNamedItem('name'));
+
     s := safeAttributeValue(node.Attributes.GetNamedItem('index'));
     Val(s, v, errcode);
     if errcode = 0 then
