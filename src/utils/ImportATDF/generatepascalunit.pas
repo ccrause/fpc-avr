@@ -792,19 +792,19 @@ var
   sortedRegs: TSortedRegs;
   r: TRegister;
   b: TBitField;
-  previousVar: boolean;
+  previousVar, foundBottomReg: boolean;
   s, comment, type_: string;
   pm: TPeriphModule;
   m: TModule;
-
+  reverseList: TStringList;
   RegGroupArray: array of string;
-
 begin
   if not Assigned(device.Modules) then
     exit
   else
     List.Add('type');
 
+  reverseList := TStringList.Create;
   for i := 0 to High(device.Modules) do
   begin
     m := device.Modules[i];
@@ -825,8 +825,8 @@ begin
         begin
           r := m.registerGroups[j].registers[k];
           // Check if entry exceeds stated size (e.g. USERROW module which states size=32 but entries run to 63)
-          if r.offset >= length(RegGroupArray)-1 then
-            SetLength(RegGroupArray, r.offset+1);
+          if (r.offset + r.size) > length(RegGroupArray) then
+            SetLength(RegGroupArray, r.offset + r.size);
 
           if r.caption = '' then
             comment := ''
@@ -852,13 +852,28 @@ begin
               List.Add('################ Error unexpected register byte size...');
           end;
         end;
-        for k := 0 to high(RegGroupArray) do
+
+        // Scan from bottom up, only add registers after first real register from bottom
+        foundBottomReg := false;
+        for k := high(RegGroupArray) downto 0 do
         begin
-          if RegGroupArray[k] = '' then
-            List.Add('    Reserved'+IntToStr(k)+': byte;')
+          if (RegGroupArray[k] = '') then
+          begin
+            if foundBottomReg then
+             reverseList.Add('    Reserved'+IntToStr(k)+': byte;')
+          end
           else if RegGroupArray[k] <> '_' then
-            List.Add(RegGroupArray[k]);
+          begin
+            reverseList.Add(RegGroupArray[k]);
+            foundBottomReg := true;
+          end;
         end;
+
+        // Flip order of registers
+        for k := reverseList.Count-1 downto 0 do
+          List.Add(reverseList[k]);
+
+        reverseList.Clear;
         List.Add('  end;');
         List.Add('');
       end  // if
@@ -876,6 +891,7 @@ begin
         List.Add('Error unexpected class type: '+m.registerGroups[j].class_);
     end;
   end;
+  reverseList.Free;
 
   sortedRegGroupsX(device, List);
 end;
