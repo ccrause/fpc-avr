@@ -756,7 +756,7 @@ begin
       begin
         rg := pms[i].periphInstances[j].RegGroup[k];
         ref := format('  %s: T%s absolute $%.4X;',[rg.aname, typ, rg.offset]);
-        sortedList.AddPair(IntToHex(rg.offset, 4), ref);
+        sortedList.Add(IntToHex(rg.offset, 4) + '=' + ref);
       end;
     end;
   end;
@@ -772,7 +772,7 @@ end;
 // ATXmega style packed records
 function EscapeReservedWord(s: string): string;
 const
-  reservedwords: array of string = ('IN', 'OUT');
+  reservedwords: array[0..1] of string = ('IN', 'OUT');
 var
   i: integer;
 begin
