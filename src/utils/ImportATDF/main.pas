@@ -174,13 +174,10 @@ begin
   device := parseDevice(Doc.DocumentElement);
   FreeAndNil(Doc);
 
-  if device.architechture = 'AVR8X' then
-  begin
-    SL.Clear;
-    exit;
-  end;
-
-  generateUnitFromATDFInfo(device, SL);
+  //if device.architechture = 'AVR8X' then
+    generateUnitXFromATDFInfo(device, SL);
+  //else
+  //  generateUnitFromATDFInfo(device, SL);
 
   if Assigned(ControllerInfo) then
   begin

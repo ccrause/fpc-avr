@@ -21,6 +21,7 @@ const
   constMaskPrefix = 'c';
 
 type
+  // avr8 style declarations are per register
   TReg = record
     aname,
     caption: string;
@@ -31,6 +32,7 @@ type
   end;
   TSortedRegs = array of TReg;
 
+  // avr8X style declarations are per register group (record)
   TRegGroup = record
     aname,
     atype: string;
@@ -195,6 +197,12 @@ begin
   FreeAndNil(bitFieldList);
 end;
 
+// Plain style var declaration per register
+// var
+//  PORTB: byte absolute $25;  // Port B Data Register
+// with bit field declarations
+// const
+//  PB0 = 0;
 procedure generateDeclarationsOpt1(constref device: TDevice; var List: TStrings);
 var
   i, j, k, bitsInMask: integer;
@@ -280,6 +288,9 @@ begin
   end;
 end;
 
+// Conventional RTL style declarations
+// var
+//  PORTA: byte absolute $22;  // Port A Data Register
 procedure generateStandardDeclarationFromRegisterInfo(constref reg: TReg; var  typeStr, varStr, constStr: string);
 var
   j, k, bitsInMask, bitIndex, bitmask, bitnumber: integer;
@@ -385,6 +396,15 @@ begin
   FreeAndNil(typeList);
 end;
 
+// Record type declaration of bit fields for ports
+// type
+//  TBitField = 0..1;
+//  TPORTArec = bitpacked record
+//    PA0, PA1, PA2, PA3,
+//    PA4, PA5, PA6, PA7: TBitField;
+//  end;
+//var
+//  PORTArec: TPORTArec absolute $22;
 procedure generateRecordDeclarationFromRegisterInfo(constref reg: TReg; var typeStr, varStr, constStr: string);
 var
   j, k, bitsInMask, dummycount: integer;
@@ -475,6 +495,11 @@ begin
   FreeAndNil(typeList);
 end;
 
+// Set style declaration of ports
+// type
+//  TPORTAset = bitpacked set of (sPA0, sPA1, sPA2, sPA3, sPA4, sPA5, sPA6, sPA7);
+//var
+//  PORTAset: TPORTAset absolute $22;
 procedure generateSetDeclarationFromRegisterInfo(constref reg: TReg; var typeStr, varStr, constStr: string);
 var
   j, k, bitsInMask: integer;
@@ -579,6 +604,7 @@ begin
   FreeAndNil(typeList);
 end;
 
+// Combine standard, set and record definitions for each register.
 procedure generateDeclarationsOpt2(constref device: TDevice; var List: TStrings);
 var
   i, typedefcount: integer;
@@ -657,6 +683,7 @@ begin
   FreeAndNil(IDList);
 end;
 
+// Combine register declarations with rest of unit information such as ISR declarations and including startup code
 procedure generateUnitFromATDFInfo(constref device: TDevice; var SL: TStrings);
 var
   jmpInstr: string;  // jmp/rjmp depending on target capability
@@ -731,6 +758,9 @@ begin
   end;
 end;
 
+// Generate variable decarations for register records at absolute offsets
+// var
+//  VPORTA: TVPORT absolute $0000;
 procedure sortedRegGroupsX(constref device: TDevice; SL: TStrings);
 var
   i, j, k: integer;
@@ -755,8 +785,13 @@ begin
       for k := 0 to high(pms[i].periphInstances[j].RegGroup) do
       begin
         rg := pms[i].periphInstances[j].RegGroup[k];
-        ref := format('  %s: T%s absolute $%.4X;',[rg.aname, typ, rg.offset]);
-        sortedList.Add(IntToHex(rg.offset, 4) + '=' + ref);
+        // AVR8 controllers have separate memory spaces, only generate
+        // declarations for data space
+        if (device.architechture = 'AVR8X') or (rg.addressSpace = 'data') then
+        begin
+          ref := format('  %s: T%s absolute $%.4X;',[rg.aname, typ, rg.offset]);
+          sortedList.Add(IntToHex(rg.offset, 4) + '=' + ref);
+        end;
       end;
     end;
   end;
@@ -769,7 +804,7 @@ begin
   sortedList.Free;
 end;
 
-// ATXmega style packed records
+// Escape reserved Pascal words to prevent compilation errors
 function EscapeReservedWord(s: string): string;
 const
   reservedwords: array[0..1] of string = ('IN', 'OUT');
@@ -786,6 +821,54 @@ begin
     result := result + '_';
 end;
 
+
+procedure convertToRegisterGroupFormat(device: TDevice);
+var
+  i, j, k, regGroupOffset, tmpOffset: integer;
+  tmpRegGroup: TRegisterGroup;
+  prg: PPeriphRegGroup;
+begin
+  for i := 0 to high(device.Modules) do
+  begin
+    for j := 0 to high(device.Modules[i].registerGroups) do
+    begin
+      tmpRegGroup := device.Modules[i].registerGroups[j];
+      regGroupOffset := MaxInt;
+      for k := 0 to high(tmpRegGroup.registers) do
+      begin
+        tmpOffset := tmpRegGroup.registers[k].offset;
+        if tmpOffset > 0 then
+          regGroupOffset := min(regGroupOffset, tmpOffset);
+      end;
+
+      // Set register offset relative to register group offset
+      for k := 0 to high(tmpRegGroup.registers) do
+      begin
+        tmpOffset := tmpRegGroup.registers[k].offset;
+        if tmpOffset > 0 then
+          tmpRegGroup.registers[k].offset := tmpOffset - regGroupOffset
+        else
+        begin
+          writeln('!');
+        end;
+      end;
+
+      // Update peripheral module offset to be compatible with avr8X format
+      prg := findPeriphModule(device,
+                              device.Modules[i].aname,
+                              device.Modules[i].registerGroups[j].aname);
+
+      prg^.offset := regGroupOffset;
+    end;
+  end;
+end;
+
+// Generate record style decalarations for register groups
+// type
+// TRSTCTRL = record //Reset controller
+//   RSTFR: byte;  //Reset Flags
+//   SWRR: byte;  //Software Reset
+// end;
 procedure generateDeclarationsOptX(constref device: TDevice; var List: TStrings);
 var
   i, j, k, bitsInMask: integer;
@@ -803,6 +886,9 @@ begin
     exit
   else
     List.Add('type');
+
+  if device.architechture = 'AVR8' then
+    convertToRegisterGroupFormat(device);
 
   reverseList := TStringList.Create;
   for i := 0 to High(device.Modules) do
@@ -896,7 +982,9 @@ begin
   sortedRegGroupsX(device, List);
 end;
 
-
+// Combine register declarations with rest of unit information such as ISR declarations and including startup code
+// Similar to generateUnitFromATDFInfo, except for calling a different register declaration function
+// Could actually use a single function and just specify which declaration style to use...
 procedure generateUnitXFromATDFInfo(constref device: TDevice; var SL: TStrings);
 var
   jmpInstr: string;  // jmp/rjmp depending on target capability
