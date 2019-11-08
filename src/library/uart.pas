@@ -1,6 +1,7 @@
 unit uart;
 
 interface
+// Automatically use U2X
 procedure uart_init(const UBRR: word);
 procedure uart_init1(const BAUD: dword; const useU2X: boolean = false);
 
@@ -27,7 +28,7 @@ begin
   // Enable receiver and transmitter
   UCSR0B := (1 shl RXEN0) or (1 shl TXEN0);
 
-  // Set frame format: 8data, 2stop bit, no parity
+  // Set frame format: 8data, 1stop bit, no parity
   UCSR0C := (3 shl UCSZ0);
 end;
 
