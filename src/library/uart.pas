@@ -3,7 +3,10 @@ unit uart;
 interface
 // Automatically use U2X
 procedure uart_init(const UBRR: word);
+
+{$ifndef CPUAVRXMEGA3}
 procedure uart_init1(const BAUD: dword; const useU2X: boolean = false);
+{$endif}
 
 // Blocking functions
 procedure uart_transmit(const data: byte);
@@ -11,6 +14,37 @@ function uart_receive(): byte;
 
 implementation
 
+{$ifdef CPUAVRXMEGA3}
+procedure uart_init(const UBRR: word);
+begin
+  // RX
+  PORTB.DIRCLR := PIN1bm;
+
+  // TX
+  PORTB.OUTSET := Pin0bm;
+  PORTB.DIRSET := Pin0bm;
+
+  USART3.BAUD := UBRR;
+  //USART3.CTRLA := TUSART.RXCIEbm;  // RX is interrupt driven
+  USART3.CTRLB := TUSART.RXENbm or TUSART.TXENbm;
+end;
+
+// Blocking functions
+procedure uart_transmit(const data: byte);
+begin
+  repeat
+  until (USART3.STATUS and TUSART.DREIFbm = TUSART.DREIFbm);
+  USART3.TXDATAL := data;
+end;
+
+function uart_receive(): byte;
+begin
+  repeat
+  until (USART3.STATUS and TUSART.RXCIFbm = TUSART.RXCIFbm);
+  result := USART3.RXDATAL;
+end;
+
+{$else}
 procedure uart_init1(const BAUD: dword; const useU2X: boolean = false);
 var
   ubrr: word;
@@ -64,6 +98,7 @@ begin
   // Get and return received data from buffer
   result := UDR0;
 end;
+{$endif CPUAVRXMEGA3}
 
 end.
 
