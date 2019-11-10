@@ -26,13 +26,100 @@ const
   I2C_SLAR_NACK         = $48;
   I2C_DATA_READ_ACK     = $50;
   I2C_DATA_READ_NACK    = $58;
+  I2C_WriteMode         = false;
+  I2C_ReadMode          = true;
 
+  {$ifdef CPUAVRXMEGA3}
+  // 10 + 2BAUD + F_CPU.Trise = F_CPU/F_SCL
+  // BAUD = (F_CPU/F_SCL - 10 - F_CPU.Trise)/2
+  // Max rise times according to spec:
+  // Trise: 1000 ns @ 100kHz, 300 ns @ 400kHz
+  I2C_100kHz = ((F_CPU div 100000) - 10 - (F_CPU div 1000000)) div 2;
+  I2C_400kHz = ((F_CPU div 400000) - 10 - ((F_CPU * 300) div 1000) div 1000000) div 2;
+  {$else}
   // F_CPU dependent calc, use prescalar value of 1, or TWPS1:0 = 0
-  I2C_100kHz_TWBR = ((F_CPU div 100000) - 16) div 2;
-  I2C_400kHz_TWBR = ((F_CPU div 400000) - 16) div 2;
+  I2C_100kHz = ((F_CPU div 100000) - 16) div 2;
+  I2C_400kHz = ((F_CPU div 400000) - 16) div 2;
+  {$endif}
 
 implementation
 
+{$ifdef CPUAVRXMEGA3}
+procedure TI2CMaster.init(bitRate: byte);
+begin
+  TWI0.MCTRLA := TTWI.ENABLEbm;		      // TWI Enabled
+  TWI0.MCTRLB := TTWI.FLUSHbm;
+  TWI0.MBAUD := bitRate;
+  TWI0.MSTATUS := TTWI.BUSSTATE_IDLE or       // Set the BUS state to idle
+                  TTWI.RIFbm or TTWI.WIFbm or // Clear interrupt flags
+                  TTWI.BUSERRbm;              // Clear bus error flag
+end;
+
+function TI2CMaster.start(address: byte; readTransaction: boolean): boolean;
+begin
+  result := (TWI0.MSTATUS and TTWI.BUSSTATEmask) <> TTWI.BUSSTATE_BUSY;
+
+  TWI0.MSTATUS := TWI0.MSTATUS or (TTWI.WIFbm or TTWI.RIFbm); // clear interrupt flags
+
+  if result then
+  begin
+    if readTransaction then
+    begin
+      TWI0.MADDR := (address shl 1) or 1;
+      repeat until (TWI0.MSTATUS and TTWI.RIFbm) <> 0;
+    end
+    else
+    begin
+      TWI0.MADDR := address shl 1;
+      repeat until (TWI0.MSTATUS and TTWI.WIFbm) <> 0;
+    end;
+
+    result := (TWI0.MSTATUS and TTWI.RXACKbm) = 0;
+    result := result and ((TWI0.MSTATUS and TTWI.BUSERRbm) = 0);
+  end;
+end;
+
+function TI2CMaster.readByte(out data: byte; ack: boolean): boolean;
+begin
+  result := (TWI0.MSTATUS and TTWI.BUSSTATEmask) = TTWI.BUSSTATE_OWNER;
+  if result then
+  begin
+    repeat until (TWI0.MSTATUS and TTWI.RIFbm > 0);
+    if ack then
+      TWI0.MCTRLB := TWI0.MCTRLB and not(TTWI.ACKACT_NACK)
+    else
+      TWI0.MCTRLB := TWI0.MCTRLB or TTWI.ACKACT_NACK;
+
+    // Check for errors during read: bus or arbitration error, or NACK from slave
+    result := (TWI0.MSTATUS and (TTWI.BUSERRbm or TTWI.ARBLOSTbm or TTWI.RXACKbm) = 0); // Arbitration lost
+    if result then
+    begin
+      data := TWI0.MDATA;
+      TWI0.MCTRLB := TWI0.MCTRLB or TTWI.MCMD_RECVTRANS; // ACK, more data to be read
+    end;
+  end;
+end;
+
+function TI2CMaster.writeByte(data: byte): boolean;
+begin
+  result := (TWI0.MSTATUS and TTWI.BUSSTATEmask) = TTWI.BUSSTATE_OWNER;
+  if result then
+  begin
+    TWI0.MDATA := data;
+    repeat until (TWI0.MSTATUS and TTWI.WIFbm > 0);// or (TWI0.MSTATUS and TTWI.RXACKbm > 0); // NACK test?
+    // Check for errors during write
+    result := (TWI0.MSTATUS and TTWI.BUSERRbm) = 0;
+  end;
+end;
+
+function TI2CMaster.stop: boolean;
+begin
+  TWI0.MCTRLB := TTWI.MCMD_STOP;
+  //TWI0.MCTRLA := 0; // disable TWI module
+  result := true;
+end;
+
+{$else}
 procedure TI2CMaster.init(bitRate: byte);
 begin
   // Default prescaler value = 1
@@ -89,6 +176,7 @@ begin
   TWCR := (1 shl TWINT) or (1 shl TWEN) or (1 shl TWSTO);
   result := true;
 end;
+{$endif CPUAVRXMEGA3}
 
 end.
 
