@@ -94,17 +94,17 @@
       <ConfigFile>
         <DontUseConfigFile Value="True"/>
         <CustomConfigFile Value="True"/>
-        <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
+        <ConfigFilePath Value="~/fpc/avr-new/fpc.cfg"/>
       </ConfigFile>
-      <CustomOptions Value="-Wpatmega328p
+      <CustomOptions Value="-Wpatmega4809
 -a
 -XPavr-
 -al
--dF_CPU:=16000000"/>
+-dF_CPU:=3333333"/>
       <OtherDefines Count="1">
         <Define0 Value="F_CPU:=16000000"/>
       </OtherDefines>
-      <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossavr"/>
+      <CompilerPath Value="/home/christo/fpc/avr-new/compiler/ppcrossavr"/>
       <ExecuteBefore>
         <Command Value="../../scripts/run-simavr.sh $(targetfile).elf"/>
         <CompileReasons Compile="False" Build="False"/>
