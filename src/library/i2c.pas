@@ -7,12 +7,23 @@ type
   TI2CMaster = object
     retVal: byte;
     procedure init(bitRate: byte);
-    // Address should be right adjusted 7-bit value
+    // Address should be left adjusted 7-bit value
     function start(address: byte; readTransaction: boolean): boolean;
     function readByte(out data: byte; ack: boolean): boolean;
     function writeByte(data: byte): boolean;
     function stop: boolean;
   end;
+
+
+  // atmega4809 default TWI pins
+{$ifdef CPUAVRXMEGA3}
+  {$define SCLpin := 3}
+  {$define SCLpin_bm := 1 shl SCLpin}
+  {$define SCLport := PORTA} // PC5
+  {$define SDApin := 2}
+  {$define SDApin_bm := 1 shl SDApin}
+  {$define SDAport := PORTA} // PC5
+{$endif}
 
 const
   I2C_START             = $08;
@@ -38,7 +49,7 @@ const
   I2C_400kHz = ((F_CPU div 400000) - 10 - ((F_CPU * 300) div 1000) div 1000000) div 2;
   {$else}
   // F_CPU dependent calc, use prescalar value of 1, or TWPS1:0 = 0
-  I2C_100kHz = ((F_CPU div 100000) - 16) div 2;
+  I2C_100kHz = ((F_CPU div 75000) - 16) div 2;
   I2C_400kHz = ((F_CPU div 400000) - 16) div 2;
   {$endif}
 
@@ -65,12 +76,12 @@ begin
   begin
     if readTransaction then
     begin
-      TWI0.MADDR := (address shl 1) or 1;
+      TWI0.MADDR := address or 1;
       repeat until (TWI0.MSTATUS and TTWI.RIFbm) <> 0;
     end
     else
     begin
-      TWI0.MADDR := address shl 1;
+      TWI0.MADDR := address;
       repeat until (TWI0.MSTATUS and TTWI.WIFbm) <> 0;
     end;
 
@@ -120,6 +131,7 @@ begin
 end;
 
 {$else}
+
 procedure TI2CMaster.init(bitRate: byte);
 begin
   // Default prescaler value = 1
@@ -136,9 +148,9 @@ begin
   if Result then
   begin
     if readTransaction then
-      TWDR := (address shl 1) or 1
+      TWDR := address or 1
     else
-      TWDR := address shl 1;
+      TWDR := address;
 
     TWCR := (1 shl TWINT) or (1 shl TWEN);
     repeat until TWCR and (1 shl TWINT) <> 0;
