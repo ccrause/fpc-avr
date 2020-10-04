@@ -1,8 +1,6 @@
 unit lcd_pcd8544;
 
 interface
-uses
-  lcd_config, spi;
 
 {$PACKENUM 1}
 type
@@ -11,9 +9,6 @@ type
   TVopRange = 0 .. 127;
   TTCControlValue = (tcZero, tcOne, tcTwo, tcThree, tcFour);
   TBiasValue = (bvZero, bvOne, bvTwo, bvThree, bvFour, bvFive, bvSix, bvSeven);
-
-  TByteShortArray = array[0..$FF] of byte;
-  PByteShortArray = ^TByteShortArray;
 
 const
   screen_width_char = (84 div 7);
@@ -48,6 +43,7 @@ procedure lcd_printString(const s: ShortString);
 
 // Compiler passes address to progmem in R24:25?
 procedure lcd_printString_P(const s_progmem: ShortString);
+procedure lcd_data_P(constref data: byte);
 
 procedure lcd_putc(const c:char);
 procedure lcd_puts(const s: shortstring);
@@ -56,17 +52,24 @@ procedure lcd_clrscr;
 procedure lcd_home;
 procedure lcd_gotoxy(x, y: byte);
 
-procedure lcd_glyph(glyph: PByteShortArray; count: byte);
+procedure lcd_glyph(glyph: PByte; count: byte);
+procedure lcd_glyph_P(glyph: PByte; count: byte);
 
 // Inverted display of text
 procedure lcd_printCharInv(const character: char);
 procedure lcd_printStringInv(const s: ShortString);
-procedure lcd_glyphInv(glyph: PByteShortArray; count: byte);
+procedure lcd_glyphInv(glyph: PByte; count: byte);
+
+procedure lcd_printStringInv_P(const s: ShortString);
+procedure lcd_glyphInv_P(glyph: PByte; count: byte);
 
 procedure lcd_command(const cmd: byte);
 procedure lcd_data(const data: byte);
 
 implementation
+
+uses
+  progmem, lcd_config, spi;
 
 const
   LCD_MODE_CMD = 0;
@@ -177,7 +180,7 @@ const
   ($00, $41, $36, $08, $00), // 7d }
   ($10, $08, $08, $10, $08), // 7e ~
   ($78, $46, $41, $46, $78)  // 7f DELTA
-  );
+  ); section '.progmem';
 
 procedure lcd_write(const mode, data: byte);
 begin
@@ -190,6 +193,24 @@ begin
 
   spi_transmit(data);
   LCD_SS_PORT := LCD_SS_PORT or (1 shl LCD_SS_PIN);
+end;
+
+procedure lcd_printStringInv_P(const s: ShortString);
+var
+  len, i: byte;
+begin
+  len := progmemByte(@s[0]);
+  for i := 1 to len do
+    lcd_printCharInv(progmemChar(@s[i]));
+end;
+
+procedure lcd_glyphInv_P(glyph: PByte; count: byte);
+var
+  i: byte;
+begin
+  // Writes columns of 8 pixels, so array of 8 bytes will fill character space
+  for i := 0 to count-1 do
+    lcd_data($FF - progmemByte(@glyph[i]));
 end;
 
 procedure lcd_command(const cmd: byte);
@@ -223,7 +244,7 @@ begin
   lcd_command(LCD_TEMP_COEF or ord(Tcoef));         // Set Temp coefficent. //0x04, 0 is OK at low temp (5 - 20C), fades at >25C, try 1 next
   lcd_command(LCD_BIAS or ord(Bias));               // LCD bias mode 1:48.
   lcd_command(LCD_FUNC_SET or LCD_FUNC_NORMAL);     // Basic commands mode
-  lcd_command(LCD_DISP_CONF or LCD_DISP_NORMAL);       // LCD in normal mode.  //0xC = normal, 0xD = inverse
+  lcd_command(LCD_DISP_CONF or LCD_DISP_NORMAL);    // LCD in normal mode.  //0xC = normal, 0xD = inverse
 end;
 
 procedure lcd_gotoxy(x, y: byte);
@@ -232,18 +253,27 @@ begin
   lcd_command($40 or y);		 // row in chars
 end;
 
-procedure lcd_glyph(glyph: PByteShortArray; count: byte);
+procedure lcd_glyph(glyph: PByte; count: byte);
 var
   i: byte;
 begin
   // Writes columns of 8 pixels, so array of 8 bytes will fill character space
   for i := 0 to count-1 do
-    lcd_data(TByteShortArray(glyph^)[i]);
+    lcd_data(glyph[i]);
+end;
+
+procedure lcd_glyph_P(glyph: PByte; count: byte);
+var
+  i: byte;
+begin
+  // Writes columns of 8 pixels, so array of 8 bytes will fill character space
+  for i := 0 to count-1 do
+    lcd_data(progmemByte(@glyph[i]));
 end;
 
 procedure lcd_printCharInv(const character: char);
 var
-  i: byte;
+  i, b: byte;
 begin
   lcd_data($FF);  // empty column of pixels
 
@@ -252,7 +282,11 @@ begin
       lcd_data($FF - $7E)
   else
     for i := 0 to char_width - 3 do
-      lcd_data($FF - ASCII_CHARSET[ord(character) - $20][i]);
+    begin
+      //lcd_data($FF - ASCII_CHARSET[ord(character) - $20][i]);
+      b := progmemByte(@ASCII_CHARSET[ord(character) - $20][i]);
+      lcd_data($FF - b);
+    end;
 
   lcd_data($FF);  // empty column of pixels
 end;
@@ -265,13 +299,13 @@ begin
     lcd_printCharInv(s[i]);
 end;
 
-procedure lcd_glyphInv(glyph: PByteShortArray; count: byte);
+procedure lcd_glyphInv(glyph: PByte; count: byte);
 var
   i: byte;
 begin
   // Writes columns of 8 pixels, so array of 8 bytes will fill character space
-    for i := 0 to count-1 do
-        lcd_data($FF - TByteShortArray(glyph^)[i]);
+  for i := 0 to count-1 do
+    lcd_data($FF - glyph[i]);
 end;
 
 procedure lcd_printChar(const character: char);
@@ -285,7 +319,10 @@ begin
       lcd_data($7E)
   else
     for i := 0 to char_width - 3 do
-      lcd_data(ASCII_CHARSET[ord(character) - $20][i]);
+    begin
+      //lcd_data(ASCII_CHARSET[ord(character) - $20][i]);
+      lcd_data_P(ASCII_CHARSET[ord(character) - $20][i]);
+    end;
 
   lcd_data(0);  // empty column of pixels
 end;
@@ -298,16 +335,21 @@ begin
     lcd_printChar(s[i]);
 end;
 
-// Compiler passes address to progmem in R24:25?
-
-function read_char_progmem(const progmem_char: pointer): char; assembler;
-asm
-
+procedure lcd_printString_P(const s_progmem: ShortString);
+var
+  len, i: byte;
+begin
+  len := progmemByte(@s_progmem[0]);
+  for i := 1 to len do
+    lcd_printChar(progmemChar(@s_progmem[i]));
 end;
 
-procedure lcd_printString_P(const s_progmem: ShortString);
+procedure lcd_data_P(constref data: byte);
+var
+  b: byte;
 begin
-
+  b := progmemByte(@data);
+  lcd_write(LCD_MODE_DATA, b);
 end;
 
 procedure lcd_putc(const c: char); inline;
