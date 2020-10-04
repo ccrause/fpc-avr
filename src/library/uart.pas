@@ -101,6 +101,16 @@ begin
   UDR0 := data;
 end;
 
+function uart_receive: byte;
+begin
+  // Wait for data to be received
+  while ((UCSR0A and (1 shl RXC0)) = 0) do;
+
+  // Get and return received data from buffer
+  result := UDR0;
+end;
+{$endif CPUAVRXMEGA3}
+
 procedure uart_transmit_hex(const data: byte);
 var
   n, d: byte; // nibbles 1&2
@@ -199,16 +209,6 @@ begin
   end;
   uart_transmit_asstring(word(b));
 end;
-
-function uart_receive: byte;
-begin
-  // Wait for data to be received
-  while ((UCSR0A and (1 shl RXC0)) = 0) do;
-
-  // Get and return received data from buffer
-  result := UDR0;
-end;
-{$endif CPUAVRXMEGA3}
 
 end.
 
