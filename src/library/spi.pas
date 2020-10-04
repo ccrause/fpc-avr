@@ -63,7 +63,7 @@ begin
   end;
 end;
 
-{$elseif}
+{$else}
 { Keep in mind the following note about SS pin in Master mode (ATmega 328P manual p. 18.3.2:
 
 When the SPI is configured as a Master (MSTR in SPCR is set), the user can determine the
@@ -111,8 +111,7 @@ begin
   repeat
   until((SPSR and (1 shl SPIF)) > 0);
 end;
-{$EndIf}
-
+{$endif}
 
 end.
 
