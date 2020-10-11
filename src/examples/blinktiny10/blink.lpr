@@ -15,3 +15,13 @@ begin
   repeat until false;
 end.
 
+// avrdude -p t10 -c usbasp -U flash:w:blink.hex:i
+//
+// USBASP connections
+//  ICSP        attiny10        ICSP
+//                 __
+//  MOSI ---- PB0 |o | RST ---- RST
+//  GND  ---- GND |  | Vcc ---- Vcc
+//  SCK  ---- PB1 |__| PB2
+//
+
