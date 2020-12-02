@@ -3,21 +3,13 @@ program sound;
 uses
   intrinsics;
 
-// Note: default CPU clock is internal 8 MHz oscillator with div 8 prescaler
-// Note: careful with stack space, there is only 32 bytes RAM. Use at least -O3!
-//       5 bytes global variables
-//       15 bytes genSound interrupt stack
-//       2 bytes return address
-//       2 bytes for Sound_xxx stack
-//       2 bytes return address
-//       26 bytes total
-//       So only 6 bytes RAM free, watch out for complex sound functions that uses stack space
+// Note: default CPU clock for attiny10 is internal 8 MHz oscillator with div 8 prescaler
 
 type
   TSoundFunction = function(): byte;
 
 var
-  t: word;
+  t: uint16;
   SoundSelector: TSoundFunction;
   soundIndex: byte;
 
@@ -38,12 +30,12 @@ end;
 
 function Sound_StrangeMelody(): byte;
 begin
-  result := byte(t*(42 and (t shr 10)));
+  result := t*(42 and (t shr 10));
 end;
 
 function Sound_StrangeMelody2(): byte;
 begin
-  result := byte(t*(41 and (t shr 10)));
+  result := t*(41 and (t shr 10));
 end;
 
 function Sound_LaserBattle(): byte;
