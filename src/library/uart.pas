@@ -4,21 +4,24 @@ interface
 // Automatically use U2X
 procedure uart_init(const UBRR: word);
 
-{$ifndef CPUAVRXMEGA3}
 procedure uart_init1(const BAUD: dword; const useU2X: boolean = false);
-{$endif}
 
 // Blocking functions
 procedure uart_transmit(const data: byte); overload;
-procedure uart_transmit_hex(const data: byte);
+procedure uart_transmit_hex(const data: byte); overload;
+procedure uart_transmit_hex(const data: word); overload;
+procedure uart_transmit_hex(const data: dword); overload;
 procedure uart_transmit(const s: shortstring); overload;
 
 procedure uart_transmit_asstring(b: byte); overload;
 procedure uart_transmit_asstring(b: int8); overload;
 procedure uart_transmit_asstring(b: word); overload;
 procedure uart_transmit_asstring(b: int16); overload;
+procedure uart_transmit_asstring(b: dword); overload;
+procedure uart_transmit_asstring(b: int32); overload;
 
 function uart_receive: byte;
+function uart_peek(out c: byte): boolean;
 
 implementation
 
@@ -30,13 +33,32 @@ procedure uart_init(const UBRR: word);
 begin
   // RX
   PORTB.DIRCLR := PIN1bm;
-
   // TX
   PORTB.OUTSET := Pin0bm;
   PORTB.DIRSET := Pin0bm;
 
   USART3.BAUD := UBRR;
   //USART3.CTRLA := TUSART.RXCIEbm;  // RX is interrupt driven
+  USART3.CTRLB := TUSART.RXENbm or TUSART.TXENbm;
+end;
+
+procedure uart_init1(const BAUD: dword; const useU2X: boolean = false);
+var
+  ubrr: word;
+begin
+  // RX
+  PORTB.DIRCLR := PIN1bm;
+  // TX
+  PORTB.OUTSET := Pin0bm;
+  PORTB.DIRSET := Pin0bm;
+
+  if useU2X then
+    ubrr := (F_CPU * 64 + 4 * BAUD) div (8 * BAUD)
+  else
+    //ubrr := (F_CPU * 64 + 8 * BAUD) div (16 * BAUD);
+    ubrr := (F_CPU * 8 + BAUD) div (2 * BAUD);
+
+  USART3.BAUD := ubrr;
   USART3.CTRLB := TUSART.RXENbm or TUSART.TXENbm;
 end;
 
@@ -53,6 +75,12 @@ begin
   repeat
   until (USART3.STATUS and TUSART.RXCIFbm = TUSART.RXCIFbm);
   result := USART3.RXDATAL;
+end;
+
+function uart_peek(c: byte): byte;
+begin
+  result := (USART3.STATUS and TUSART.RXCIFbm) = TUSART.RXCIFbm;
+  c := USART3.RXDATAL;
 end;
 
 {$else}
@@ -109,6 +137,13 @@ begin
   // Get and return received data from buffer
   result := UDR0;
 end;
+
+function uart_peek(out c: byte): boolean;
+begin
+  result := UCSR0A and (1 shl RXC0) > 0;
+  c := UDR0;
+end;
+
 {$endif CPUAVRXMEGA3}
 
 procedure uart_transmit_hex(const data: byte);
@@ -128,6 +163,18 @@ begin
   else
     d := ord('A') + (n - 10);
   uart_transmit(d);
+end;
+
+procedure uart_transmit_hex(const data: word);
+begin
+  uart_transmit_hex(hi(data));
+  uart_transmit_hex(lo(data));
+end;
+
+procedure uart_transmit_hex(const data: dword);
+begin
+  uart_transmit_hex(hi(data));
+  uart_transmit_hex(lo(data));
 end;
 
 procedure uart_transmit(const s: shortstring);
@@ -208,6 +255,42 @@ begin
     uart_transmit(ord('-'));
   end;
   uart_transmit_asstring(word(b));
+end;
+
+procedure uart_transmit_asstring(b: dword);
+var
+  d, temp: dword;
+  skipLeadingZero: boolean;
+begin
+  if b = 0 then
+    uart_transmit(ord('0'))
+  else
+  begin
+    skipLeadingZero := true;
+    d := 10;
+    repeat
+      temp := b;
+      decimalDivMod(temp, b, d);
+      if not skipLeadingZero or (temp > 0) then
+      begin
+        skipLeadingZero := false;
+        uart_transmit(byte(temp) + ord('0'));
+      end;
+      dec(d);
+      if d = 0 then
+        uart_transmit(byte(b) + ord('0'));
+    until d = 0;
+  end;
+end;
+
+procedure uart_transmit_asstring(b: int32);
+begin
+  if b < 0 then
+  begin
+    b := -b;
+    uart_transmit(ord('-'));
+  end;
+  uart_transmit_asstring(dword(b));
 end;
 
 end.
