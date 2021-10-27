@@ -184,7 +184,9 @@ const
 
 procedure lcd_write(const mode, data: byte);
 begin
+  {$if declared(LCD_SS_PORT)}
   LCD_SS_PORT := LCD_SS_PORT and not(1 shl LCD_SS_PIN);
+  {$endif}
 
   if mode = LCD_MODE_CMD then
     LCD_DC_PORT := LCD_DC_PORT and not(1 shl LCD_DC_PIN)
@@ -192,7 +194,9 @@ begin
     LCD_DC_PORT := LCD_DC_PORT or (1 shl LCD_DC_PIN);
 
   spi_transmit(data);
+  {$if declared(LCD_SS_PORT)}
   LCD_SS_PORT := LCD_SS_PORT or (1 shl LCD_SS_PIN);
+  {$endif}
 end;
 
 procedure lcd_printStringInv_P(const s: ShortString);
@@ -226,13 +230,15 @@ end;
 procedure lcd_init(Vop: TVopRange = 60; Tcoef: TTCControlValue = tcOne; Bias: TBiasValue = bvThree);
 begin
   LCD_RST_DDR := LCD_RST_DDR or (1 shl LCD_RST_PIN);
-  LCD_RST_PORT := LCD_RST_PORT and not(1 shl LCD_RST_PIN);
+  LCD_RST_PORT := LCD_RST_PORT and not (1 shl LCD_RST_PIN);
 
   LCD_DC_DDR := LCD_DC_DDR or (1 shl LCD_DC_PIN);
   LCD_DC_PORT := LCD_DC_PORT or (1 shl LCD_DC_PIN);
 
+  {$if declared(LCD_SS_PORT)}
   LCD_SS_DDR := LCD_SS_DDR or (1 shl LCD_SS_PIN);
   LCD_SS_PORT := LCD_SS_PORT or (1 shl LCD_SS_PIN);
+  {$endif}
 
   spi_init;
 
