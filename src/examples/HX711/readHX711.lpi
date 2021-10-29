@@ -82,7 +82,7 @@
         <Mode0 Name="default"/>
       </Modes>
     </RunParams>
-    <Units Count="3">
+    <Units Count="4">
       <Unit0>
         <Filename Value="readHX711.pp"/>
         <IsPartOfProject Value="True"/>
@@ -95,6 +95,10 @@
         <Filename Value="../blink1/simavrinfo.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
+      <Unit3>
+        <Filename Value="spi_config.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit3>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -148,7 +152,7 @@
       </ExecuteBefore>
       <ExecuteAfter>
         <Command Value="../../scripts/listasm.sh $(targetfile)"/>
-        <CompileReasons Compile="False" Build="False" Run="False"/>
+        <CompileReasons Run="False"/>
       </ExecuteAfter>
     </Other>
     <CompileReasons Run="False"/>
