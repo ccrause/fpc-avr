@@ -3,13 +3,13 @@ program readHX711;
 {$PackEnum 1}
 {$inline on}
 
-{$define UseSPI}
+{ $define UseSPI}
 
 uses
   intrinsics, delay, uart, spi, spi_config;
 
 type
-  TConvSetting = (csChannelAGain128=1, csChannelBGain32, csChannelAGain64);
+  TConvSetting = (csInvalid=0, csChannelAGain128, csChannelBGain32, csChannelAGain64);
 
 const
   DOpinMask  = 1 shl SPI_MISO_PIN;  // PortB pin 0 pin mask
@@ -95,13 +95,14 @@ begin
   SPI_DDR := SPI_DDR or SCKpinMask;
 {$endif}
   // Now bang out the next conversion setting
-  repeat
+  while nextConvSetting > csInvalid do
+  begin
     SPI_PORT := SPI_PORT or SCKpinMask;
     Min200nsDelay;
     SPI_PORT := SPI_PORT and not SCKpinMask;
     Min200nsDelay;
     dec(nextConvSetting);
-  until ord(nextConvSetting) = 0;
+  end;
 
   // Check that DO pin is high here
   if (SPI_PIN and DOpinMask) = 0 then
