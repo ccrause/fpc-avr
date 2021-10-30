@@ -17,10 +17,9 @@ const
   SPR1 = 1;
 
 var
-  SPI_PORT: byte absolute byte(@PORTB);
-  SPI_DDR: byte absolute byte(@DDRB);
-  SPI_PIN: byte absolute byte(@PINB);
-
+  SPI_PORT: byte absolute PORTB;
+  SPI_DDR: byte absolute DDRB;
+  SPI_PIN: byte absolute PINB;
 
 implementation
 
