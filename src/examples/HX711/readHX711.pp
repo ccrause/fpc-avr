@@ -29,13 +29,13 @@ begin
 {$endif}
 end;
 
-procedure Min200nsDelay; inline;
+procedure Min500nsDelay; inline;
 begin
-  avr_nop;
-  {$if F_CPU > 2000000}avr_nop;{$endif}
-  {$if F_CPU > 4000000}avr_nop;{$endif}
-  {$if F_CPU > 8000000}avr_nop;{$endif}
-  {$if F_CPU > 16000000}avr_nop;{$endif}
+  {$if F_CPU >  1000000}avr_nop; avr_nop;{$endif}
+  {$if F_CPU >  2000000}avr_nop; avr_nop;{$endif}
+  {$if F_CPU >  4000000}avr_nop; avr_nop;{$endif}
+  {$if F_CPU >  8000000}avr_nop; avr_nop;{$endif}
+  {$if F_CPU > 16000000}avr_nop; avr_nop;{$endif}
 end;
 
 function readByteHX711: byte;
@@ -53,11 +53,11 @@ begin
   begin
     SPI_PORT := SPI_PORT or SCKpinMask;
     Result := Result shl 1;
-    Min200nsDelay;
+    Min500nsDelay;
     SPI_PORT := SPI_PORT and not SCKpinMask;
     if (SPI_PIN and DOpinMask) <> 0 then
       Result := Result or 1;
-    Min200nsDelay
+    Min500nsDelay
   end;
 end;
 {$endif}
@@ -98,9 +98,9 @@ begin
   while nextConvSetting > csInvalid do
   begin
     SPI_PORT := SPI_PORT or SCKpinMask;
-    Min200nsDelay;
+    Min500nsDelay;
     SPI_PORT := SPI_PORT and not SCKpinMask;
-    Min200nsDelay;
+    Min500nsDelay;
     dec(nextConvSetting);
   end;
 
