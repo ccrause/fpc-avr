@@ -30,7 +30,8 @@ var
      ($00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $06, $1F, $3F, $3F, $7F, $7F, $7F, $7F, $7F, $3F, $3F, $3F, $3F, $3F, $3F, $1F, $1F, $1F, $0F, $0F, $0F, $07, $03, $01, $00, $00, $00, $00));
 
 begin
-  lcd_init();
+  lcd_init(); // One old display needed Vop = 40 to display properly, most work OK with default values
+  lcd_clrscr;
 
   // Copy bitmap to LCD
   for i := 0 to length(Img)-1 do
@@ -67,19 +68,24 @@ begin
 
       y := y + y_inc;
       x_switch := false;
-      lcd_gotoxy(x, y);
-      lcd_printStringInv(msg);
-      lcd_glyphInv(@smileyGlyph[0], length(smileyGlyph));
+    end
+    else
+      x := x + x_inc;
+
+    lcd_gotoxy(x, y);
+    if x_inc > 0 then
+    begin
+      lcd_printString(msg);
+      lcd_glyph(@smileyGlyph[0], length(smileyGlyph));
     end
     else
     begin
-      x := x + x_inc;
-      lcd_gotoxy(x, y);
-      lcd_printString(msg);
-      lcd_glyph(@smileyGlyph[0], length(smileyGlyph));
+      lcd_printStringInv(msg);
+      lcd_glyphInv(@smileyGlyph[0], length(smileyGlyph));
     end;
+
+    delay_ms(500);
     lcd_gotoxy(x, y);
-    delay_ms(300);
     lcd_printString(clr);
   until false;
 end.
