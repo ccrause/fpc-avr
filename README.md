@@ -7,29 +7,25 @@ A collection of Free Pascal AVR microcontroller code snippets, examples and libr
 A Linux-64 bit compiled gdb 8.0 for avr, includes patch for debugging program memory.
 
 ### examples
-blink1 - A simple blink example using busy delay functions.  
-blink2 - A simple timer interrupt driven blink example.  
-blink4809 - A simple blink example using busy delays to test the megaAVR0 series code.  
-blinktiny10 - A simple blink example using a timer interrupt, for the attiny10 controller.
-blinktiny10 - A simple blink example using a timer interrupt, for the attiny104 controller.
-blinktiny15 - A simple blink example using a timer interrupt, for the attiny15 controller which doesn't have any RAM.  
-dumptiny104flash - A program to dump flash contents to serial.  Written to investigate a [potential hardware bug](https://www.avrfreaks.net/forum/critical-hardware-bug-attiny102-and-attiny104)  
-i2c - Reads the time from a DS1307 real time clock over i2c.
-intmathtest - Testing of assembler versions of integer division algorithms in the integermath library.  
-lcd1 - A simple sliding text example for HD44780 compatible character LCDs.  
-lcd2-progmem - Show bitmap and sliding text on PCD8544 compatible LCD. Also shows how to load a glyph from flash memory.  
-uart1 - A simple serial echo example.  
-simavrtest - Demonstrates how to pass information to simavr using .mmcu section.  
-sound - A sound (noise) generator using simple formulas. Demonstrated on an attiny10.  
-uart1 - A simple serial test that reads a character and echos its ordinal value.  
-uart4809 - A simple test written mostly to figure out how to read a button press, generate timer interrupts and send data over serial on the atmega4809.  
-### library
-delay.pas - Contain busy delay loops.  
-lcd_hd44780.pas - A driver for character based HD44780 compatible LCDs.  
-lcd_pcd8544.pas - A simple driver for text and graphics for PCD8544 compatible LCDs.  
-simavr.pas - Some enumerations and record structures to pass information to simavr.  
-spi.pas - Hardware or software based serial peripheral interface.  
-uart.pas - Simple hardware based serial driver.  
+| Name | Description |
+| :--- | :--- |
+| blink1 | A simple blink example using busy delay functions. |
+| blink2 | A simple timer interrupt driven blink example. |
+| blink4809 | A simple blink example using busy delays to test the megaAVR0 series code. |
+| blinktiny10 | A simple blink example using a timer interrupt, for the attiny10 controller. |
+| blinktiny10 | A simple blink example using a timer interrupt, for the attiny104 controller. |
+| blinktiny15 | A simple blink example using a timer interrupt, for the attiny15 controller which doesn't have any RAM. |
+| dumptiny104flash | A program to dump flash contents to serial.  Written to investigate a [potential hardware bug](https://www.avrfreaks.net/forum/critical-hardware-bug-attiny102-and-attiny104)
+| i2c | Reads the time from a DS1307 real time clock over i2c. |
+| intmathtest | Testing of assembler versions of integer division algorithms in the integermath library. |
+| lcd1 | A simple sliding text example for HD44780 compatible character LCDs. |
+| lcd2-progmem | Show bitmap and sliding text on PCD8544 compatible LCD. Also shows how to load a glyph from flash memory. |
+| uart1 | A simple serial echo example. |
+| simavrtest | Demonstrates how to pass information to simavr using .mmcu section. |
+| sound | A sound (noise) generator using simple formulas. Demonstrated on an attiny10. |
+| uart1 | A simple serial test that reads a character and echos its ordinal value. |
+| uart4809 | A simple test written mostly to figure out how to read a button press, generate timer interrupts and send data over serial on the atmega4809. |
+
 ### rtl-avr-modifications
 This folder contains "improved" implementations for the AVR. Main changes include the exclusion of exception raising code and some assembler routines which are more compact than the generic Pascal implementations in rtl/inc/generic.inc.
 ### scripts
