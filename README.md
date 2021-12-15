@@ -13,7 +13,7 @@ blink4809 - A simple blink example using busy delays to test the megaAVR0 series
 blinktiny10 - A simple blink example using a timer interrupt, for the attiny10 controller.
 blinktiny10 - A simple blink example using a timer interrupt, for the attiny104 controller.
 blinktiny15 - A simple blink example using a timer interrupt, for the attiny15 controller which doesn't have any RAM.  
-dumptiny104flash - A program to dump flash contents to serial.  Written to investigate a [potential hardware bug](https://www.avrfreaks.net/forum/critical-hardware-bug-attiny102-and-attiny104)
+dumptiny104flash - A program to dump flash contents to serial.  Written to investigate a [potential hardware bug](https://www.avrfreaks.net/forum/critical-hardware-bug-attiny102-and-attiny104)  
 i2c - Reads the time from a DS1307 real time clock over i2c.
 intmathtest - Testing of assembler versions of integer division algorithms in the integermath library.  
 lcd1 - A simple sliding text example for HD44780 compatible character LCDs.  
