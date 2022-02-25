@@ -18,6 +18,7 @@ A Linux-64 bit compiled gdb 8.0 for avr, includes patch for debugging program me
 | dumptiny104flash | A program to dump flash contents to serial.  Written to investigate a [potential hardware bug](https://www.avrfreaks.net/forum/critical-hardware-bug-attiny102-and-attiny104)
 | i2c | Reads the time from a DS1307 real time clock over i2c. |
 | intmathtest | Testing of assembler versions of integer division algorithms in the integermath library. |
+| light_tracker | A simple fun project that uses a light sensor mounted on a servo driven pan & tilt base to track a light source. |
 | lcd1 | A simple sliding text example for HD44780 compatible character LCDs. |
 | lcd2-progmem | Show bitmap and sliding text on PCD8544 compatible LCD. Also shows how to load a glyph from flash memory. |
 | uart1 | A simple serial echo example. |
