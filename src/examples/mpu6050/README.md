@@ -1,0 +1,2 @@
+## Interfacing with an MPU6050
+The [MPU6050](https://invensense.tdk.com/products/motion-tracking/6-axis/mpu-6050/) is a 3-axis gyroscope and 3-axis accelerometer in a single package. This example demonstartes how to initialize and communicate with the MPU6050 (using I2C). The 3-axis accelerometer data is transmitted over serial.  The output stream could for example be used to display the orientation of the MPU6050 sensor.
