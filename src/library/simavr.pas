@@ -6,6 +6,21 @@ unit simavr;
 // could pass -k--section-start=.mmcu=0x910000 to linker to set offset of section
 // .mmcu in elf file
 
+// Also note that when placing the data not in the main program file
+// the linker tends to discard the .mmcu section because it is not referenced
+// elsewhere in code.  To retain the .mmcu section data add the following
+// constant in the same unit containing the rest of the .mmcu data:
+
+// anchor: Tavr_mmcu_uint32 =
+//   (tag: AVR_MMCU_TAG; len: sizeof(Tavr_mmcu_uint32)-2;
+//          val: 0); public name '_mmcu_'; section '.mmcu';
+
+// Pass the following linker parameter via the compiler:
+// -k'--undefined=_mmcu_ --section-start=.mmcu=0x910000'
+// This will tell avr-ld to keep the section and map the data to address offset $910000
+
+// Simavr by default print data sent to the serial data register (UDR[n])
+// note that data gets buffered before printing to console until a newline (#10) char is encountered
 interface
 
 type
@@ -21,7 +36,7 @@ type
     AVR_MMCU_TAG_EFUSE,
     AVR_MMCU_TAG_SIGNATURE,
     AVR_MMCU_TAG_SIMAVR_COMMAND,
-    AVR_MMCU_TAG_SIMAVR_CONSOLE,
+    AVR_MMCU_TAG_SIMAVR_CONSOLE,   // output buffered, data only printed when a carriage return (#13) is encountered.
     AVR_MMCU_TAG_VCD_FILENAME,
     AVR_MMCU_TAG_VCD_PERIOD,
     AVR_MMCU_TAG_VCD_TRACE,
@@ -64,5 +79,16 @@ type
 
 implementation
 
+// This public name can be used to prevent the linker from discarding the .mmcu section
+// Pass the following linker parameter via the compiler:
+// -k'--undefined=_mmcu_ --section-start=.mmcu=0x910000'
+// This will tell avr-ld to keep the section and map the data to address offset $910000
+// If not done then debug information for the types defined in this unit may not
+// be correctly referenced elsewhere and gdb may have difficulty parsing the debug
+// information
+//const
+//  anchor: Tavr_mmcu_uint32 =
+//    (tag: AVR_MMCU_TAG; len: sizeof(Tavr_mmcu_uint32)-2;
+//           val: 0); public name '_mmcu_'; section '.mmcu';
 end.
 
