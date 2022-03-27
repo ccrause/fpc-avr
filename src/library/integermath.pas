@@ -1,16 +1,12 @@
 unit integermath;
 
 interface
-procedure fpc_div_mod_byte(Dividend, Divisor: byte; out result, remainder: byte);
-procedure fpc_div_mod_word(Dividend, Divisor: word; var result, remainder: word);
-procedure fpc_div_mod_dword(Dividend, Divisor: dword; var result, remainder: dword);
-function fpc_div_mod_qword(Dividend, Divisor: qword; out Remainder: qword): qword;
 
-implementation
 // Based on restoring division algorithm
 // Algorithm source document: Lecture notes by S. Galal and D. Pham, Division algorithms and hardware implementations.
 // Link to documentation http://www.seas.ucla.edu/~ingrid/ee213a/lectures/division_presentV2.pdf
 
+// Note these functions do not generate runtime errors
 // Note that the algorithm automatically yields the following results for special cases:
 // x div 0 = MAX(type)
 // 0 div 0 = MAX(type)
@@ -21,7 +17,15 @@ implementation
 
 // x (dividend) = q(quotient) x d(divisor) + p(remainder)
 
-procedure fpc_div_mod_byte(Dividend, Divisor: byte; out Result, Remainder: byte); assembler; nostackframe;
+procedure div_mod_byte(Dividend, Divisor: byte; out result, remainder: byte);
+procedure div_mod_word(Dividend, Divisor: word; out result, remainder: word);
+{$ifndef CPUAVR_16_REGS}
+procedure div_mod_dword(Dividend, Divisor: dword; out result, remainder: dword);
+function div_mod_qword(Dividend, Divisor: qword; out Remainder: qword): qword;
+{$endif}
+implementation
+
+procedure div_mod_byte(Dividend, Divisor: byte; out Result, Remainder: byte); assembler; nostackframe;
 label
   start, div1, div2, div3, finish;
 asm
@@ -66,7 +70,7 @@ finish:
   st  Z, R24
 end;
 
-procedure fpc_div_mod_word(Dividend, Divisor: word; var Result, Remainder: word); assembler; nostackframe;
+procedure div_mod_word(Dividend, Divisor: word; out Result, Remainder: word); assembler; nostackframe;
 label
   start, div1, div2, div3, finish;
 asm
@@ -118,7 +122,8 @@ finish:
   st Z, R25
 end;
 
-procedure fpc_div_mod_dword(Dividend, Divisor: dword; var Result, Remainder: dword); assembler; nostackframe;
+{$ifndef CPUAVR_16_REGS}
+procedure div_mod_dword(Dividend, Divisor: dword; out Result, Remainder: dword); assembler; nostackframe;
 label
   start, div1, div2, div3, finish;
 asm
@@ -184,7 +189,7 @@ finish:
   st Z, R25
 end;
 
-function fpc_div_mod_qword(Dividend, Divisor: qword; out Remainder: qword): qword; assembler; {nostackframe;}
+function div_mod_qword(Dividend, Divisor: qword; out Remainder: qword): qword; assembler; {nostackframe;}
 label
   start, div1, div2, div3, finish;
 asm
@@ -266,7 +271,8 @@ div2:             // negative branch, A[0] = 0 (default after shift), restore P
 
 div3:
   dec R26
-  brne div1
+  breq finish
+  rjmp div1
 
 finish:
   // Copy remainder via pointer stored in pushed address
@@ -297,6 +303,7 @@ finish:
   pop R16
   pop R17
 end;
+{$endif CPUAVR_16_REGS}
 
 end.
 
