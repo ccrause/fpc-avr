@@ -6,6 +6,7 @@ interface
 function progmemByte(const address: pointer): byte;
 function progmemChar(const address: pointer): char;
 function progmemWord(const address: pointer): word;
+function progmemStr(const s: shortstring): shortstring;
 {$endif}
 
 implementation
@@ -32,6 +33,16 @@ asm
   lpm r24, Z+
   lpm r25, Z
 end['r24', 'r25', 'r30', 'r31'];
+
+function progmemStr(const s: shortstring): shortstring;
+var
+  len, i: byte;
+begin
+  len := progmemByte(@s[0]);
+  setlength(progmemStr, len);
+  for i := 1 to len do
+    progmemStr[i] := char(progmemByte(@s[i]));
+end;
 
 {$endif CPUAVR_HAS_LPMX}
 end.
