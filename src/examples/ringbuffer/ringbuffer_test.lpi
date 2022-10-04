@@ -25,7 +25,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <OtherUnitFiles Value="source"/>
+            <OtherUnitFiles Value="..\..\library"/>
             <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)\$(BuildMode)"/>
           </SearchPaths>
           <Parsing>
@@ -64,10 +64,6 @@
               <Define0 Value="F_CPU:=16000000"/>
               <Define1 Value="debugunits"/>
             </OtherDefines>
-            <ExecuteAfter>
-              <Command Value="G:\Programming\dimitris\tools\avrdude-7.0_bin64\avrdude_static.exe -patmega328p -c snap_isp -Uflash:w:$Path($(OutputFile))$NameOnly($(OutputFile)).hex:i"/>
-              <CompileReasons Compile="False" Run="False"/>
-            </ExecuteAfter>
           </Other>
         </CompilerOptions>
       </Item>
@@ -94,7 +90,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="source"/>
+      <OtherUnitFiles Value="..\..\library"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)\$(BuildMode)"/>
     </SearchPaths>
     <Parsing>
@@ -132,10 +128,6 @@
 -WpATMEGA328P
 -CpAVR5
 -dF_CPU:=16000000"/>
-      <OtherDefines Count="2">
-        <Define0 Value="F_CPU:=16000000"/>
-        <Define1 Value="debugunits"/>
-      </OtherDefines>
     </Other>
   </CompilerOptions>
   <Debugging>
