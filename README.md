@@ -26,6 +26,8 @@ A Linux-64 bit compiled gdb 8.0 for avr, includes patch for debugging program me
 | sound | A sound (noise) generator using simple formulas. Demonstrated on an attiny10. |
 | uart1 | A simple serial test that reads a character and echos its ordinal value. |
 | uart4809 | A simple test written mostly to figure out how to read a button press, generate timer interrupts and send data over serial on the atmega4809. |
+| ringbuffer | Demonstrates how to use the spsc_ringbuffer library. spsc_ringbuffer is a ring buffer which writes and reads, in such a way that
+  mutual exclusion is not required (assumes one reader & one writer, hence the SPSC name a.k.a Single Producer / Single Consumer) |
 
 ### rtl-avr-modifications
 This folder contains "improved" implementations for the AVR. Main changes include the exclusion of exception raising code and some assembler routines which are more compact than the generic Pascal implementations in rtl/inc/generic.inc.
