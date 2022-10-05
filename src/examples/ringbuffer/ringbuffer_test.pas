@@ -46,7 +46,7 @@ const
   //
   // NOTICE that the size MUST be a power of 2
   //
-  // i.e. 2,4,8,15,32,...
+  // i.e. 2,4,8,16,32,...
   //
   // from which one byte will be used for indexing
   // making the ACTUAL USABLE SIZE TO BE SIZE - 1
@@ -85,7 +85,12 @@ begin
   // stored in flash
   // ( see SerialMessage declaration above )
   UART_Transmit(ProgmemStr(SerialMessage));
+  UART_Transmit(#13#10);
 
+  UART_Transmit('Rinng Buffer Free Size : ');
+  uart_transmit_asstring(High(ReceiveData) + 1 - SPSC_Size(ReceiveBuffer) - 1);
+  UART_Transmit(#13#10);
+  UART_Transmit(#13#10);
 
   //
   // As this is a ring buffer,
@@ -103,7 +108,7 @@ begin
     uart_transmit('Write [ Value: ');
     uart_transmit_asstring(i);
     UART_Transmit(' - Free:');
-    uart_transmit_asstring(Length(ReceiveData) - SPSC_Size(ReceiveBuffer) - 1);
+    uart_transmit_asstring(High(ReceiveData) + 1 - SPSC_Size(ReceiveBuffer) - 1);
     UART_Transmit(' ]'#13#10);
     Inc(i);
   end;
@@ -122,7 +127,7 @@ begin
     uart_transmit('Read [ Value: ');
     uart_transmit_asstring(i);
     UART_Transmit(' - Free:');
-    uart_transmit_asstring(Length(ReceiveData) - SPSC_Size(ReceiveBuffer) - 1);
+    uart_transmit_asstring(High(ReceiveData) + 1 - SPSC_Size(ReceiveBuffer) - 1);
     UART_Transmit(' ]'#13#10);
   end;
 
