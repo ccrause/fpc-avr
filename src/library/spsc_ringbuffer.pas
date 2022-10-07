@@ -11,9 +11,9 @@ unit spsc_ringbuffer;
   It requires that the ring buffer size be a power of two, and the
   size of the buffer needs to smaller than the index SPSC_PTRUINT.
   So an 8 bit index SPSC_PTRUINT supports a ring buffer
-  upto ( 1 << 7 ) = 128 - 1 for masking 127 entries, and a 16 bit
-  index SPSC_PTRUINT supports a ring buffer upto ( 1 << 15 ) = 32768 - 1
-  for masking 32767 entries.
+  upto ( 1 << 7 ) = 128 but effectively 127 (128 - 1 for masking) entries,
+  and a 16 bit index SPSC_PTRUINT supports a ring buffer upto
+  ( 1 << 15 ) = 32768 but effectively 32767 (32768 - 1 for masking) entries.
 
   The basis for these routines came from an article in Jack Ganssle's
   Embedded Muse: http://www.ganssle.com/tem/tem110.pdf
@@ -21,7 +21,7 @@ unit spsc_ringbuffer;
   First you need to define a static array with the size in need.
   The size must be a power of two and it needs to fit in the
   read/write index SPSC_PTRUINT. i.e. if you use an 8 bit index,
-  then the maximum supported size would be 128 - 1 for masking = 127.
+  then the maximum supported size would be 128.
 
   The TSPSCRingBuffer record which holds all the relavent values for
   the ring buffer needs to have 2 fields initialized. The FBuffer field
@@ -63,7 +63,7 @@ type
 
   TSPSCRingBuffer = packed record
     FBuffer: pbyte;
-    FBufferSize, FReadIndex, FWriteIndex: uint8;
+    FBufferSize, FReadIndex, FWriteIndex: SPSC_PTRUINT;
   end;
 
 function SPSC_IsEmpty(constref ARingBuffer: TSPSCRingBuffer): boolean;
