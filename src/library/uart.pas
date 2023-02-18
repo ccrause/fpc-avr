@@ -235,9 +235,8 @@ begin
         uart_transmit(temp + ord('0'));
       end;
       dec(d);
-      if d = 0 then
-        uart_transmit(b + ord('0'));
     until d = 0;
+    uart_transmit(b + ord('0'));
   end;
 end;
 
@@ -271,9 +270,8 @@ begin
         uart_transmit(temp + ord('0'));
       end;
       dec(d);
-      if d = 0 then
-        uart_transmit(b + ord('0'));
     until d = 0;
+    uart_transmit(b + ord('0'));
   end;
 end;
 
@@ -307,9 +305,8 @@ begin
         uart_transmit(byte(temp) + ord('0'));
       end;
       dec(d);
-      if d = 0 then
-        uart_transmit(byte(b) + ord('0'));
     until d = 0;
+    uart_transmit(byte(b) + ord('0'));
   end;
 end;
 
