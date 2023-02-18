@@ -18,46 +18,46 @@ $ avrdude -p m328p -c arduino -P /dev/ttyACM0 -Uflash:w:ircapture.hex:i
 ```
 
 ## Example waveform
-The timing for the _power_ buttn of a Yamaha RAV463 remote control has been captured with this firmware, see output generated below. The data appear to agree well with the NEC protocol, which states that the start of the signal is indicated by a mark of 9 ms and space of 4.45 ms, while a data bit starts with a mark of 560 us, followed by either a space of 1690 us for a logical "1" or a space of 560 us for a logical "0".   
+The timing for the _power_ button of a Yamaha RAV463 remote control has been captured with this firmware, see output generated below. The data suggests that the NEC protocol is used by the remote: the start of the signal is indicated by a mark of 9 ms and space of 4.45 ms, a data bit starts with a mark of 560 us (microseconds), followed by either a space of 1690 us for a logical "1" or a space of 560 us for a logical "0".  
  
-_Number of bits captured: 40_
-_Pulse timing, usec_
-| Bit | Mark | Space |
-| :--- | ---: | ---: |
-| 0 | 8980 | 4448 | Start of message header
-| 1 | 584 | 568 | First bit with value of 0
-| 2 | 568 | 1660 | Second bit with value 1
-| 3 | 564 | 1660 |
-| 4 | 564 | 1660 |
-| 5 | 568 | 1660 |
-| 6 | 564 | 1660 |
-| 7 | 568 | 1660 |
-| 8 | 564 | 560 |
-| 9 | 560 | 1664 |
-| 10 | 564 | 564 |
-| 11 | 560 | 568 |
-| 12 | 564 | 560 |
-| 13 | 564 | 564 |
-| 14 | 560 | 568 |
-| 15 | 568 | 560 |
-| 16 | 564 | 1664 |
-| 17 | 560 | 560 |
-| 18 | 556 | 1668 |
-| 19 | 560 | 568 |
-| 20 | 564 | 1660 |
-| 21 | 568 | 560 |
-| 22 | 564 | 1660 |
-| 23 | 560 | 560 |
-| 24 | 560 | 564 |
-| 25 | 564 | 1660 |
-| 26 | 568 | 560 |
-| 27 | 564 | 1664 |
-| 28 | 560 | 560 |
-| 29 | 560 | 1668 |
-| 30 | 560 | 568 |
-| 31 | 568 | 1660 |
-| 32 | 564 | 1656 | Last bit (32nd) of data
-| 33 | 564 | 39704 | Pause before repeat header
-| 34 | 8984 | 2212 | Repeat header, 9 ms mark, 2.25 ms space, 0.56 ms mark (on next line)
-| 35 | 588 | 30100 |
+_Number of bits captured: 40_  
+_Pulse timing, us_
+| Bit | Mark | Space | Notes |
+| :--- | ---: | ---: | :--- |
+| 0 | 8980 | 4448 | Start of message header |
+| 1 | 584 | 568 | First bit with value of 0 
+| 2 | 568 | 1660 | Second bit with value 1 |
+| 3 | 564 | 1660 | |
+| 4 | 564 | 1660 | |
+| 5 | 568 | 1660 | |
+| 6 | 564 | 1660 | |
+| 7 | 568 | 1660 | |
+| 8 | 564 | 560 | |
+| 9 | 560 | 1664 | |
+| 10 | 564 | 564 | |
+| 11 | 560 | 568 | |
+| 12 | 564 | 560 | |
+| 13 | 564 | 564 | |
+| 14 | 560 | 568 | |
+| 15 | 568 | 560 | |
+| 16 | 564 | 1664 | |
+| 17 | 560 | 560 | |
+| 18 | 556 | 1668 | |
+| 19 | 560 | 568 | |
+| 20 | 564 | 1660 | |
+| 21 | 568 | 560 | |
+| 22 | 564 | 1660 | |
+| 23 | 560 | 560 | |
+| 24 | 560 | 564 | |
+| 25 | 564 | 1660 | |
+| 26 | 568 | 560 | |
+| 27 | 564 | 1664 | |
+| 28 | 560 | 560 | |
+| 29 | 560 | 1668 | |
+| 30 | 560 | 568 | |
+| 31 | 568 | 1660 | |
+| 32 | 564 | 1656 | Last bit (32nd) of data |
+| 33 | 564 | 39704 | Pause before repeat header |
+| 34 | 8984 | 2212 | Repeat header, 9 ms mark, 2.25 ms space, 0.56 ms mark (on next line) |
+| 35 | 588 | 30100 | |
 
