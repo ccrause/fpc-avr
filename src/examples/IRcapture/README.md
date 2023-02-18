@@ -57,7 +57,7 @@ _Pulse timing, us_
 | 30 | 560 | 568 | |
 | 31 | 568 | 1660 | |
 | 32 | 564 | 1656 | Last bit (32nd) of data |
-| 33 | 564 | 39704 | Pause before repeat header |
-| 34 | 8984 | 2212 | Repeat header, 9 ms mark, 2.25 ms space, 0.56 ms mark (on next line) |
-| 35 | 588 | 30100 | |
-
+| 33 | 564 | 39704 | Pause before repeat code |
+| 34 | 8984 | 2212 | Repeat code, 9 ms mark, 2.25 ms space, 0.56 ms mark (on next line) |
+| 35 | 588 | 95656 | Pause before next repeat code |
+| 36 | 8984 | 2216 | 2nd repeat code |

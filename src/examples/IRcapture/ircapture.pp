@@ -94,9 +94,9 @@ begin
   begin
     uart_transmit_asstring(i);
     uart_transmit(#9);
-    uart_transmit_asstring(word(data[2*i] shl 2));
+    uart_transmit_asstring(dword(data[2*i]) shl 2);
     uart_transmit(#9);
-    uart_transmit_asstring(word(data[2*i+1] shl 2));
+    uart_transmit_asstring(dword(data[2*i+1]) shl 2);
     uart_transmit(EOL);
   end;
 end;
