@@ -220,24 +220,19 @@ var
   d, temp: byte;
   skipLeadingZero: boolean;
 begin
-  if b = 0 then
-    uart_transmit(ord('0'))
-  else
-  begin
-    skipLeadingZero := true;
-    d := 2;  // 100 = 10^2
-    repeat
-      temp := b;
-      decimalDivMod(temp, b, d);
-      if not skipLeadingZero or (temp > 0) then
-      begin
-        skipLeadingZero := false;
-        uart_transmit(temp + ord('0'));
-      end;
-      dec(d);
-    until d = 0;
-    uart_transmit(b + ord('0'));
-  end;
+  skipLeadingZero := true;
+  d := 2;  // 100 = 10^2
+  repeat
+    temp := b;
+    decimalDivMod(temp, b, d);
+    if not skipLeadingZero or (temp > 0) then
+    begin
+      skipLeadingZero := false;
+      uart_transmit(temp + ord('0'));
+    end;
+    dec(d);
+  until d = 0;
+  uart_transmit(b + ord('0'));
 end;
 
 procedure uart_transmit_asstring(b: int8);
@@ -255,24 +250,19 @@ var
   d, temp: word;
   skipLeadingZero: boolean;
 begin
-  if b = 0 then
-    uart_transmit(ord('0'))
-  else
-  begin
-    skipLeadingZero := true;
-    d := 4;  // 10000 = 10^4
-    repeat
-      temp := b;
-      decimalDivMod(temp, b, d);
-      if not skipLeadingZero or (temp > 0) then
-      begin
-        skipLeadingZero := false;
-        uart_transmit(temp + ord('0'));
-      end;
-      dec(d);
-    until d = 0;
-    uart_transmit(b + ord('0'));
-  end;
+  skipLeadingZero := true;
+  d := 4;  // 10000 = 10^4
+  repeat
+    temp := b;
+    decimalDivMod(temp, b, d);
+    if not skipLeadingZero or (temp > 0) then
+    begin
+      skipLeadingZero := false;
+      uart_transmit(temp + ord('0'));
+    end;
+    dec(d);
+  until d = 0;
+  uart_transmit(b + ord('0'));
 end;
 
 procedure uart_transmit_asstring(b: int16);
@@ -290,24 +280,19 @@ var
   d, temp: dword;
   skipLeadingZero: boolean;
 begin
-  if b = 0 then
-    uart_transmit(ord('0'))
-  else
-  begin
-    skipLeadingZero := true;
-    d := 10;
-    repeat
-      temp := b;
-      decimalDivMod(temp, b, d);
-      if not skipLeadingZero or (temp > 0) then
-      begin
-        skipLeadingZero := false;
-        uart_transmit(byte(temp) + ord('0'));
-      end;
-      dec(d);
-    until d = 0;
-    uart_transmit(byte(b) + ord('0'));
-  end;
+  skipLeadingZero := true;
+  d := 10;
+  repeat
+    temp := b;
+    decimalDivMod(temp, b, d);
+    if not skipLeadingZero or (temp > 0) then
+    begin
+      skipLeadingZero := false;
+      uart_transmit(byte(temp) + ord('0'));
+    end;
+    dec(d);
+  until d = 0;
+  uart_transmit(byte(b) + ord('0'));
 end;
 
 procedure uart_transmit_asstring(b: int32);
