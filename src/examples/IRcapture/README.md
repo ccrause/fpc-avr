@@ -8,7 +8,7 @@ To cater for different types of receivers with different idle state output (high
 The output is automatically transmitted over the UART via the TX pin (PD1) at a baud rate of 115200 in 8N1 format.  
 
 ### Note
-There is a compiler optimization bug in FPC 3.2.2 and 3.3.1 (Feb 2023) that requires the firmware be compiled with optimization level of 2 or lower (-O2).
+There is a compiler optimization bug in FPC 3.2.2 ~~and 3.3.1~~ (fixed on Feb 17th, 2023) that requires the firmware be compiled with optimization level of 2 or lower (-O2).
 
 ### Flashing firmware
 The compiled hex file can be flashed to the atmega328p controller using avrdude (Linux example, assumes Arduino bootloader is installed on controller):
