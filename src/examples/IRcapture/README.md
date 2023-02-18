@@ -18,7 +18,7 @@ $ avrdude -p m328p -c arduino -P /dev/ttyACM0 -Uflash:w:ircapture.hex:i
 ```
 
 ## Example waveform
-The timing for the _power_ button of a Yamaha RAV463 remote control has been captured with this firmware, see output generated below. The data suggests that the NEC protocol is used by the remote: the start of the signal is indicated by a mark of 9 ms and space of 4.45 ms, a data bit starts with a mark of 560 us (microseconds), followed by either a space of 1690 us for a logical "1" or a space of 560 us for a logical "0".  
+The timing for the _power_ button of a Yamaha RAV463 remote control has been captured with this firmware, see output generated below. The data suggests that the [NEC](https://www.sbprojects.net/knowledge/ir/nec.php) protocol is used by the remote: the start of the signal is indicated by a mark of 9 ms and space of 4.45 ms, a data bit starts with a mark of 560 us (microseconds), followed by either a space of 1690 us for a logical "1" or a space of 560 us for a logical "0".  
  
 _Number of bits captured: 40_  
 _Pulse timing, us_
