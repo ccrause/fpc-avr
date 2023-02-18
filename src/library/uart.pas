@@ -28,7 +28,7 @@ implementation
 uses
   simplemath;
 
-{$ifdef CPUAVRXMEGA3}
+{$if defined(CPUAVRXMEGA3)}
 procedure uart_init(const UBRR: word);
 begin
   // RX
@@ -83,6 +83,36 @@ begin
   c := USART3.RXDATAL;
 end;
 
+{$elseif defined(FPC_MCU_AVRSIM)}
+procedure uart_init1(const BAUD: dword; const useU2X: boolean = false);
+begin
+  // fp-avrsim simply display data written to OUTPUTREG to the console.
+  // No actual UART hardware needs to be configured
+end;
+
+procedure uart_init(const UBRR: word);
+begin
+  // fp-avrsim simply display data written to OUTPUTREG to the console.
+  // No actual UART hardware needs to be configured
+end;
+
+procedure uart_transmit(const data: byte);
+begin
+  // Put data into buffer, sends the data
+  OUTPUTREG := data;
+end;
+
+function uart_receive: byte;
+begin
+  // No input mechanism provided by fp-avrsim
+  result := 0;
+end;
+
+function uart_peek(out c: byte): boolean;
+begin
+  result := false;
+  c := 0;
+end;
 {$else}
 procedure uart_init1(const BAUD: dword; const useU2X: boolean = false);
 var
