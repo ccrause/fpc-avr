@@ -37,6 +37,8 @@ begin
   TCCR1B := TCCR1B xor (1 shl ICES1); // toggle bit value to trigger on the other edge
 end;
 
+// Timer overflow occurs after 4*65535/1000 = 262 ms.
+// Any mark or space longer than this will not be captured.
 procedure Timer1Overflow(); interrupt; alias: 'TIMER1_OVF_ISR';
 begin
   timeoutOK := false;
@@ -84,7 +86,7 @@ begin
   uart_transmit_asstring((dataIndex+1) shr 1);
   uart_transmit(EOL);
 
-  uart_transmit('Pulse timing, usec' + EOL);
+  uart_transmit('Pulse timing, us' + EOL);
   uart_transmit(#9'Mark'#9'Space' + EOL);
 
   // Note that (for F_CPU=16MHz) a timer tick is 4 microseconds
