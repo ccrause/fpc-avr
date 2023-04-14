@@ -206,7 +206,6 @@ begin
       dec(timeout);
     until (TWCR and (1 shl TWINT) <> 0) or ( timeout = 0);
     retVal := (TWSR and $F8);
-
     result := (retVal = I2C_SLAR_ACK) or (retVal = I2C_SLAW_ACK);
   end;
 end;
@@ -239,7 +238,6 @@ begin
   repeat
     dec(timeout);
   until (TWCR and (1 shl TWINT) <> 0) or (timeout = 0);
-
   retVal := (TWSR and $F8);
   result := retVal = I2C_DATA_WRITE_ACK;
 end;
