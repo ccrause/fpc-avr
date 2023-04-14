@@ -1,5 +1,7 @@
 unit lcd_hd44780;
 
+{$inline on}
+
 interface
 
 uses
@@ -285,16 +287,6 @@ end;
 procedure lcd_displayControl(const settings_mask: byte);
 begin
   lcd_write(0, settings_mask);
-end;
-
-procedure lcd_on;
-begin
-  lcd_write(0, %00001000);
-end;
-
-procedure lcd_off;
-begin
-  lcd_write(0, %00001000);
 end;
 
 procedure lcd_command(const cmd: byte); inline;
