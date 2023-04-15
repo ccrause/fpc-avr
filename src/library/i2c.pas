@@ -17,6 +17,7 @@ type
     // Higher level implementation
     function ReadByteFromReg(i2caddress, regAddress: byte; out data: byte): boolean; overload;
     function ReadBytesFromReg(i2caddress, regAddress: byte; data: PByte; size: byte): boolean; overload;
+    function ReadBytes(i2caddress: byte; const data: PByte; size: byte): boolean; overload;
 
     function WriteByteToReg(i2caddress, regAddress: byte; const data: byte): boolean; overload;
     function WriteBytesToReg(i2caddress, regAddress: byte; data: PByte; size: byte
@@ -303,6 +304,27 @@ begin
   end;
 
   result := stop and readOK;
+end;
+
+function TI2CMaster.ReadBytes(i2caddress: byte; const data: PByte;
+  size: byte): boolean;
+var
+  pb: PByte;
+  statusOK: boolean;
+begin
+  if not start(i2caddress, I2C_ReadMode) then
+    exit(false);
+
+  statusOK := true;
+  pb := data;
+  while (size > 0) and statusOK do
+  begin
+    statusOK := readByte(pb^, true);
+    inc(pb);
+    dec(size);
+  end;
+
+  result := stop and statusOK;
 end;
 
 function TI2CMaster.WriteByteToReg(i2caddress, regAddress: byte;
