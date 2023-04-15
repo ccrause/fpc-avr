@@ -28,24 +28,26 @@ const
   lcd_displayOnCursorOnCursorBlink = 15; // %00001111;
 
 // i2cAddress is the left adjusted address
-procedure lcd_init(const settings_mask: byte; const i2cAddress: byte);
+function lcd_init(const settings_mask: byte; const i2cAddress: byte): boolean;
 
-procedure lcd_printChar(const c:char);
-procedure lcd_printString(const s: shortstring);
-procedure lcd_putc(const c:char);
-procedure lcd_puts(const s: shortstring);
+function lcd_printChar(const c:char): boolean;
+function lcd_printString(const s: shortstring): boolean;
+function lcd_putc(const c:char): boolean;
+function lcd_puts(const s: shortstring): boolean;
 
-procedure lcd_clrscr;
-procedure lcd_home;
-procedure lcd_gotoxy(const x, y: byte);
+function lcd_clrscr: boolean;
+function lcd_home: boolean;
+function lcd_gotoxy(const x, y: byte): boolean;
 
 // Generate more code but maybe clearer
-procedure lcd_displayControl(const displayOn, cursorOn, cursorBlink: boolean); overload;
+function lcd_displayControl(const displayOn, cursorOn, cursorBlink: boolean): boolean; overload;
 // Generate +_ 20 bytes less code
-procedure lcd_displayControl(const settings_mask: byte); overload;
+function lcd_displayControl(const settings_mask: byte): boolean; overload;
 
-procedure lcd_command(const cmd: byte);
-procedure lcd_data(const data: byte);
+function lcd_backlight(lightOn: boolean): boolean;
+
+function lcd_command(const cmd: byte): boolean;
+function lcd_data(const data: byte): boolean;
 
 implementation
 
@@ -75,145 +77,185 @@ const
   RS_DATA     = RS_DataMask;
   RS_INSTR    = 0;
 
+  cmdFunctionSet8bit = %00110000;
+  cmdFunctionSet4bit = %00100000;
+
 var
   i2cMaster: TI2CMaster;
   fi2cAddress: byte;
+  backlightState: byte;
 
-procedure set_dataNibble(nibble: byte);
+function set_dataNibble(nibble: byte): boolean;
 begin
   nibble := nibble or E_Mask;
-  i2cMaster.writeBytes(fi2cAddress, @nibble, 1);
-  delay_us(1);
-
+  Result := i2cMaster.writeByte(nibble);
   nibble := nibble and ($FF - E_Mask);
-  i2cMaster.WriteBytes(fi2cAddress, @nibble, 1);
-  delay_us(1);
+  Result := Result and i2cMaster.WriteByte(nibble);
 end;
 
 // Note: RS should be passed as 0 or RS_DataMask
-procedure lcd_write(rs, data: byte);
+function lcd_write(rs, data: byte): boolean;
 var
   b: byte;
 begin
-  b := (data and $F0) or rs or BL_Mask;
-  set_dataNibble(b);
+  b := (data and $F0) or rs or backlightState;
+  i2cMaster.start(fi2cAddress, false);
+  Result := set_dataNibble(b);
 
-  b := (data shl 4) or rs or BL_Mask;
-  set_dataNibble(b);
+  b := (data shl 4) or rs or backlightState;
+  Result := Result and set_dataNibble(b);
+  i2cMaster.stop;
 
   // delay to allow LCD to process instruction
   if (data and %00000011) > 0 then   // long delay for clear display and return home commands
-    delay_us(1520)
+    delay_us(1600) // Hitachi datasheet 1520 us
   else
-    delay_us(41);
+    delay_us(50); // Hitachi datasheet 37 us
 end;
 
-procedure lcd_init(const settings_mask: byte; const i2cAddress: byte);
+function lcd_init(const settings_mask: byte; const i2cAddress: byte): boolean;
 begin
   i2cMaster.init(I2C_100kHz);
   fi2cAddress := i2cAddress;
-  delay_ms(15);  // Hitachi datasheet says 15ms after Vcc > 4.5V
+  // Default backlight to off
+  backlightState := 0;
+
+  delay_ms(50);  // Hitachi datasheet says 15ms after Vcc > 4.5V
 
   // set pins 0&1 high
-  set_dataNibble(%0011);
-  delay_us(4100);  // Hitachi datasheet
-  set_dataNibble(%0011);
-  delay_us(100);  // Hitachi datasheet
-  set_dataNibble(%0011);
-  delay_us(100);  // Hitachi datasheet
+  i2cMaster.start(fi2cAddress, false);
+  Result := set_dataNibble(cmdFunctionSet8bit);
+  i2cMaster.stop();
+  delay_ms(5);  // Hitachi datasheet 4.1 ms
+
+  i2cMaster.start(fi2cAddress, false);
+  Result := Result and set_dataNibble(cmdFunctionSet8bit);
+  i2cMaster.stop();
+  delay_us(200);  // Hitachi datasheet 100 us
+
+  i2cMaster.start(fi2cAddress, false);
+  Result := Result and set_dataNibble(cmdFunctionSet8bit);
+  i2cMaster.stop();
+  delay_us(200);  // Hitachi datasheet 100 us
+
+  i2cMaster.start(fi2cAddress, false);
+  Result := Result and set_dataNibble(cmdFunctionSet8bit);
+  i2cMaster.stop();
+  delay_us(200);  // Hitachi datasheet 100 us
 
   // set interface to 4 bit mode
-  set_dataNibble(%0010);
+  i2cMaster.start(fi2cAddress, false);
+  Result := Result and set_dataNibble(cmdFunctionSet4bit);
+  i2cMaster.stop();
+  delay_us(50);  // Hitachi datasheet 37 us
 
-  // Function set: Set data width (8/4 bit), display lines (2/1) and font option (5x10 / 5x8)
-  lcd_write(RS_INSTR, %00101000);
-
-  // Display off
-  lcd_write(RS_INSTR, lcd_displayOff); //%00001000);
-
-  // Display clear
-  lcd_write(RS_INSTR, %00000001);
-
-  // Set entry mode
-  lcd_write(RS_INSTR, %00000110);  // increment, no shift
+  // Function set: 001DNFxx
+  // Data width: 1 = 8 bit, 0 = 4 bit
+  // Number of display lines: 1 = 2 lines, 0 = 1 line
+  // Font option: 1 = 5x10, 0 = 5x8 (2 line display can only use a 5x8 font)
+  Result := Result and lcd_command(%00101000);
+  //delay_us(50);  // Hitachi datasheet 37 us
 
   // Display on
-  lcd_write(RS_INSTR, settings_mask);  //%00001100);
+  Result := Result and lcd_command(settings_mask);//lcd_displayOnCursorOff); //%00001000);
+
+  // Display clear
+  Result := Result and lcd_command(%00000001);
+
+  // Set entry mode
+  Result := Result and lcd_command(%00000110);  // increment, no shift
 end;
 
-procedure lcd_putc(const c: char); inline;
+function lcd_putc(const c: char): boolean; inline;
 begin
-  lcd_printChar(c);
+  Result := lcd_printChar(c);
 end;
 
-procedure lcd_puts(const s: shortstring); inline;
+function lcd_puts(const s: shortstring): boolean; inline;
 begin
-  lcd_printString(s);
+  Result := lcd_printString(s);
 end;
 
-procedure lcd_clrscr;
+function lcd_clrscr: boolean;
 begin
-  lcd_write(RS_INSTR, %00000001);
+  Result := lcd_command(%00000001);
 end;
 
-procedure lcd_home;
+function lcd_home: boolean;
 begin
-  lcd_write(RS_INSTR, %00000010);
+  Result := lcd_command(%00000010);
 end;
 
 // x, y are zero based indexes
-procedure lcd_gotoxy(const x, y: byte);
+function lcd_gotoxy(const x, y: byte): boolean;
 begin
   case lcd_lines of
-    1: lcd_command(DDRAM_mask or (Line1Start + x));
+    1: Result := lcd_command(DDRAM_mask or (Line1Start + x));
 
     2: if y = 0 then
-         lcd_command(DDRAM_mask or (Line1Start + x))
+         Result := lcd_command(DDRAM_mask or (Line1Start + x))
        else
-         lcd_command(DDRAM_mask or (Line2Start + x));
+         Result := lcd_command(DDRAM_mask or (Line2Start + x));
 
     4: if y = 0 then
-         lcd_command(DDRAM_mask or (Line1Start + x))
+         Result := lcd_command(DDRAM_mask or (Line1Start + x))
        else if y = 1 then
-         lcd_command(DDRAM_mask or (Line2Start + x))
+         Result := lcd_command(DDRAM_mask or (Line2Start + x))
        else if y = 3 then
-         lcd_command(DDRAM_mask or (Line3Start + x))
+         Result := lcd_command(DDRAM_mask or (Line3Start + x))
        else
-         lcd_command(DDRAM_mask or (Line4Start + x));
+         Result := lcd_command(DDRAM_mask or (Line4Start + x));
   end;
 end;
 
-procedure lcd_printChar(const c: char); inline;
+function lcd_printChar(const c: char): boolean; inline;
 begin
-  lcd_write(RS_DATA, ord(c));
+  Result := lcd_data(ord(c));
 end;
 
-procedure lcd_printString(const s: shortstring); inline;
+function lcd_printString(const s: shortstring): boolean; inline;
 var
   i:byte;
 begin
+  Result := true;
   for i := 1 to byte(s[0]) do
-    lcd_printChar(s[i]);
+    Result := Result and lcd_printChar(s[i]);
 end;
 
-procedure lcd_displayControl(const displayOn, cursorOn, cursorBlink: boolean);
+function lcd_displayControl(const displayOn, cursorOn, cursorBlink: boolean): boolean;
 begin
-  lcd_write(RS_INSTR, displayControl_mask or (byte(displayOn) shl 2) or (byte(cursorOn) shl 1) or byte(cursorBlink));
+  Result := lcd_command(displayControl_mask or (byte(displayOn) shl 2) or (byte(cursorOn) shl 1) or byte(cursorBlink));
 end;
 
-procedure lcd_displayControl(const settings_mask: byte);
+function lcd_displayControl(const settings_mask: byte): boolean;
 begin
-  lcd_write(RS_INSTR, settings_mask);
+  Result := lcd_command(settings_mask);
 end;
 
-procedure lcd_command(const cmd: byte); inline;
+function lcd_backlight(lightOn: boolean): boolean;
 begin
-  lcd_write(RS_INSTR, cmd);
+  if lightOn then
+    backlightState := BL_Mask
+  else
+    backlightState := 0;
+
+  // Just set backlight line on/off, no other data is sent
+  i2cMaster.start(fi2cAddress, false);
+  if lightOn then
+    i2cMaster.writeByte(8)
+  else
+    i2cMaster.writeByte(0);
+  Result := i2cMaster.stop;
 end;
 
-procedure lcd_data(const data: byte); inline;
+function lcd_command(const cmd: byte): boolean; inline;
 begin
-  lcd_write(RS_DATA, data);
+  Result := lcd_write(RS_INSTR, cmd);
+end;
+
+function lcd_data(const data: byte): boolean; inline;
+begin
+  Result := lcd_write(RS_DATA, data);
 end;
 
 end.

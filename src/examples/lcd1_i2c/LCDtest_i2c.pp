@@ -1,6 +1,7 @@
 program LCDtest_i2c;
 
-uses lcd_hd44780_i2c, delay;
+uses
+  lcd_hd44780_i2c, delay, uart;
 
 var
   x: int8 = 0;
@@ -11,17 +12,41 @@ var
 
 const
   msg: shortstring = 'FPC-AVR';
+  BAUD_Rate = 115200;
+  {$ifdef CPUAVRXMEGA3}
+  BAUD_SETTING = (F_CPU * 64 + 8 *BAUD_Rate) div (16 * BAUD_Rate);
+  {$else}
+  BAUD_SETTING = (((F_CPU + 4*BAUD_Rate) shr 3) div BAUD_Rate) - 1;
+  {$endif}
 
 begin
   DDRB := DDRB or (1 shl 5);
+  uart_init(BAUD_SETTING);
+  delay_ms(100);
+  uart_transmit('lcd_init: ');
+  if lcd_init(lcd_displayOnCursorOff, $7E) then // Left adjusted address
+    uart_transmit('OK'#13#10)
+  else
+    uart_transmit('ERR'#13#10);
 
-  lcd_init(lcd_displayOnCursorOff, $7E); // Left adjusted address
+  // Blink backlight
+  delay_ms(500);
+  lcd_backlight(true);
+  delay_ms(500);
+  lcd_backlight(false);
+  delay_ms(500);
+  lcd_backlight(true);
 
   repeat
-    lcd_gotoxy(x, y);
-    lcd_puts(msg); // fixed length of 10 characters assumed below
-    delay_ms(300);
-    lcd_clrscr();
+    if not lcd_gotoxy(x, y) then
+      uart_transmit('lcd_gotoxy ERR'#13#10);
+
+    if not lcd_puts(msg) then // fixed length of 10 characters assumed below
+      uart_transmit('lcd_puts ERR'#13#10);
+
+    delay_ms(400);
+    if not lcd_clrscr() then
+      uart_transmit('lcd_clrscr ERR'#13#10);
 
     if (x_inc > 0) and (x >= (lcd_displayLength - length(msg))) then
     begin
