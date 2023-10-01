@@ -1,7 +1,7 @@
 program i2cscan;
 
 uses
-  uart, i2c, delay;//bitbang;
+  uart, i2c;
 
 const
   HexChars: array[0..15] of char = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
@@ -57,7 +57,6 @@ begin
       else
         writeString('.. ');
       i2c_master.stop;
-      delay_ms(10);
     end;
     writeString(#13#10);
   end;
