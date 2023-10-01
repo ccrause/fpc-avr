@@ -1,11 +1,13 @@
 program uart1;
 
-uses uart, delay{, integermath};
+// Simple uart echo example,
+// written for Arduino Uno board LED
+
+uses
+  uart;
 
 const
-  baud = 115200;
-  // UseU2X = true
-  ub = (((F_CPU + 4*BAUD) shr 3) div BAUD) - 1;
+  baud = 9600;
   PB5 = 1 shl 5;
 
 var
@@ -14,17 +16,15 @@ var
   pindir: byte absolute DDRB;
 
 begin
-  uart_init1(BAUD, false);
-  //uart_init(ub);
+  uart_init1(BAUD, true);
   pindir := PB5;
+
+  uart_transmit('Starting up...'#13);
 
   repeat
     c := uart_receive();    // blocking
     pinport := pinport XOR PB5; // toggle LED
-    uart_transmit(ord('#'));
-
     uart_transmit(c);
-    uart_transmit(13);
   until false;
 end.
 
