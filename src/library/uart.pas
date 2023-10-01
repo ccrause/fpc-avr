@@ -77,9 +77,9 @@ begin
   result := USART3.RXDATAL;
 end;
 
-function uart_peek(c: byte): byte;
+function uart_peek(out c: byte): boolean;
 begin
-  result := (USART3.STATUS and TUSART.RXCIFbm) = TUSART.RXCIFbm;
+  Result := (USART3.STATUS and TUSART.RXCIFbm) = TUSART.RXCIFbm;
   c := USART3.RXDATAL;
 end;
 
