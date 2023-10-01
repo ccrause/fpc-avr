@@ -4,7 +4,19 @@ uses
   intrinsics;
 
 const
-  LEDpin = 1 shl 4;
+  {$if defined(FPC_MCU_ATMEGA328P)}
+  // Assume Uno layout
+  LEDpin = 1 shl 5;
+  {$elseif defined(FPC_MCU_ATMEGA32U4)}
+  // Assume Pro Micro layout
+  LEDpin = 1;
+  {$elseif defined(FPC_MCU_ATMEGA2560)}
+  // Assume Mega layout
+  LEDpin = 1 shl 7;
+  {$else}
+  LEDpin = 1 shl 3;
+  {$endif}
+
   CS00msk = 1 shl 0;
   CS01msk = 1 shl 1;
   CS02msk = 1 shl 2;
@@ -12,8 +24,8 @@ const
   TOIE0msk =
   {$ifdef FPC_MCU_ATTINY45}
    1 shl 1;
-  {$else} // defaults to atmega328p
-   1 shl 0;
+  {$else}
+  1;
   {$endif}
 
 var
@@ -32,11 +44,19 @@ begin
   end;
 end;
 
+procedure init;
 begin
-  countsPerSecond := (((F_CPU div 1024) + 128) div 256 div 3);  // 3 Hz
+  LEDdir := LEDdir or LEDpin;  // Set pin to output
+  LEDport := LEDport or LEDpin; // Set LED high
+end;
+
+begin
+  init;
+  countsPerSecond := (((F_CPU div 1024) + 128) div 256 div 3) ;  // ~1 Hz
   LEDdir := LEDdir or LEDpin;  // Set pin to output
   LEDport := LEDport or LEDpin; // Set LED high
 
+  TCNT0 := 0;
   TCCR0A := 0;
   TCCR0B := CS02msk or CS00msk;  // clock prescaler = 1024
   // enable timer1 overflow interrupt
