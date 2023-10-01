@@ -49,6 +49,13 @@ function lcd_backlight(lightOn: boolean): boolean;
 function lcd_command(const cmd: byte): boolean;
 function lcd_data(const data: byte): boolean;
 
+type
+  TCharMap = array[0..7] of byte; // 5 columns of 8 vertical bits, (0, 0) is top right hand side
+
+// Supports 5x8 character maps
+// Index ranges from 0 - 7
+function lcd_setCustomChar(index: byte; CharMap: TCharMap): boolean;
+
 implementation
 
 uses
@@ -56,6 +63,7 @@ uses
 
 const
   DDRAM_mask = (1 shl 7); // used to set DDRAM address
+  CGRAM_mask = (1 shl 6); // used to set CGRAM address
   displayControl_mask = (1 shl 3);
 
   Line1Start = 0;
@@ -256,6 +264,18 @@ end;
 function lcd_data(const data: byte): boolean; inline;
 begin
   Result := lcd_write(RS_DATA, data);
+end;
+
+function lcd_setCustomChar(index: byte; CharMap: TCharMap): boolean;
+var
+  i: byte;
+begin
+  index := (index and 7) shl 3; // Truncate to valid range, then shift to appropriate CGRAM location
+  // Set CGRAM address
+  Result := lcd_command(CGRAM_mask or index);
+  //Write character map to CGRAM
+  for i := 0 to high(CharMap) do
+    Result := Result and lcd_data(CharMap[i]);
 end;
 
 end.

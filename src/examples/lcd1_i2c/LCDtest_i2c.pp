@@ -9,6 +9,7 @@ var
   x_inc: int8 = 1;
   y_inc: int8 = 1;
   x_switch: boolean = false;
+  i: byte;
 
 const
   msg: shortstring = 'FPC-AVR';
@@ -18,6 +19,11 @@ const
   {$else}
   BAUD_SETTING = (((F_CPU + 4*BAUD_Rate) shr 3) div BAUD_Rate) - 1;
   {$endif}
+  degreeSymbol: TCharMap = ($00, $0C, $12, $12, $0C, $00, $00, $00);
+  box1: TCharMap         = ($1F, $11, $11, $11, $11, $11, $11, $1F);
+  box2: TCharMap         = ($00, $1F, $11, $11, $11, $11, $1F, $0);
+  box3: TCharMap         = ($00, $00, $1F, $11, $11, $1F, $00, $00);
+  box4: TCharMap         = ($00, $00, $00, $1F, $1F, $00, $00, $00);
 
 begin
   DDRB := DDRB or (1 shl 5);
@@ -36,6 +42,30 @@ begin
   lcd_backlight(false);
   delay_ms(500);
   lcd_backlight(true);
+
+  lcd_setCustomChar(0, degreeSymbol);
+  lcd_home;
+  lcd_printString('Degree: '#0);
+  delay_ms(3000);
+  //lcd_setCustomChar(1, box1);
+  //lcd_setCustomChar(2, box2);
+  //lcd_setCustomChar(3, box3);
+  //lcd_setCustomChar(4, box4);
+  //
+  //lcd_home;
+  //for i := 0 to 255 do
+  //begin
+  //  // Action on every line
+  //  if (i and 31) = 0 then
+  //  begin
+  //    lcd_home;
+  //    if i > 31 then
+  //      delay_ms(3000);
+  //  end
+  //  else if (i and 15) = 0 then
+  //    lcd_gotoxy(0, 1);
+  //  lcd_printChar(char(i));
+  //end;
 
   repeat
     if not lcd_gotoxy(x, y) then
