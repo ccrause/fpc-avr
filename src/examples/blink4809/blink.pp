@@ -1,6 +1,7 @@
 program blink4809;
 
-uses delay, simavrinfo;
+uses
+  delay;
 
 begin
   PORTF.DIRSET := Pin5bm;
