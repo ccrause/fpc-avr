@@ -69,8 +69,8 @@ label
   inner, outer, finish;
 asm
   // test if t = 0, jump to finish if true
-  cp R24, R1
-  cpc R25, R1
+  cp R24, {$ifdef CPUAVRTINY}R17{$else}R1{$endif}
+  cpc R25, {$ifdef CPUAVRTINY}R17{$else}R1{$endif}
   breq finish       // 2 cycles to branch, 1 to continue
 
 outer:
@@ -81,12 +81,12 @@ outer:
 inner:
   // inner loop, 1 ms  4cycles/loop + 1
   subi R26, 1    // 1 cycle
-  sbc R27, R1    // 1 cycle
+  sbc R27, {$ifdef CPUAVRTINY}R17{$else}R1{$endif}    // 1 cycle
   brne inner       // 2 cycles to branch, 1 to continue
 
   // outer loop, count ms, 4 cycles/loop + 1
   subi R24, 1      // 1 cycle
-  sbc R25, r1      // 1 cycle
+  sbc R25, {$ifdef CPUAVRTINY}R17{$else}R1{$endif}      // 1 cycle
   brne outer       // 2 cycles to branch, 1 to continue
 finish:
 end;

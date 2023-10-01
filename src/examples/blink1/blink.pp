@@ -1,25 +1,52 @@
 program blink;
 
-uses delay;
+{$Inline on}
+
+uses
+  delay;
 
 const
-  PB5 = 1 shl 5;
-
+  {$if defined(FPC_MCU_ATMEGA328P) or defined(FPC_MCU_ATTINY104)}
+  // Assume Uno or attiny104 Xplained Nano layout
+  LEDpin = 1 shl 5;
+  {$elseif defined(FPC_MCU_ATMEGA32U4)}
+  // Assume Pro Micro layout
+  LEDpin = 1;
+  {$elseif defined(FPC_MCU_ATMEGA2560)}
+  // Assume Mega layout
+  LEDpin = 1 shl 7;
+  {$else}
+  LEDpin = 1 shl 2;
+  {$endif}
 var
-  pinport: byte absolute PORTB;
-  pindir: byte absolute DDRB;
-  i: byte;
+{$if defined(FPC_MCU_ATTINY104)}
+  LEDport: byte absolute PORTA;
+  LEDdir: byte absolute DDRA;
+{$else}
+  LEDport: byte absolute PORTB;
+  LEDdir: byte absolute DDRB;
+{$endif attiny104}
+
+procedure blinkOn; inline;
+begin
+  LEDport := LEDport or LEDpin;
+end;
+
+procedure blinkOff; inline;
+begin
+  LEDport := LEDport and ($FF - LEDpin);
+end;
 
 begin
-  pindir := pindir or PB5;
+  LEDdir := LEDpin;
+  LEDport := 0;  // off
+
   while True do
   begin
-     pinport := pinport or PB5;  // LED on
-     delay_ms(1000);    // delay 1 second
-
-     pinport := pinport and not PB5;  // LED off
-     for i := 0 to 19 do       // delay 20 x 50 ms = 1 second
-       delay_us(50000);
+     blinkOn;
+     delay_ms(500);    // delay 1 second
+     blinkOff;
+     delay_ms(500);
   end;
 end.
 
