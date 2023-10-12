@@ -1,9 +1,11 @@
 unit uart;
 
 interface
-// Automatically use U2X
-procedure uart_init(const UBRR: word);
 
+// Important note for ATMEGAX3 series:
+// Configure RX pin as input and TX pin as output in user code.
+// This is not required for classic AVR controllers such as atmega328p
+procedure uart_init(const UBRR: word);
 procedure uart_init1(const BAUD: dword; const useU2X: boolean = false);
 
 // Blocking functions
@@ -29,58 +31,60 @@ uses
   simplemath;
 
 {$if defined(CPUAVRXMEGA3)}
+var
+  {$ifdef useUSART}
+    selectedUSART: TUSART absolute useUSART;
+  {$elseif declared(USART3)}
+    selectedUSART: TUSART absolute USART3; // On atmega4809 Curiosity Nano USART3 is connected to the onboard USB virtual COM port
+  {$elseif declared(USART0)}
+    selectedUSART: TUSART absolute USART0;
+  {$else}
+    {$error No USART declaration found}
+  {$endif}
+
 procedure uart_init(const UBRR: word);
 begin
-  // RX
-  PORTB.DIRCLR := PIN1bm;
-  // TX
-  PORTB.OUTSET := Pin0bm;
-  PORTB.DIRSET := Pin0bm;
-
-  USART3.BAUD := UBRR;
-  //USART3.CTRLA := TUSART.RXCIEbm;  // RX is interrupt driven
-  USART3.CTRLB := TUSART.RXENbm or TUSART.TXENbm;
+  selectedUSART.BAUD := UBRR;
+  selectedUSART.CTRLB := TUSART.RXMODE_CLK2X or TUSART.RXENbm or TUSART.TXENbm;
 end;
 
 procedure uart_init1(const BAUD: dword; const useU2X: boolean = false);
 var
   ubrr: word;
 begin
-  // RX
-  PORTB.DIRCLR := PIN1bm;
-  // TX
-  PORTB.OUTSET := Pin0bm;
-  PORTB.DIRSET := Pin0bm;
-
   if useU2X then
-    ubrr := (F_CPU * 64 + 4 * BAUD) div (8 * BAUD)
+  begin
+    selectedUSART.CTRLB := TUSART.RXMODE_CLK2X or TUSART.RXENbm or TUSART.TXENbm;
+    ubrr := (F_CPU * 64 + 8 * BAUD) div (16 * BAUD);
+  end
   else
-    //ubrr := (F_CPU * 64 + 8 * BAUD) div (16 * BAUD);
-    ubrr := (F_CPU * 8 + BAUD) div (2 * BAUD);
+  begin
+    selectedUSART.CTRLB := TUSART.RXENbm or TUSART.TXENbm;
+    ubrr := (F_CPU * 64 + 4 * BAUD) div (8 * BAUD);
+  end;
 
-  USART3.BAUD := ubrr;
-  USART3.CTRLB := TUSART.RXENbm or TUSART.TXENbm;
+  selectedUSART.BAUD := ubrr;
 end;
 
 // Blocking functions
 procedure uart_transmit(const data: byte);
 begin
   repeat
-  until (USART3.STATUS and TUSART.DREIFbm = TUSART.DREIFbm);
-  USART3.TXDATAL := data;
+  until (selectedUSART.STATUS and TUSART.DREIFbm = TUSART.DREIFbm);
+  selectedUSART.TXDATAL := data;
 end;
 
 function uart_receive(): byte;
 begin
   repeat
-  until (USART3.STATUS and TUSART.RXCIFbm = TUSART.RXCIFbm);
-  result := USART3.RXDATAL;
+  until (selectedUSART.STATUS and TUSART.RXCIFbm = TUSART.RXCIFbm);
+  result := selectedUSART.RXDATAL;
 end;
 
 function uart_peek(out c: byte): boolean;
 begin
-  Result := (USART3.STATUS and TUSART.RXCIFbm) = TUSART.RXCIFbm;
-  c := USART3.RXDATAL;
+  Result := (selectedUSART.STATUS and TUSART.RXCIFbm) = TUSART.RXCIFbm;
+  c := selectedUSART.RXDATAL;
 end;
 
 {$elseif defined(FPC_MCU_AVRSIM)}
@@ -135,6 +139,7 @@ begin
   UCSR0C := (3 shl UCSZ0);
 end;
 
+// Automatically use U2X
 procedure uart_init(const UBRR: word);
 begin
   UBRR0H := UBRR shr 8;
