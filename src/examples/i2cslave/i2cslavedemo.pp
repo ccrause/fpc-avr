@@ -7,11 +7,16 @@ program i2cslavedemo;
 }
 
 uses
-  uart, i2cslave_unit;
+  uart, i2cslave_unit, delay;
 
 const
   BAUD_Rate = 115200;
+  {$ifdef CPUAVRXMEGA3}
+  // Baud setting for x2 mode
+  BAUD_SETTING = (F_CPU*64 + 4*BAUD_Rate) div (8*BAUD_Rate);
+  {$else}
   BAUD_SETTING = (((F_CPU + 4*BAUD_Rate) shr 3) div BAUD_Rate) - 1;
+  {$endif}
   DeviceAddress = $18 shl 1; // Left adjusted byte address, no response to general call address.
 
 var
@@ -44,7 +49,13 @@ begin
 end;
 
 begin
-  uart.uart_init(BAUD_SETTING);
+  uart_init(BAUD_SETTING);
+  {$ifdef CPUAVRXMEGA3}
+  // Configure RX & TX pins for USART3 of atmega48809
+  PORTB.DIRCLR := PIN1bm; // RX in input mode
+  PORTB.DIRSET := Pin0bm; // TX in output mode
+  {$endif}
+
   uart_transmit('Starting I2C slave @ $');
   uart_transmit_hex(byte(DeviceAddress shr 1));  //
   uart_transmit(#10);
@@ -54,7 +65,10 @@ begin
   i2cslave_listen(DeviceAddress, @DataReceivedHandler,
                   @DataRequestHandler, @ResetHandler);  // Do not respond to general call address
 
-  // Endless loop
-  repeat until false;
+  // Endless loop transmitting a . over serial as heartbeat indicator
+  repeat
+    delay_ms(1000);
+    uart_transmit('.');
+  until false;
 end.
 

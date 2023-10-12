@@ -59,6 +59,13 @@ implementation
 uses
   intrinsics;
 
+var
+  fReceiveHandler: TDataReceivedHandler;
+  fTransmitHandler: TDataRequestHandler;
+  fResetHandler: TResetCallback;
+  fOldSREG: byte;
+
+{$if declared(TWCR)}  // Check if this is a clasic style AVR I2C peripheral
 const
   // Interrupt enabled, clear interrupt flag, enabled ACK, enable transceiver
   I2C_SLAVE_SETUP_ACK  = (1 shl TWIE) or (1 shl TWINT) or (1 shl TWEA) or (1 shl TWEN);
@@ -66,12 +73,6 @@ const
   I2C_SLAVE_SETUP_NACK = (1 shl TWIE) or (1 shl TWINT) or (0 shl TWEA) or (1 shl TWEN);
   // Set non-status bits of of status register to zero
   I2C_STATUS_MASK = $F8;
-
-var
-  fReceiveHandler: TDataReceivedHandler;
-  fTransmitHandler: TDataRequestHandler;
-  fResetHandler: TResetCallback;
-  fOldSREG: byte;
 
 procedure TWISlaveInterrupt; interrupt; public name 'TWI_ISR';
 var
@@ -151,6 +152,77 @@ begin
   TWAR := 0;
   SREG := fOldSREG;
 end;
+{$elseif declared(TWI0)}  // Check if this is an AVRXMEGA3 style I2C peripheral
+
+// This interrupt can be triggered by either an address, data or stop condition
+procedure TWISlaveInterrupt; interrupt; public name 'TWI0_TWIS_ISR';
+var
+  status, data: byte;
+  ack: boolean;
+begin
+  status := TWI0.SSTATUS;
+  if (status and TTWI.DIFbm) = TTWI.DIFbm then    // Data interrupt
+  begin
+    if (status and TTWI.DIRbm) = 0 then     // Master write operation
+    begin
+      data := TWI0.SDATA;
+      ack := (status and TTWI.RXACKbm) > 0;
+      fReceiveHandler(data, ack);
+    end
+    else                                    // Master read operation
+    begin
+      fTransmitHandler(data, ack);
+      TWI0.SDATA := data;
+    end;
+
+    if ack then
+      // Acknowledge & respond
+      TWI0.SCTRLB := TTWI.ACKACT_ACK or TTWI.SCMD_RESPONSE
+    else
+      // End of transaction
+      TWI0.SCTRLB := TTWI.SCMD_COMPTRANS;
+  end
+  else if (status and TTWI.APIFbm) = TTWI.APIFbm then  // Address/stop received
+  begin
+    if (status and TTWI.APmask) = TTWI.AP_ADR then     // Address received
+      // Acknowledge & respond
+      TWI0.SCTRLB := TTWI.ACKACT_ACK or TTWI.SCMD_RESPONSE
+    else                                               // Stop received
+    begin
+      TWI0.SSTATUS := TTWI.APIFbm;  // Clear AP flag
+      // Stop received, reset state
+      if Assigned(fResetHandler) then
+        fResetHandler();
+    end;
+  end;
+end;
+
+procedure i2cslave_listen(const address: byte;
+  ReceiveHandler: TDataReceivedHandler;
+  TransmitHandler: TDataRequestHandler; ResetHandler: TResetCallback);
+begin
+  fReceiveHandler := ReceiveHandler;
+  fTransmitHandler := TransmitHandler;
+  fResetHandler := ResetHandler;
+  TWI0.SADDR := address;
+  TWI0.SCTRLA := TTWI.DIENbm or  // Data interrupt enabled
+                 TTWI.APIENbm or // Address or stop interrupt enabled
+                 TTWI.PIENbm or  // Stop interrupt enabled
+                 TTWI.ENABLEbm;  // Slave enabled
+  fOldSREG := CPU.SREG;
+  avr_sei;
+end;
+
+procedure i2cslave_stop;
+begin
+  avr_cli;
+  TWI0.SCTRLA := 0;
+  TWI0.SADDR := 0;
+  CPU.SREG := fOldSREG;
+end;
+{$else}
+  {$error 'No hardware I2C support detected for MCU'}
+{$endif}
 
 end.
 
