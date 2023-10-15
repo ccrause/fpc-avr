@@ -23,8 +23,8 @@ var
   c: char;
 
 const
-  DS1307 = $68;
-  //BMPxxx = $77;  // Address of BMP085/180/280* pressure sensor (* if SDO is high)
+  DS1307 = $68 shl 1;
+  BMPxxx = $77 shl 1;  // Address of BMP085/180/280* pressure sensor (* if SDO is high)
   BAUD_Rate = 115200;
   {$ifdef CPUAVRXMEGA3}
   BAUD_SETTING = (F_CPU * 64 + 8 *BAUD_Rate) div (16 * BAUD_Rate);
