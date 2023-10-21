@@ -84,7 +84,10 @@ end;
 function uart_peek(out c: byte): boolean;
 begin
   Result := (selectedUSART.STATUS and TUSART.RXCIFbm) = TUSART.RXCIFbm;
-  c := selectedUSART.RXDATAL;
+  if result then
+    c := selectedUSART.RXDATAL
+  else
+    c := 0;
 end;
 
 {$elseif defined(FPC_MCU_AVRSIM)}
@@ -176,7 +179,10 @@ end;
 function uart_peek(out c: byte): boolean;
 begin
   result := UCSR0A and (1 shl RXC0) > 0;
-  c := UDR0;
+  if result then
+    c := UDR0
+  else
+    c := 0;
 end;
 
 {$endif CPUAVRXMEGA3}
