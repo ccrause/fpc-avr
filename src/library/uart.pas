@@ -250,7 +250,8 @@ procedure uart_transmit_asstring(b: int8);
 begin
   if b < 0 then
   begin
-    b := -b;
+    if byte(b) <> $80 then
+      b := -b;
     uart_transmit(ord('-'));
   end;
   uart_transmit_asstring(byte(b));
@@ -280,7 +281,8 @@ procedure uart_transmit_asstring(b: int16);
 begin
   if b < 0 then
   begin
-    b := -b;
+    if word(b) <> $8000 then
+      b := -b;
     uart_transmit(ord('-'));
   end;
   uart_transmit_asstring(word(b));
@@ -310,7 +312,8 @@ procedure uart_transmit_asstring(b: int32);
 begin
   if b < 0 then
   begin
-    b := -b;
+    if dword(b) <> $80000000 then
+      b := -b;
     uart_transmit(ord('-'));
   end;
   uart_transmit_asstring(dword(b));
