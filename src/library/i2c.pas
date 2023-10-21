@@ -24,7 +24,7 @@ type
       ): boolean; overload;
     function WriteBytes(address: byte; const data: PByte; size: byte): boolean;
 
-    // data pointer should be pointer to flash memory
+    // data pointer to flash memory (e.g. data stored in progmem section)
     function WriteBytesToReg_P(i2caddress, regAddress: byte; data: PByte; size: byte
       ): boolean;
 
@@ -90,7 +90,7 @@ const
   timeoutvalue =
   {$if (F_CPU > 8000000)}
     65535
-  {$elseif (F_CPU > 1000000}
+  {$elseif (F_CPU > 1000000)}
     40000  // 25 ms @ 1 MHz clock
   {$else}
     10000
@@ -99,7 +99,8 @@ const
 {$ifdef CPUAVRXMEGA3}
 procedure TI2CMaster.init(bitRate: byte);
 begin
-  TWI0.MCTRLA := TTWI.ENABLEbm;		      // TWI Enabled
+  TWI0.MCTRLA := TTWI.TIMEOUT_200US or        // 200 us timeout
+                 TTWI.ENABLEbm;               // TWI Enabled
   TWI0.MCTRLB := TTWI.FLUSHbm;
   TWI0.MBAUD := bitRate;
   TWI0.MSTATUS := TTWI.BUSSTATE_IDLE or       // Set the BUS state to idle
@@ -108,35 +109,47 @@ begin
 end;
 
 function TI2CMaster.start(address: byte; readTransaction: boolean): boolean;
+var
+  timeout: uint16;
 begin
   result := (TWI0.MSTATUS and TTWI.BUSSTATEmask) <> TTWI.BUSSTATE_BUSY;
 
   TWI0.MSTATUS := TWI0.MSTATUS or (TTWI.WIFbm or TTWI.RIFbm); // clear interrupt flags
-
+  timeout := timeoutvalue;
   if result then
   begin
     if readTransaction then
     begin
       TWI0.MADDR := address or 1;
-      repeat until (TWI0.MSTATUS and TTWI.RIFbm) <> 0;
+      repeat
+        dec(timeout);
+      until (TWI0.MSTATUS and TTWI.RIFbm <> 0) or (timeout = 0);
     end
     else
     begin
       TWI0.MADDR := address;
-      repeat until (TWI0.MSTATUS and TTWI.WIFbm) <> 0;
+      repeat
+        dec(timeout);
+      until (TWI0.MSTATUS and TTWI.WIFbm <> 0) or (timeout = 0);
     end;
 
-    result := (TWI0.MSTATUS and TTWI.RXACKbm) = 0;
-    result := result and ((TWI0.MSTATUS and TTWI.BUSERRbm) = 0);
+    result := TWI0.MSTATUS and (TTWI.RXACKbm or TTWI.BUSSTATE_IDLE or
+              TTWI.BUSERRbm) = 0;
   end;
 end;
 
 function TI2CMaster.readByte(out data: byte; ack: boolean): boolean;
+var
+  timeout: uint16;
 begin
   result := (TWI0.MSTATUS and TTWI.BUSSTATEmask) = TTWI.BUSSTATE_OWNER;
   if result then
   begin
-    repeat until (TWI0.MSTATUS and TTWI.RIFbm > 0);
+    timeout := timeoutvalue;
+    repeat
+      dec(timeout);
+    until (TWI0.MSTATUS and TTWI.RIFbm > 0) or (timeout = 0);
+
     if ack then
       TWI0.MCTRLB := TWI0.MCTRLB and not(TTWI.ACKACT_NACK)
     else
@@ -153,14 +166,23 @@ begin
 end;
 
 function TI2CMaster.writeByte(data: byte): boolean;
+var
+  timeout: uint16;
 begin
   result := (TWI0.MSTATUS and TTWI.BUSSTATEmask) = TTWI.BUSSTATE_OWNER;
   if result then
   begin
     TWI0.MDATA := data;
-    repeat until (TWI0.MSTATUS and TTWI.WIFbm > 0);// or (TWI0.MSTATUS and TTWI.RXACKbm > 0); // NACK test?
+    timeout := timeoutvalue;
+    repeat
+      dec(timeout);
+    until (TWI0.MSTATUS and TTWI.WIFbm > 0) or (timeout = 0);
     // Check for errors during write
-    result := (TWI0.MSTATUS and TTWI.BUSERRbm) = 0;
+    result := (TWI0.MSTATUS and TTWI.BUSERRbm = 0) and
+              (TWI0.MSTATUS and TTWI.BUSSTATE_IDLE = 0);
+
+    //Clear write flag
+    TWI0.MSTATUS := TTWI.WIFbm;
   end;
 end;
 
@@ -169,6 +191,12 @@ begin
   TWI0.MCTRLB := TTWI.MCMD_STOP;
   //TWI0.MCTRLA := 0; // disable TWI module
   result := true;
+end;
+
+function TI2CMaster.clearStalledBus: boolean;
+begin
+  // TODO
+  result := false;
 end;
 
 {$else}
@@ -190,7 +218,7 @@ begin
   timeout := timeoutvalue;
   repeat
     dec(timeout);
-  until (TWCR and (1 shl TWINT) <> 0) or ( timeout = 0);
+  until (TWCR and (1 shl TWINT) <> 0) or (timeout = 0);
   retVal := TWSR and $F8;
   result := (retVal = I2C_START) or (retVal = I2C_REPSTART);
 
@@ -205,7 +233,7 @@ begin
     timeout := timeoutvalue;
     repeat
       dec(timeout);
-    until (TWCR and (1 shl TWINT) <> 0) or ( timeout = 0);
+    until (TWCR and (1 shl TWINT) <> 0) or (timeout = 0);
     retVal := (TWSR and $F8);
     result := (retVal = I2C_SLAR_ACK) or (retVal = I2C_SLAW_ACK);
   end;
@@ -223,7 +251,7 @@ begin
   timeout := timeoutvalue;
   repeat
     dec(timeout);
-  until (TWCR and (1 shl TWINT) <> 0) or ( timeout = 0);
+  until (TWCR and (1 shl TWINT) <> 0) or (timeout = 0);
   retVal := (TWSR and $F8);
   result := (retVal = I2C_DATA_READ_ACK) or (retVal = I2C_DATA_READ_NACK);
   data := TWDR;
@@ -255,17 +283,51 @@ begin
   result := TWCR and (1 shl TWSTO) = 0;
 end;
 
+function TI2CMaster.clearStalledBus: boolean;
+var
+  SCLpulses, clockStretchTimeout: byte;
+begin
+  stop;
+  // Make SDA & SCL inputs to check state
+  I2CDDR := I2CDDR and not (SDApin_bm or SCLpin_bm);
+  // Clear SDA & SCL pullups (just in case)
+  I2Cport := I2Cport and not (SDApin_bm or SCLpin_bm);
+  delay_us(100);
+  // Check if SCL is stuck low
+  // This is fatal, exit if true
+  if (I2CPins and SCLpin_bm) = 0 then
+  begin
+    exit(false);
+  end;
+
+  SCLpulses := 10;
+  while SCLpulses > 0 do
+  begin
+    // Output low
+    I2CDDR := I2CDDR or (SCLpin_bm);
+    delay_us(100);
+    I2CDDR := I2CDDR and not (SCLpin_bm);
+    // Check for clock stretching by slave
+    clockStretchTimeout := 255;
+    while ((I2CPins and SCLpin_bm) = 0) or (clockStretchTimeout > 0) do
+    begin
+      dec(clockStretchTimeout);
+      delay_us(10);
+    end;
+    dec(SCLpulses);
+  end;
+
+  stop;
+  result := (I2CPins and (SDApin_bm or SCLpin_bm)) = (SDApin_bm or SCLpin_bm);
+end;
+
+{$endif CPUAVRXMEGA3}
+
 function TI2CMaster.ReadByteFromReg(i2caddress, regAddress: byte; out data: byte
   ): boolean;
 begin
   result := ReadBytesFromReg(i2caddress, regAddress, @data, 1);
 end;
-
-//function TI2CMaster.ReadByteFromReg(i2caddress: byte; regAddress: uint16; out
-//  data: byte): boolean;
-//begin
-//  result := ReadBytesFromReg(i2caddress, regAddress, @data, 1);
-//end;
 
 function TI2CMaster.ReadBytesFromReg(i2caddress, regAddress: byte; data: PByte;
   size: byte): boolean;
@@ -280,10 +342,6 @@ begin
   // send address
   if not writeByte(regAddress) then
     exit(false);
-
-  // Stop {for troubleshooting hung bus}
-  //if not stop then
-  //  exit(false);
 
   // {-Repeated-} start
   if not start(i2caddress, I2C_ReadMode) then
@@ -388,6 +446,7 @@ asm
   lpm r24, Z
 end;
 
+
 function TI2CMaster.WriteBytesToReg_P(i2caddress, regAddress: byte;
   data: PByte; size: byte): boolean;
 var
@@ -408,46 +467,6 @@ begin
 
   result := stop and writeOK;
 end;
-
-function TI2CMaster.clearStalledBus: boolean;
-var
-  SCLpulses, clockStretchTimeout: byte;
-begin
-  stop;
-  // Make SDA & SCL inputs to check state
-  I2CDDR := I2CDDR and not (SDApin_bm or SCLpin_bm);
-  // Clear SDA & SCL pullups (just in case)
-  I2Cport := I2Cport and not (SDApin_bm or SCLpin_bm);
-  delay_us(100);
-  // Check if SCL is stuck low
-  // This is fatal, exit if true
-  if (I2CPins and SCLpin_bm) = 0 then
-  begin
-    exit(false);
-  end;
-
-  SCLpulses := 10;
-  while SCLpulses > 0 do
-  begin
-    // Output low
-    I2CDDR := I2CDDR or (SCLpin_bm);
-    delay_us(100);
-    I2CDDR := I2CDDR and not (SCLpin_bm);
-    // Check for clock stretching by slave
-    clockStretchTimeout := 255;
-    while ((I2CPins and SCLpin_bm) = 0) or (clockStretchTimeout > 0) do
-    begin
-      dec(clockStretchTimeout);
-      delay_us(10);
-    end;
-    dec(SCLpulses);
-  end;
-
-  stop;
-  result := (I2CPins and (SDApin_bm or SCLpin_bm)) = (SDApin_bm or SCLpin_bm);
-end;
-
-{$endif CPUAVRXMEGA3}
 
 end.
 
