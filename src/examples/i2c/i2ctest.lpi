@@ -6,6 +6,7 @@
       <Flags>
         <MainUnitHasCreateFormStatements Value="False"/>
         <MainUnitHasTitleStatement Value="False"/>
+        <MainUnitHasScaledStatement Value="False"/>
         <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
@@ -16,8 +17,71 @@
     <i18n>
       <EnableI18N LFM="False"/>
     </i18n>
-    <BuildModes Count="1">
-      <Item1 Name="Default" Default="True"/>
+    <BuildModes Count="2">
+      <Item1 Name="m328p" Default="True"/>
+      <Item2 Name="m4809">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="$nameonly($(projfile))"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir)"/>
+            <OtherUnitFiles Value="../../library"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <Parsing>
+            <SyntaxOptions>
+              <CStyleOperator Value="False"/>
+              <CPPInline Value="False"/>
+              <CStyleMacros Value="True"/>
+              <UseAnsiStrings Value="False"/>
+            </SyntaxOptions>
+          </Parsing>
+          <CodeGeneration>
+            <TargetCPU Value="avr"/>
+            <TargetOS Value="embedded"/>
+            <Optimizations>
+              <OptimizationLevel Value="3"/>
+            </Optimizations>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf2Set"/>
+              <UseLineInfoUnit Value="False"/>
+            </Debugging>
+            <Options>
+              <LinkerOptions Value="--undefined=_mmcu_ --undefined=_mmcu_data --section-start=.mmcu=0x910000"/>
+            </Options>
+          </Linking>
+          <Other>
+            <Verbosity>
+              <ShowAll Value="True"/>
+            </Verbosity>
+            <WriteFPCLogo Value="False"/>
+            <ConfigFile>
+              <ConfigFilePath Value="~/fpc/avr-new/fpc.cfg"/>
+            </ConfigFile>
+            <CustomOptions Value="-Wpatmega4809
+-XPavr-
+-al
+-Sg
+-dF_CPU:=3333333"/>
+            <OtherDefines Count="1">
+              <Define0 Value="F_CPU:=16000000"/>
+            </OtherDefines>
+            <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossavr"/>
+            <ExecuteBefore>
+              <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
+              <CompileReasons Compile="False" Build="False"/>
+            </ExecuteBefore>
+            <ExecuteAfter>
+              <Command Value="../../scripts/listasm.sh $(targetfile)"/>
+              <CompileReasons Run="False"/>
+            </ExecuteAfter>
+          </Other>
+        </CompilerOptions>
+      </Item2>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
@@ -46,7 +110,7 @@
         <IsPartOfProject Value="True"/>
       </Unit3>
       <Unit4>
-        <Filename Value="../../library/i2c.pas"/>
+        <Filename Value="../../library/i2cbitbang.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit4>
     </Units>
@@ -87,30 +151,25 @@
       </Options>
     </Linking>
     <Other>
-      <Verbosity>
-        <ShowAll Value="True"/>
-      </Verbosity>
       <WriteFPCLogo Value="False"/>
       <ConfigFile>
-        <DontUseConfigFile Value="True"/>
-        <CustomConfigFile Value="True"/>
         <ConfigFilePath Value="~/fpc/avr-new/fpc.cfg"/>
       </ConfigFile>
-      <CustomOptions Value="-Wpatmega4809
--a
+      <CustomOptions Value="-Wpatmega328p
 -XPavr-
 -al
--dF_CPU:=3333333"/>
+-Sg
+-dF_CPU:=16000000"/>
       <OtherDefines Count="1">
         <Define0 Value="F_CPU:=16000000"/>
       </OtherDefines>
-      <CompilerPath Value="/home/christo/fpc/avr-new/compiler/ppcrossavr"/>
+      <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossavr"/>
       <ExecuteBefore>
-        <Command Value="../../scripts/run-simavr.sh $(targetfile).elf"/>
+        <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
         <CompileReasons Compile="False" Build="False"/>
       </ExecuteBefore>
       <ExecuteAfter>
-        <Command Value="../../scripts/listasm.sh $(targetfile).elf"/>
+        <Command Value="../../scripts/listasm.sh $(targetfile)"/>
         <CompileReasons Run="False"/>
       </ExecuteAfter>
     </Other>
