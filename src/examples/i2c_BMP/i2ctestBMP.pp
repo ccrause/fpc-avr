@@ -46,8 +46,12 @@ begin
     if bmp085_180.readTP(T, P) then
     begin
       uart_transmit('T = ');
-      if T < 0 then uart_transmit('-');
-      divmod10(dword(T), dword(dT));
+      if T < 0 then
+      begin
+        uart_transmit('-');
+        T := -T;
+      end;
+      divmod10(uint32(T), uint32(dT));
       uart_transmit_asstring(T); uart_transmit('.');
       uart_transmit_asstring(dT); uart_transmit(' degC'#13#10);
       uart_transmit('P = '); uart_transmit_asstring(P); uart_transmit(' Pa'#13#10);
