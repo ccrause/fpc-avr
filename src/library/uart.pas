@@ -54,13 +54,13 @@ var
 begin
   if useU2X then
   begin
-    ubrr := (F_CPU * 64 + 4 * BAUD) div (8 * BAUD);
+    ubrr := (F_CPU * 16 + BAUD) div (2 * BAUD);
     selectedUSART.BAUD := ubrr;
     selectedUSART.CTRLB := TUSART.RXMODE_CLK2X or TUSART.RXENbm or TUSART.TXENbm;
   end
   else
   begin
-    ubrr := (F_CPU * 64 + 8 * BAUD) div (16 * BAUD);
+    ubrr := (F_CPU * 8 + BAUD) div (2 * BAUD);
     selectedUSART.BAUD := ubrr;
     selectedUSART.CTRLB := TUSART.RXENbm or TUSART.TXENbm;
   end;
