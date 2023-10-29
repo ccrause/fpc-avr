@@ -22,19 +22,18 @@ var
   T, dT, P: int32;
 
 begin
-  if not bmp_init then
-  begin
-    uart_transmit('Error initializing BMP sensor.');
-    Halt(1);
-  end;
-
-  //uart.uart_init(BAUD_SETTING);
-  uart.uart_init1(BAUD_Rate);
+  uart.uart_init(BAUD_SETTING);
   {$ifdef CPUAVRXMEGA3}
   // Configure RX & TX pins for USART3 of atmega48809
   PORTB.DIRCLR := PIN1bm; // RX in input mode
   PORTB.DIRSET := Pin0bm; // TX in output mode
   {$endif}
+
+  if not bmp_init then
+  begin
+    uart_transmit('Error initializing BMP sensor.');
+    Halt(1);
+  end;
 
   uart_transmit('BMP ID: $');
   if bmp085_180.readID(ID) then
