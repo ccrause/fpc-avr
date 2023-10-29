@@ -150,17 +150,15 @@ begin
       dec(timeout);
     until (TWI0.MSTATUS and TTWI.RIFbm > 0) or (timeout = 0);
 
-    if ack then
-      TWI0.MCTRLB := TWI0.MCTRLB and not(TTWI.ACKACT_NACK)
-    else
-      TWI0.MCTRLB := TWI0.MCTRLB or TTWI.ACKACT_NACK;
-
     // Check for errors during read: bus or arbitration error, or NACK from slave
     result := (TWI0.MSTATUS and (TTWI.BUSERRbm or TTWI.ARBLOSTbm or TTWI.RXACKbm) = 0); // Arbitration lost
     if result then
     begin
       data := TWI0.MDATA;
-      TWI0.MCTRLB := TWI0.MCTRLB or TTWI.MCMD_RECVTRANS; // ACK, more data to be read
+      if ack then
+        TWI0.MCTRLB := TTWI.MCMD_RECVTRANS
+      else
+        TWI0.MCTRLB := TTWI.ACKACT_NACK or TTWI.MCMD_STOP;
     end;
   end;
 end;
@@ -188,8 +186,7 @@ end;
 
 function TI2CMaster.stop: boolean;
 begin
-  TWI0.MCTRLB := TTWI.MCMD_STOP;
-  //TWI0.MCTRLA := 0; // disable TWI module
+  TWI0.MCTRLB := TTWI.ACKACT_NACK or TTWI.MCMD_STOP;
   result := true;
 end;
 
