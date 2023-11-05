@@ -95,8 +95,8 @@ begin
 
     I2C_SR_STOP:
     begin
-      //if Assigned(fResetHandler) then
-      //  fResetHandler();
+      if Assigned(fResetHandler) then
+        fResetHandler();
       TWCR := I2C_SLAVE_SETUP_ACK;
     end;
 
@@ -105,7 +105,7 @@ begin
     I2C_ST_DATA_ACK:
     begin
       // master is requesting data, call the transmit callback
-      // The callback has to determine whether ACK should be set
+      // The callback has to indicate whether this is the last byte to be transmitted
       fTransmitHandler(data, ack);
       TWDR := data;
       if ack then
@@ -156,45 +156,61 @@ end;
 
 // This interrupt can be triggered by either an address, data or stop condition
 procedure TWISlaveInterrupt; interrupt; public name 'TWI0_TWIS_ISR';
+const
+  firstRead: boolean = false;
 var
-  status, data: byte;
-  ack: boolean;
+  status: byte;
+  ack, done: boolean;
 begin
   status := TWI0.SSTATUS;
-  if (status and TTWI.DIFbm) = TTWI.DIFbm then    // Data interrupt
-  begin
-    if (status and TTWI.DIRbm) = 0 then     // Master write operation
-    begin
-      data := TWI0.SDATA;
-      ack := (status and TTWI.RXACKbm) > 0;
-      fReceiveHandler(data, ack);
-    end
-    else                                    // Master read operation
-    begin
-      fTransmitHandler(data, ack);
-      TWI0.SDATA := data;
-    end;
+  done := false;
 
-    if ack then
-      // Acknowledge & respond
-      TWI0.SCTRLB := TTWI.ACKACT_ACK or TTWI.SCMD_RESPONSE
-    else
-      // End of transaction
-      TWI0.SCTRLB := TTWI.SCMD_COMPTRANS;
-  end
-  else if (status and TTWI.APIFbm) = TTWI.APIFbm then  // Address/stop received
+  if (status and TTWI.APIFbm) = TTWI.APIFbm then  // Address/stop received
   begin
     if (status and TTWI.APmask) = TTWI.AP_ADR then     // Address received
-      // Acknowledge & respond
-      TWI0.SCTRLB := TTWI.ACKACT_ACK or TTWI.SCMD_RESPONSE
+      firstRead := true
     else                                               // Stop received
     begin
-      TWI0.SSTATUS := TTWI.APIFbm;  // Clear AP flag
+      done := true;
       // Stop received, reset state
       if Assigned(fResetHandler) then
         fResetHandler();
     end;
+  end
+  else if (status and TTWI.DIFbm) = TTWI.DIFbm then    // Data interrupt
+  begin
+    if (status and TTWI.DIRbm) = 0 then     // Master write operation
+    begin
+      if assigned(fReceiveHandler) then
+        fReceiveHandler(TWI0.SDATA, ack)
+      else
+        ack := false;
+
+      if not ack then
+        done := true;
+    end
+    else    // DIR = 1                      // Master read operation
+    begin
+      // First data read interrupt generated before ACK/NACK is received
+      // so delay ACK/NACK check
+      // reference https://github.com/cv007/Avr01Dx_Twi/blob/a5acadf515def685cc5feab3145f6cbd701d7a35/twis0.c#L82C46-L82C47
+      if firstRead then
+        firstRead := false
+      else
+        done := (status and TTWI.RXACKbm) > 0;
+
+      if not done then
+      begin
+        if assigned(fTransmitHandler) then
+          fTransmitHandler(TWI0.SDATA, ack);
+      end;
+    end;
   end;
+
+  if done then
+    TWI0.SCTRLB := TTWI.ACKACT_NACK or TTWI.SCMD_COMPTRANS
+  else
+    TWI0.SCTRLB := TTWI.SCMD_RESPONSE;
 end;
 
 procedure i2cslave_listen(const address: byte;
