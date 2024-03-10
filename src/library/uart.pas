@@ -121,6 +121,37 @@ begin
   c := 0;
 end;
 {$else}
+{$macro on}
+{$if defined(FPC_MCU_ATMEGA8)}
+  {$define UBRR_:=UBRR}
+  {$define UBRRL_:=UBRRL}
+  {$define UBRRH_:=UBRRH}
+  {$define UCSRA_:=UCSRA}
+  {$define UCSRB_:=UCSRB}
+  {$define UCSRC_:=UCSRC}
+  {$define U2X_:=U2X}
+  {$define RXEN_:=RXEN}
+  {$define TXEN_:=TXEN}
+  {$define UCSZ_:=UCSZ}
+  {$define UDR_:=UDR}
+  {$define UDRE_:=UDRE}
+  {$define RXC_:=RXC}
+{$else}
+  {$define UBRR_:=UBRR0}
+  {$define UCSRA_:=UCSR0A}
+  {$define UBRRL_:=UBRR0L}
+  {$define UBRRH_:=UBRR0H}
+  {$define UCSRB_:=UCSR0B}
+  {$define UCSRC_:=UCSR0C}
+  {$define U2X_:=U2X0}
+  {$define RXEN_:=RXEN0}
+  {$define TXEN_:=TXEN0}
+  {$define UCSZ_:=UCSZ0}
+  {$define UDR_:=UDR0}
+  {$define UDRE_:=UDRE0}
+  {$define RXC_:=RXC0}
+{$endif}
+
 procedure uart_init1(const BAUD: dword; const useU2X: boolean = false);
 var
   ubrr: word;
@@ -130,57 +161,57 @@ begin
   else
     ubrr := ((F_CPU + 8*BAUD) shr 4) div BAUD;
 
-  UBRR0 := ubrr-1;
+  UBRR_ := ubrr-1;
 
   // Set U2X as specified
-  UCSR0A := UCSR0A or (byte(useU2X) shl U2X0);
+  UCSRA_ := byte(useU2X) shl U2X_;
 
   // Enable receiver and transmitter
-  UCSR0B := (1 shl RXEN0) or (1 shl TXEN0);
+  UCSRB_ := (1 shl RXEN_) or (1 shl TXEN_);
 
   // Set frame format: 8data, 1stop bit, no parity
-  UCSR0C := (3 shl UCSZ0);
+  UCSRC_ := (3 shl UCSZ_) {$if declared(URSEL)} and (1 shl URSEL){$endif};
 end;
 
 // Automatically use U2X
 procedure uart_init(const UBRR: word);
 begin
-  UBRR0H := UBRR shr 8;
-  UBRR0L := byte(UBRR);
+  UBRRH_ := UBRR shr 8;
+  UBRRL_ := byte(UBRR);
 
   // Set U2X bit
-  UCSR0A := UCSR0A or (1 shl U2X0);
+  UCSRA_ := 1 shl U2X_;
 
   // Enable receiver and transmitter
-  UCSR0B := (1 shl RXEN0) or (1 shl TXEN0);
+  UCSRB_ := (1 shl RXEN_) or (1 shl TXEN_);
 
   // Set frame format: 8data, 1stop bit, no parity
-  UCSR0C := (3 shl UCSZ0);
+  UCSRC_ := (3 shl UCSZ_) {$if declared(URSEL)} and (1 shl URSEL){$endif};
 end;
 
 procedure uart_transmit(const data: byte);
 begin
   // Wait for empty transmit buffer
-  while ((UCSR0A and (1 shl UDRE0)) = 0) do;
+  while ((UCSRA_ and (1 shl UDRE_)) = 0) do;
 
   // Put data into buffer, sends the data
-  UDR0 := data;
+  UDR_ := data;
 end;
 
 function uart_receive: byte;
 begin
   // Wait for data to be received
-  while ((UCSR0A and (1 shl RXC0)) = 0) do;
+  while ((UCSRA_ and (1 shl RXC_)) = 0) do;
 
   // Get and return received data from buffer
-  result := UDR0;
+  result := UDR_;
 end;
 
 function uart_peek(out c: byte): boolean;
 begin
-  result := UCSR0A and (1 shl RXC0) > 0;
+  result := UCSRA_ and (1 shl RXC_) > 0;
   if result then
-    c := UDR0
+    c := UDR_
   else
     c := 0;
 end;
