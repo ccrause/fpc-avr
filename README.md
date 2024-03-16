@@ -35,6 +35,7 @@ A Linux-64 bit compiled gdb 8.0 for avr, includes patch for debugging program me
 | mpu6050 | Reads the gyroscope and accelerometer values of an MPU6050 inertial measurement unit and write the values over serial. |
 | ringbuffer | Demonstrates how to use the spsc_ringbuffer library. spsc_ringbuffer is a ring buffer which writes and reads, in such a way that mutual exclusion is not required (assumes one reader & one writer, hence the SPSC name a.k.a Single Producer / Single Consumer) |
 | simavrtest | Demonstrates how to pass information to simavr using .mmcu section. |
+| softserial | A simple demonstration of software serial typically for attiny controllers without USART. |
 | sound | A sound (noise) generator using simple formulas. Demonstrated on an attiny10. |
 | uart1 | A simple serial test that reads a character and echos its ordinal value. |
 | uart4809 | A simple test written mostly to figure out how to read a button press, generate timer interrupts and send data over serial on the atmega4809. |
