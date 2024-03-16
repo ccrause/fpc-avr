@@ -20,6 +20,7 @@ A Linux-64 bit compiled gdb 8.0 for avr, includes patch for debugging program me
 | blinktiny15 | A simple blink example using a timer interrupt, for the attiny15 controller which doesn't have any RAM. |
 | dht_example | Reads a DHT11/21/22 or compatible humidity and temperature sensor and write values to serial. |
 | dumptiny104flash | A program to dump flash contents to serial.  Written to investigate a [potential hardware bug](https://www.avrfreaks.net/forum/critical-hardware-bug-attiny102-and-attiny104)
+| hello_world | Demonstrates how to redirect console I/O to UART. |
 | i2c | Reads the time from a DS1307 real time clock over i2c. |
 | i2c_BMP | Simple program to read values from a BMP085 or BMP180 pressure sensor over I2C. |
 | i2cscan | An i2c address scanner. |

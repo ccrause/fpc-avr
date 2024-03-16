@@ -1,7 +1,7 @@
 program hello_world;
 
 uses
-  consoleio, uart, delay, intrinsics;
+  consoleio, uart, delay;
 
 function WriteChar(ACh: char; AUserData: pointer): boolean;
 begin
