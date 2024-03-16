@@ -32,11 +32,10 @@
           </SearchPaths>
           <Parsing>
             <SyntaxOptions>
-              <SyntaxMode Value="fpc"/>
               <CStyleOperator Value="False"/>
+              <UseAnsiStrings Value="False"/>
               <CPPInline Value="False"/>
               <CStyleMacros Value="True"/>
-              <UseAnsiStrings Value="False"/>
             </SyntaxOptions>
           </Parsing>
           <CodeGeneration>
@@ -55,23 +54,21 @@
             </Verbosity>
             <WriteFPCLogo Value="False"/>
             <ConfigFile>
-              <DontUseConfigFile Value="True"/>
-              <CustomConfigFile Value="True"/>
-              <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
+              <ConfigFilePath Value=""/>
             </ConfigFile>
             <CustomOptions Value="-Wpattiny25
+-Si
+-Sm
 -dF_CPU:=8000000"/>
             <OtherDefines Count="1">
               <Define0 Value="F_CPU:=16000000"/>
             </OtherDefines>
             <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossavr"/>
             <ExecuteBefore>
-              <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
               <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteBefore>
             <ExecuteAfter>
-              <Command Value="../../scripts/listasm.sh $(targetfile)"/>
-              <CompileReasons Run="False"/>
+              <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteAfter>
           </Other>
           <CompileReasons Run="False"/>
@@ -90,16 +87,18 @@
           </SearchPaths>
           <Parsing>
             <SyntaxOptions>
-              <SyntaxMode Value="fpc"/>
               <CStyleOperator Value="False"/>
+              <UseAnsiStrings Value="False"/>
               <CPPInline Value="False"/>
               <CStyleMacros Value="True"/>
-              <UseAnsiStrings Value="False"/>
             </SyntaxOptions>
           </Parsing>
           <CodeGeneration>
             <TargetCPU Value="avr"/>
             <TargetOS Value="embedded"/>
+            <Optimizations>
+              <OptimizationLevel Value="2"/>
+            </Optimizations>
           </CodeGeneration>
           <Linking>
             <Debugging>
@@ -113,23 +112,21 @@
             </Verbosity>
             <WriteFPCLogo Value="False"/>
             <ConfigFile>
-              <DontUseConfigFile Value="True"/>
-              <CustomConfigFile Value="True"/>
-              <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
+              <ConfigFilePath Value=""/>
             </ConfigFile>
             <CustomOptions Value="-Wpatmega32u4
+-Si
+-Sm
 -dF_CPU:=16000000"/>
             <OtherDefines Count="1">
               <Define0 Value="F_CPU:=16000000"/>
             </OtherDefines>
             <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossavr"/>
             <ExecuteBefore>
-              <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
               <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteBefore>
             <ExecuteAfter>
-              <Command Value="../../scripts/listasm.sh $(targetfile)"/>
-              <CompileReasons Run="False"/>
+              <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteAfter>
           </Other>
           <CompileReasons Run="False"/>
@@ -148,18 +145,17 @@
           </SearchPaths>
           <Parsing>
             <SyntaxOptions>
-              <SyntaxMode Value="fpc"/>
               <CStyleOperator Value="False"/>
+              <UseAnsiStrings Value="False"/>
               <CPPInline Value="False"/>
               <CStyleMacros Value="True"/>
-              <UseAnsiStrings Value="False"/>
             </SyntaxOptions>
           </Parsing>
           <CodeGeneration>
             <TargetCPU Value="avr"/>
             <TargetOS Value="embedded"/>
             <Optimizations>
-              <OptimizationLevel Value="3"/>
+              <OptimizationLevel Value="2"/>
             </Optimizations>
           </CodeGeneration>
           <Linking>
@@ -169,27 +165,22 @@
             </Debugging>
           </Linking>
           <Other>
-            <Verbosity>
-              <ShowAll Value="True"/>
-            </Verbosity>
-            <WriteFPCLogo Value="False"/>
             <ConfigFile>
-              <ConfigFilePath Value="~/fpc/gitlab-cc/fpc.cfg"/>
+              <ConfigFilePath Value=""/>
             </ConfigFile>
             <CustomOptions Value="-Wpatmega2560
--dF_CPU:=16000000
--alr"/>
+-Si
+-Sm
+-dF_CPU:=16000000"/>
             <OtherDefines Count="1">
               <Define0 Value="F_CPU:=16000000"/>
             </OtherDefines>
             <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossavr"/>
             <ExecuteBefore>
-              <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
               <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteBefore>
             <ExecuteAfter>
-              <Command Value="../../scripts/listasm.sh $(targetfile)"/>
-              <CompileReasons Run="False"/>
+              <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteAfter>
           </Other>
           <CompileReasons Run="False"/>
@@ -208,11 +199,10 @@
           </SearchPaths>
           <Parsing>
             <SyntaxOptions>
-              <SyntaxMode Value="fpc"/>
               <CStyleOperator Value="False"/>
+              <UseAnsiStrings Value="False"/>
               <CPPInline Value="False"/>
               <CStyleMacros Value="True"/>
-              <UseAnsiStrings Value="False"/>
             </SyntaxOptions>
           </Parsing>
           <CodeGeneration>
@@ -237,20 +227,18 @@
               <ConfigFilePath Value="~/fpc/gitlab-cc/fpc.cfg"/>
             </ConfigFile>
             <CustomOptions Value="-Wpattiny10
--dF_CPU:=8000000
--alr
--Sm"/>
+-Si
+-Sm
+-dF_CPU:=8000000"/>
             <OtherDefines Count="1">
               <Define0 Value="F_CPU:=16000000"/>
             </OtherDefines>
             <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossavr"/>
             <ExecuteBefore>
-              <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
               <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteBefore>
             <ExecuteAfter>
-              <Command Value="../../scripts/listasm.sh $(targetfile)"/>
-              <CompileReasons Run="False"/>
+              <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteAfter>
           </Other>
           <CompileReasons Run="False"/>
@@ -269,18 +257,17 @@
           </SearchPaths>
           <Parsing>
             <SyntaxOptions>
-              <SyntaxMode Value="fpc"/>
               <CStyleOperator Value="False"/>
+              <UseAnsiStrings Value="False"/>
               <CPPInline Value="False"/>
               <CStyleMacros Value="True"/>
-              <UseAnsiStrings Value="False"/>
             </SyntaxOptions>
           </Parsing>
           <CodeGeneration>
             <TargetCPU Value="avr"/>
             <TargetOS Value="embedded"/>
             <Optimizations>
-              <OptimizationLevel Value="3"/>
+              <OptimizationLevel Value="2"/>
             </Optimizations>
           </CodeGeneration>
           <Linking>
@@ -290,27 +277,22 @@
             </Debugging>
           </Linking>
           <Other>
-            <Verbosity>
-              <ShowAll Value="True"/>
-            </Verbosity>
-            <WriteFPCLogo Value="False"/>
             <ConfigFile>
               <ConfigFilePath Value="~/fpc/gitlab-cc/fpc.cfg"/>
             </ConfigFile>
             <CustomOptions Value="-Wpattiny10
--dF_CPU:=1000000
--alr"/>
+-Si
+-Sm
+-dF_CPU:=1000000"/>
             <OtherDefines Count="1">
               <Define0 Value="F_CPU:=16000000"/>
             </OtherDefines>
             <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossavr"/>
             <ExecuteBefore>
-              <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
               <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteBefore>
             <ExecuteAfter>
-              <Command Value="../../scripts/listasm.sh $(targetfile)"/>
-              <CompileReasons Run="False"/>
+              <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteAfter>
           </Other>
           <CompileReasons Run="False"/>
@@ -329,18 +311,17 @@
           </SearchPaths>
           <Parsing>
             <SyntaxOptions>
-              <SyntaxMode Value="fpc"/>
               <CStyleOperator Value="False"/>
+              <UseAnsiStrings Value="False"/>
               <CPPInline Value="False"/>
               <CStyleMacros Value="True"/>
-              <UseAnsiStrings Value="False"/>
             </SyntaxOptions>
           </Parsing>
           <CodeGeneration>
             <TargetCPU Value="avr"/>
             <TargetOS Value="embedded"/>
             <Optimizations>
-              <OptimizationLevel Value="3"/>
+              <OptimizationLevel Value="2"/>
             </Optimizations>
           </CodeGeneration>
           <Linking>
@@ -350,27 +331,22 @@
             </Debugging>
           </Linking>
           <Other>
-            <Verbosity>
-              <ShowAll Value="True"/>
-            </Verbosity>
-            <WriteFPCLogo Value="False"/>
             <ConfigFile>
-              <ConfigFilePath Value="~/fpc/gitlab-cc/fpc.cfg"/>
+              <ConfigFilePath Value=""/>
             </ConfigFile>
             <CustomOptions Value="-Wpattiny104
--dF_CPU:=1000000
--alr"/>
+-Si
+-Sm
+-dF_CPU:=1000000"/>
             <OtherDefines Count="1">
               <Define0 Value="F_CPU:=16000000"/>
             </OtherDefines>
             <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossavr"/>
             <ExecuteBefore>
-              <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
               <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteBefore>
             <ExecuteAfter>
-              <Command Value="../../scripts/listasm.sh $(targetfile)"/>
-              <CompileReasons Run="False"/>
+              <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteAfter>
           </Other>
           <CompileReasons Run="False"/>
@@ -386,7 +362,7 @@
         <Mode0 Name="default"/>
       </Modes>
     </RunParams>
-    <Units Count="3">
+    <Units Count="2">
       <Unit0>
         <Filename Value="blink.pp"/>
         <IsPartOfProject Value="True"/>
@@ -395,11 +371,10 @@
         <Filename Value="../../library/delay.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit1>
-      <Unit2>
-        <Filename Value="simavrinfo.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit2>
     </Units>
+    <Debugger>
+      <StoreDebuggerClassConfInSession Value="True"/>
+    </Debugger>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>
@@ -413,11 +388,10 @@
     </SearchPaths>
     <Parsing>
       <SyntaxOptions>
-        <SyntaxMode Value="fpc"/>
         <CStyleOperator Value="False"/>
+        <UseAnsiStrings Value="False"/>
         <CPPInline Value="False"/>
         <CStyleMacros Value="True"/>
-        <UseAnsiStrings Value="False"/>
       </SyntaxOptions>
     </Parsing>
     <CodeGeneration>
@@ -434,27 +408,22 @@
       </Debugging>
     </Linking>
     <Other>
-      <Verbosity>
-        <ShowAll Value="True"/>
-      </Verbosity>
-      <WriteFPCLogo Value="False"/>
       <ConfigFile>
         <ConfigFilePath Value="~/fpc/gitlab-cc/fpc.cfg"/>
       </ConfigFile>
       <CustomOptions Value="-Wpatmega328p
--dF_CPU:=16000000
--alr"/>
+-Si
+-Sm
+-dF_CPU:=16000000"/>
       <OtherDefines Count="1">
         <Define0 Value="F_CPU:=16000000"/>
       </OtherDefines>
       <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossavr"/>
       <ExecuteBefore>
-        <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
         <CompileReasons Compile="False" Build="False" Run="False"/>
       </ExecuteBefore>
       <ExecuteAfter>
-        <Command Value="../../scripts/listasm.sh $(targetfile)"/>
-        <CompileReasons Run="False"/>
+        <CompileReasons Compile="False" Build="False" Run="False"/>
       </ExecuteAfter>
     </Other>
     <CompileReasons Run="False"/>

@@ -1,15 +1,16 @@
 program i2cscan;
 
 uses
-  uart, i2c;
+  uart, i2c, delay;
 
 var
   i2c_master: TI2CMaster;
 
 const
   BAUD_Rate = 115200;
+  // For x2 mode
   {$ifdef CPUAVRXMEGA3}
-  BAUD_SETTING = (F_CPU * 64 + 8 *BAUD_Rate) div (16 * BAUD_Rate);
+  BAUD_SETTING = (F_CPU*64 + 4*BAUD_Rate) div (8*BAUD_Rate);
   {$else}
   BAUD_SETTING = (((F_CPU + 4*BAUD_Rate) shr 3) div BAUD_Rate) - 1;
   {$endif}
@@ -32,7 +33,7 @@ begin
     for j := 0 to 15 do
     begin
       addr := (i shl 4) or j;
-      if i2c_master.start(addr shl 1, true) then
+      if i2c_master.start(addr shl 1, false) then
       begin
         uart_transmit_hex(addr);
         uart_transmit(' ');
@@ -47,8 +48,16 @@ end;
 
 begin
   uart.uart_init(BAUD_SETTING);
-  i2c_scan;
+  {$ifdef CPUAVRXMEGA3}
+  // Configure RX & TX pins for USART3 of atmega48809
+  PORTB.DIRCLR := PIN1bm; // RX in input mode
+  PORTB.DIRSET := Pin0bm; // TX in output mode
+  {$endif}
+
   repeat
+    i2c_scan;
+    delay_ms(5000);
+    uart_transmit(#13#10);
   until false;
 end.
 

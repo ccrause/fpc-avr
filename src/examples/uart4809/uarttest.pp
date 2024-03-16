@@ -4,9 +4,14 @@ program uarttest;
   If PF6 is pulled down an underscore (_) is transmitted, else a minus (-) is transmitted
   every second
 
-  Remember to define F_CPU  because BAUD_SETTING below requires this.
+  Remember to define F_CPU because BAUD_SETTING below requires this.
   Specify -dF_CPU:=3333333 as command line parameter to the compiler (in Lazarus
   this can be specified under Project Options - Custom Options).
+
+  Note for ATmega4809 Curiosity Nano:
+  The host serial terminal must assert the DTR signal to indicate to the onboard
+  debugger that a CDC session is active.  If the DTR signal is deasserted no
+  serial data will be streamed to the host.
 }
 
 uses

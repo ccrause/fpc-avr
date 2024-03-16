@@ -29,37 +29,21 @@
         <Mode0 Name="default"/>
       </Modes>
     </RunParams>
-    <Units Count="6">
+    <Units Count="2">
       <Unit0>
         <Filename Value="mpu6050pantilt.pp"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="../../library/delay.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit1>
-      <Unit2>
-        <Filename Value="../blink1/simavrinfo.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit2>
-      <Unit3>
-        <Filename Value="../../library/uart.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit3>
-      <Unit4>
-        <Filename Value="../../library/i2cbitbang.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit4>
-      <Unit5>
         <Filename Value="../../library/mpu6050.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit5>
+      </Unit1>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="mpu6050pantilt"/>
+      <Filename Value="$nameonly($(projfile))"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
@@ -69,9 +53,9 @@
     <Parsing>
       <SyntaxOptions>
         <CStyleOperator Value="False"/>
+        <UseAnsiStrings Value="False"/>
         <CPPInline Value="False"/>
         <CStyleMacros Value="True"/>
-        <UseAnsiStrings Value="False"/>
       </SyntaxOptions>
     </Parsing>
     <CodeGeneration>
@@ -83,30 +67,27 @@
     </CodeGeneration>
     <Linking>
       <Debugging>
-        <DebugInfoType Value="dsDwarf2Set"/>
+        <DebugInfoType Value="dsDwarf3"/>
         <UseLineInfoUnit Value="False"/>
       </Debugging>
     </Linking>
     <Other>
-      <WriteFPCLogo Value="False"/>
       <ConfigFile>
-        <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
+        <ConfigFilePath Value=""/>
       </ConfigFile>
       <CustomOptions Value="-Wpatmega328p
--Sg
--dF_CPU:=16000000
--XPavr-"/>
+-Si
+-Sm
+-dF_CPU:=16000000"/>
       <OtherDefines Count="1">
         <Define0 Value="F_CPU:=16000000"/>
       </OtherDefines>
       <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossavr"/>
       <ExecuteBefore>
-        <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
         <CompileReasons Compile="False" Build="False" Run="False"/>
       </ExecuteBefore>
       <ExecuteAfter>
-        <Command Value="../../scripts/listasm.sh $(targetfile)"/>
-        <CompileReasons Run="False"/>
+        <CompileReasons Compile="False" Build="False" Run="False"/>
       </ExecuteAfter>
     </Other>
     <CompileReasons Run="False"/>

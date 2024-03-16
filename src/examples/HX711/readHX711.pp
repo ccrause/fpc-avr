@@ -1,7 +1,6 @@
 program readHX711;
 
 {$PackEnum 1}
-{$inline on}
 
 { $define UseSPI}
 

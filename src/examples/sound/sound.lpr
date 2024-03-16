@@ -69,14 +69,15 @@ begin
     else
       SoundSelector := @Sound_TwoToneAlarm;
 
+    // cancel previous PWM value
+    {$if declared(OCR0AL)} OCR0AL {$else} OCR0A {$endif} := 0;
     // Delay between samples
     // at -O3 this loop takes 13 cycles, @2 MHz this is an 0.4 s delay
-    OCR0AL := 0;  // cancel previous PWM value
     repeat
       inc(t);
     until t = 0;
   end;
-  OCR0AL := SoundSelector();
+  {$if declared(OCR0AL)} OCR0AL {$else} OCR0A {$endif} := SoundSelector();
 end;
 
 begin
@@ -91,7 +92,11 @@ begin
   TCCR0A := (2 shl COM0A) or (1 shl 0); // WGM mode 5
   TCCR0B := (1 shl 3) or (1 shl CS0);   // clock prescaler = 1, OVF = 2000000/256 = 7812.5 Hz
   OCR0A := 0;
+  {$if declared(TIMSK)}
+  TIMSK := 1 shl TOIE0;
+  {$elseif declared(TIMSK0)}
   TIMSK0 := 1 shl TOIE0;
+  {$endif}
   avr_sei;
 
   repeat until false;

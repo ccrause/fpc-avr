@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="11"/>
+    <Version Value="12"/>
     <General>
       <Flags>
         <MainUnitHasCreateFormStatements Value="False"/>
         <MainUnitHasTitleStatement Value="False"/>
         <MainUnitHasScaledStatement Value="False"/>
+        <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <MainUnit Value="0"/>
       <Title Value="simavrtest"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
     <BuildModes Count="1">
-      <Item1 Name="Default" Default="True"/>
+      <Item1 Name="m328p" Default="True"/>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
@@ -26,7 +26,7 @@
         <Mode0 Name="default"/>
       </Modes>
     </RunParams>
-    <Units Count="2">
+    <Units Count="3">
       <Unit0>
         <Filename Value="simavrtest.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -35,12 +35,16 @@
         <Filename Value="../../library/simavr.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit1>
+      <Unit2>
+        <Filename Value="simavrinfo.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit2>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="simavrtest"/>
+      <Filename Value="$nameonly($(projfile))" ApplyConventions="False"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
@@ -48,33 +52,30 @@
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>
-      <SmartLinkUnit Value="True"/>
-      <Optimizations>
-        <OptimizationLevel Value="2"/>
-      </Optimizations>
+      <TargetCPU Value="avr"/>
+      <TargetOS Value="embedded"/>
     </CodeGeneration>
     <Linking>
       <Debugging>
-        <GenerateDebugInfo Value="False"/>
+        <DebugInfoType Value="dsDwarf3"/>
         <UseLineInfoUnit Value="False"/>
       </Debugging>
-      <LinkSmart Value="True"/>
     </Linking>
     <Other>
       <ConfigFile>
-        <DontUseConfigFile Value="True"/>
-        <CustomConfigFile Value="True"/>
-        <ConfigFilePath Value="~/fpc/avr/fpclocal.cfg"/>
+        <ConfigFilePath Value=""/>
       </ConfigFile>
-      <CustomOptions Value="-Sm
--Wpatmega328p
--al
--at
--k--section-start=.mmcu=0x910000
+      <CustomOptions Value="-Wpatmega328p
+-Si
+-Sm
 -dF_CPU:=16000000"/>
-      <CompilerPath Value="/home/christo/fpc/avr/compiler/avr/pp"/>
+      <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossavr"/>
+      <ExecuteBefore>
+        <Command Value="/home/christo/fpc/fpc-avr/src/scripts/run-simavr.sh $(targetfile)"/>
+        <CompileReasons Compile="False" Build="False"/>
+      </ExecuteBefore>
       <ExecuteAfter>
-        <Command Value="../../scripts/listasm.sh $(targetfile)"/>
+        <Command Value="/home/christo/fpc/fpc-avr/src/scripts/listasm.sh $(targetfile)"/>
         <CompileReasons Run="False"/>
       </ExecuteAfter>
     </Other>

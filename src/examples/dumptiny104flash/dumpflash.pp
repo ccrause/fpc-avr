@@ -1,7 +1,5 @@
 program dumpflash;
 
-{$Macro on}
-
 // Note default CPU clock is 1 MHz
 
 uses dummyunit;

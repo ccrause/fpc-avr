@@ -26,11 +26,10 @@ begin
   l2:
 end;
 
-var
-  i: byte;
 
 begin
-  DDRB := DDRB or (1 shl PB3);  // Set pin to output
+  DDRB := DDRB or (1 shl PB3);  // Set PB3 as output pin
+
   // Configure Timer0 for overflow interrupt
   TCNT0 := 0;
   TCCR0 := (1 shl CS02) or (1 shl CS00);  // clock prescaler = 1024, overflow = 1600000/1024/256 = 6.1 Hz

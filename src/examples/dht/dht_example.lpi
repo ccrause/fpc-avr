@@ -47,21 +47,15 @@
           </CodeGeneration>
           <Linking>
             <Debugging>
-              <DebugInfoType Value="dsDwarf2Set"/>
+              <DebugInfoType Value="dsDwarf3"/>
               <UseLineInfoUnit Value="False"/>
             </Debugging>
           </Linking>
           <Other>
-            <Verbosity>
-              <ShowAll Value="True"/>
-            </Verbosity>
-            <WriteFPCLogo Value="False"/>
             <ConfigFile>
-              <ConfigFilePath Value="~/fpc/avr-new/fpc.cfg"/>
+              <ConfigFilePath Value=""/>
             </ConfigFile>
             <CustomOptions Value="-Wpatmega4809
--XPavr-
--al
 -Sg
 -Sm
 -dF_CPU:=3333333
@@ -71,12 +65,10 @@
             </OtherDefines>
             <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossavr"/>
             <ExecuteBefore>
-              <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
-              <CompileReasons Compile="False" Build="False"/>
+              <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteBefore>
             <ExecuteAfter>
-              <Command Value="../../scripts/listasm.sh $(targetfile)"/>
-              <CompileReasons Run="False"/>
+              <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteAfter>
           </Other>
         </CompilerOptions>
@@ -109,18 +101,15 @@
           </CodeGeneration>
           <Linking>
             <Debugging>
-              <DebugInfoType Value="dsDwarf2Set"/>
+              <DebugInfoType Value="dsDwarf3"/>
               <UseLineInfoUnit Value="False"/>
             </Debugging>
           </Linking>
           <Other>
-            <WriteFPCLogo Value="False"/>
             <ConfigFile>
-              <ConfigFilePath Value="~/fpc/avr-new/fpc.cfg"/>
+              <ConfigFilePath Value=""/>
             </ConfigFile>
             <CustomOptions Value="-Wpatmega8
--XPavr-
--al
 -Sg
 -Sm
 -dF_CPU:=8000000"/>
@@ -129,14 +118,13 @@
             </OtherDefines>
             <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossavr"/>
             <ExecuteBefore>
-              <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
-              <CompileReasons Compile="False" Build="False"/>
+              <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteBefore>
             <ExecuteAfter>
-              <Command Value="../../scripts/listasm.sh $(targetfile)"/>
-              <CompileReasons Run="False"/>
+              <CompileReasons Compile="False" Build="False" Run="False"/>
             </ExecuteAfter>
           </Other>
+          <CompileReasons Run="False"/>
         </CompilerOptions>
       </Item3>
     </BuildModes>
@@ -149,7 +137,7 @@
         <Mode0 Name="default"/>
       </Modes>
     </RunParams>
-    <Units Count="8">
+    <Units Count="5">
       <Unit0>
         <Filename Value="dht_example.pp"/>
         <IsPartOfProject Value="True"/>
@@ -159,29 +147,17 @@
         <IsPartOfProject Value="True"/>
       </Unit1>
       <Unit2>
-        <Filename Value="../blink1/simavrinfo.pas"/>
+        <Filename Value="../../library/uart.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
       <Unit3>
-        <Filename Value="../../library/uart.pas"/>
+        <Filename Value="../../library/dht.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit3>
       <Unit4>
-        <Filename Value="../../library/i2cbitbang.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit4>
-      <Unit5>
-        <Filename Value="../../library/bmp085_180.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit5>
-      <Unit6>
-        <Filename Value="../../library/dht.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit6>
-      <Unit7>
         <Filename Value="dht_config.inc"/>
         <IsPartOfProject Value="True"/>
-      </Unit7>
+      </Unit4>
     </Units>
     <Debugger>
       <ClassConfig Version="1">
@@ -219,18 +195,15 @@
     </CodeGeneration>
     <Linking>
       <Debugging>
-        <DebugInfoType Value="dsDwarf2Set"/>
+        <DebugInfoType Value="dsDwarf3"/>
         <UseLineInfoUnit Value="False"/>
       </Debugging>
     </Linking>
     <Other>
-      <WriteFPCLogo Value="False"/>
       <ConfigFile>
-        <ConfigFilePath Value="~/fpc/avr-new/fpc.cfg"/>
+        <ConfigFilePath Value=""/>
       </ConfigFile>
       <CustomOptions Value="-Wpatmega328p
--XPavr-
--al
 -Sg
 -Sm
 -dF_CPU:=16000000"/>
@@ -239,14 +212,13 @@
       </OtherDefines>
       <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossavr"/>
       <ExecuteBefore>
-        <Command Value="../../scripts/run-simavr.sh $(targetfile)"/>
-        <CompileReasons Compile="False" Build="False"/>
+        <CompileReasons Compile="False" Build="False" Run="False"/>
       </ExecuteBefore>
       <ExecuteAfter>
-        <Command Value="../../scripts/listasm.sh $(targetfile)"/>
-        <CompileReasons Run="False"/>
+        <CompileReasons Compile="False" Build="False" Run="False"/>
       </ExecuteAfter>
     </Other>
+    <CompileReasons Run="False"/>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">

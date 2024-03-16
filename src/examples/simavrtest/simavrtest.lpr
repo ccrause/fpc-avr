@@ -1,7 +1,7 @@
 program simavrtest;
 
 uses
-  intrinsics, simavr, uart;
+  intrinsics, uart, simavrinfo, simavr;
 
 const
   baud1 = 115200;
@@ -9,27 +9,6 @@ const
   baud2 = 9600;
   ub2 = (((F_CPU + 4*baud2) shr 3) div baud2) - 1;
   s = 'SizeOf(pointer) = ';
-
-  // Data written in section .mmcu to be read by simavr
-  // Microcontroller name
-  mcuname: Tavr_mmcu_str = (tag: AVR_MMCU_TAG_NAME; len: sizeof(Tavr_mmcu_str)-2;
-           str: 'atmega88'); section '.mmcu';
-
-  // Specify CPU clock frequency
-  freq: Tavr_mmcu_uint32 = (tag: AVR_MMCU_TAG_FREQUENCY; len: sizeof(uint32)-2;
-        val: F_CPU); section '.mmcu';
-
-  // Output trace of UDR0 register to vcd file
-  trace: Tavr_mmcu_vcd_trace = (tag: AVR_MMCU_TAG_VCD_TRACE; len: sizeof(Tavr_mmcu_vcd_trace)-2;
-         mask: 0; addr: @UDR0; name: 'UDR0'); section '.mmcu';
-
-  // Data (text) written to this register (GPIOR0) will be echoed in terminal
-  consolereg: Tavr_mmcu_addr = (tag: AVR_MMCU_TAG_SIMAVR_CONSOLE; len: sizeof(Tavr_mmcu_addr)-2;
-              addr: @GPIOR0); section '.mmcu';
-
-  // Write simavr commands to GPIOR1 e.g. start/stop trace
-  commandreg: Tavr_mmcu_addr = (tag: AVR_MMCU_TAG_SIMAVR_COMMAND; len: sizeof(Tavr_mmcu_addr)-2;
-                          addr: @GPIOR1); section '.mmcu';
 
 var
   i: integer;

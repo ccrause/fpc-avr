@@ -3,7 +3,7 @@ unit spi_config;
 interface
 
 const
-  USE_SPI_SOFTWARE = 1;  // Must be set to either 0 (use SPI hardware) or 1 (use software)
+  USE_SPI_SOFTWARE = 0;  // Must be set to either 0 (use SPI hardware) or 1 (use software)
 
   SPI_CLK_PIN = 5;
   SPI_MOSI_PIN = 3;

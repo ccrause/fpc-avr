@@ -1,7 +1,5 @@
 program blink;
 
-{$Inline on}
-
 uses
   delay;
 
@@ -34,17 +32,17 @@ end;
 
 procedure blinkOff; inline;
 begin
-  LEDport := LEDport and ($FF - LEDpin);
+  LEDport := LEDport and not(LEDpin);
 end;
 
 begin
   LEDdir := LEDpin;
-  LEDport := 0;  // off
+  blinkOff;
 
   while True do
   begin
      blinkOn;
-     delay_ms(500);    // delay 1 second
+     delay_ms(500);
      blinkOff;
      delay_ms(500);
   end;
