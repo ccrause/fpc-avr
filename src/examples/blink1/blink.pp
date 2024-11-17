@@ -35,12 +35,11 @@ end;
 
 procedure blinkOff; inline;
 begin
-  LEDport := LEDport and not(LEDpin);
+  LEDport := LEDport and ($FF - LEDpin);
 end;
 
 begin
   LEDdir := LEDpin;
-  blinkOff;
 
   while True do
   begin
