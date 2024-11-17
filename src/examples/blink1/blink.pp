@@ -4,12 +4,12 @@ uses
   delay;
 
 const
-  {$if defined(FPC_MCU_ATMEGA328P) or defined(FPC_MCU_ATTINY104)}
+  {$if defined(FPC_MCU_ATMEGA328P) or defined(FPC_MCU_ATTINY104) or defined(FPC_MCU_ATMEGA8)}
   // Assume Uno or attiny104 Xplained Nano layout
   LEDpin = 1 shl 5;
   {$elseif defined(FPC_MCU_ATMEGA32U4)}
-  // Assume Pro Micro layout
-  LEDpin = 1;
+  // Assume Leonardo layout
+  LEDpin = 1 shl 7;
   {$elseif defined(FPC_MCU_ATMEGA2560)}
   // Assume Mega layout
   LEDpin = 1 shl 7;
@@ -20,10 +20,13 @@ var
 {$if defined(FPC_MCU_ATTINY104)}
   LEDport: byte absolute PORTA;
   LEDdir: byte absolute DDRA;
+{$elseif defined(FPC_MCU_ATMEGA32U4)}
+  LEDport: byte absolute PORTC;
+  LEDdir: byte absolute DDRC;
 {$else}
   LEDport: byte absolute PORTB;
   LEDdir: byte absolute DDRB;
-{$endif attiny104}
+{$endif}
 
 procedure blinkOn; inline;
 begin
