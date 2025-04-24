@@ -93,12 +93,12 @@ end;
 {$ENDIF CPUAVR_HAS_MOVW}
 
 // Cycle count
-// function overhead: 4 cycles for call and 4 cycles for ret = 8
+// function overhead: 4 cycles for call and 4 cycles for ret and 2 cycles for loading a const = 10
 // Shortcut to exit: 15 cycles
-// Shortest limit = 8 + 15 + 1/2 of 1 loop (5) = 26
-// Calculation overhead up to begining of loop: 23 + 6 + 8 = 31
+// Shortest limit = 10 + 15 + 1/2 of 1 loop (5) = 28
+// Calculation overhead up to begining of loop: 29 + 10 = 39
 // Loop will execute if loopcounter = 0, fixed overhead of 5
-// Fixed overhead including 1 loop cycle = 30 + 5 = 35
+// Fixed overhead including 1 loop cycle = 39 + 5 = 44
 // cyclecount = t*tickFreq
 // Loop accounting:
 // cyclecount = 5 + 4*loopcounter + 3*(loopcounter shr 16)
@@ -110,8 +110,7 @@ end;
 procedure delay_us(t: uint16); assembler;
 const
   tickFreq = (F_CPU div 1000000); // only valid from 1 - 64 MHz clock
-  shortlimit = 26;                // If delay ticks less than this, exit
-  overheadloop = 36;              // fixed overhead besides loop
+  fixedoverhead = 44 + 2;         // fixed overhead + 1/2 loop (for rounding)
 label
   loop, finish;
 asm
@@ -134,14 +133,14 @@ asm
   clr R1
 
   // test if ticks required < overhead, jump to finish if true
-  cpi R24, shortlimit
+  cpi R24, fixedoverhead
   cpc R25, R1
   cpc R26, R1
   brlo finish    // 2 cycles to branch, 1 to continue
 
   // Calculate loop counter
   // First substract overhead
-  sbiw R24, overheadloop          // 2 cycles
+  sbiw R24, fixedoverhead          // 2 cycles
   sbc R26, R1
 
   // Loop count = tickcount / 4
