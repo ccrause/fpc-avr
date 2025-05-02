@@ -7,6 +7,7 @@ interface
 type
   TRomArray = array[0..7] of byte;
   PRomArray = ^TRomArray;
+  TOneWireSearch = (owsNormal, owsAlarm);
 
   { ToneWire }
 
@@ -16,7 +17,7 @@ type
     owMatchRom = $55;
     owReadPowerSupply = $B4;
     owSkipRom = $CC;
-    owAlarmSearch = $EC;
+    owSearchAlarm = $EC;
     owSearchRom = $F0;
   private
     LastDiscrepancy, LastFamilyDiscrepancy: byte;
@@ -36,8 +37,11 @@ type
     // Search algorithm adapted from:
     // https://www.analog.com/en/resources/app-notes/1wire-search-algorithm.html
     // https://github.com/PaulStoffregen/OneWire/blob/master/OneWire.cpp
+    // and Application Note 187 from Dallas Semiconductor accessed from:
+    // https://techwww.in.tu-clausthal.de/site/Dokumentation/OneWire/ApplicationNotes/App187_1WSearch.pdf
     procedure initSearch;
-    function search(const newAddress: PRomArray): boolean;
+    function search(const newAddress: PRomArray; searchType: TOneWireSearch = owsNormal): boolean;
+    function verify(const address: PRomArray): boolean;
   end;
 
 implementation
@@ -221,7 +225,29 @@ begin
   LastFamilyDiscrepancy := 0;
 end;
 
-function ToneWire.search(const newAddress: PRomArray): boolean;
+// This function verifies that device matching address is present on bus
+function ToneWire.verify(const address: PRomArray): boolean;
+var
+  tmpAddr: TRomArray;
+  i: byte;
+begin
+  LastDiscrepancy := 64;
+  LastDeviceFlag := false;
+  LastFamilyDiscrepancy := 0;
+  tmpAddr := address^;
+  search(@tmpAddr);
+
+  i := 0;
+  while (tmpAddr[i] = address^[i]) and (i < length(tmpAddr)) do
+    inc(i);
+  Result := (i = length(tmpAddr));
+end;
+
+// This function enumerates devices on the bus.
+// Default searchType will list all found devices,
+// searchType=owSearchAlarm will enumerate devices in alarm state only.
+function ToneWire.search(const newAddress: PRomArray;
+  searchType: TOneWireSearch): boolean;
 var
   id_bit_number, last_zero, rom_byte_number: byte;
   id_bit, cmp_id_bit: byte;
@@ -242,7 +268,10 @@ begin
     if Result then
     begin
       // issue the search command
-      writeByte(owSearchRom);
+      if searchType = owsNormal then
+        writeByte(owSearchRom)
+      else
+        writeByte(owSearchAlarm);
 
       // loop to do the search
       repeat
