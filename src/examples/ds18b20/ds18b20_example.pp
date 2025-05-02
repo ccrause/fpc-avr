@@ -25,7 +25,7 @@ const
 
 var
   ds: TDS18xxx;
-  i, j: byte;
+  i, j: int8;
   devices: array[0..7] of TRomArray;
   T: int8;
   fracT: uint8;
@@ -42,7 +42,7 @@ begin
   repeat
     uart_transmit(#10#10'Bus identification:'#10);
     FillByte(devices, SizeOf(devices), 0);
-    ds.initSearch;
+    ds.initSearch();
     i := 0;
     repeat
       res := ds.search(@devices[i]);
@@ -58,14 +58,31 @@ begin
       end
       else
         uart_transmit('No more devices responded'#10);
+
       inc(i);
     until not res or (i >= length(devices));
+
+    i := 0;
+    while (devices[i][0] > 0) and (i < length(devices)) do
+    begin
+      uart_transmit('Verify ');
+      uart_transmit_asstring(i);
+      uart_transmit(' : ');
+      if ds.verify(@devices[i]) then
+        uart_transmit('OK')
+      else
+        uart_transmit('Er');
+      inc(i);
+      uart_transmit(#10);
+    end;
 
     uart_transmit('Starting T convertion'#10);
     if ds.startConvertT then
     begin
       i := 0;
-      delay_ms(800); // Max delay required is 750 ms for 12 bit resolution
+      while ds.conversionInProgress do
+        delay_ms(delayFor9bitConversion);
+
       while (devices[i][0] > 0) and (i < length(devices)) do
       begin
         uart_transmit('  Device ');

@@ -43,7 +43,14 @@ type
     function recallEEPROM(const pAddress: PRomArray): boolean;
     function readTemperature(const pAddress: PRomArray; out T: int8; out
       fracT: uint8): boolean;
+    function conversionInProgress: boolean;
   end;
+
+const
+  delayFor9bitConversion = 94;
+  delayFor10bitConversion = 2*delayFor9bitConversion;
+  delayFor11bitConversion = 2*delayFor10bitConversion;
+  delayFor12bitConversion = 2*delayFor11bitConversion;
 
 implementation
 
@@ -119,6 +126,11 @@ begin
     if negative then
       T := -T;
   end;
+end;
+
+function TDS18xxx.conversionInProgress: boolean;
+begin
+  Result := not(readBit);
 end;
 
 end.
