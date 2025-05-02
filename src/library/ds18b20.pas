@@ -54,6 +54,14 @@ const
 
 implementation
 
+uses
+  progmem;
+
+const
+  // Should be a local const, but FPC does not allow a section directive there.
+  binToDecLookup: array[0..15] of byte =
+    (0, 1, 1, 2, 3, 3, 4, 4,
+     5, 6, 6, 7, 8, 8, 9, 9); section '.progmem';
 
 { TDS18xxx }
 
@@ -104,10 +112,6 @@ begin
 end;
 
 function TDS18xxx.readTemperature(const pAddress: PRomArray; out T: int8; out fracT: uint8): boolean;
-const
-  binToDecLookup: array[0..15] of byte =
-    (0, 1, 1, 2, 3, 3, 4, 4,
-     5, 6, 6, 7, 8, 8, 9, 9);
 var
   data: TScratchpad;
   negative: boolean;
@@ -121,7 +125,7 @@ begin
       data.rec.TL := -data.rec.TL;
       data.rec.TH := -data.rec.TH;
     end;
-    fracT := binToDecLookup[data.rec.TL and $0F];
+    fracT := progmemByte(@binToDecLookup[data.rec.TL and $0F]);
     T := (data.rec.TL shr 4) or (data.rec.TH shl 4);  // Range of DS18D20 is -55 to 125, so no loss of significant bits
     if negative then
       T := -T;
