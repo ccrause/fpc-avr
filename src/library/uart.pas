@@ -2,10 +2,15 @@ unit uart;
 
 interface
 
-// Important note for ATMEGAX3 series:
-// Configure RX pin as input and TX pin as output in user code.
-// This is not required for classic AVR controllers such as atmega328p
+{ Important note for ATMEGAX3 series controllers:
+  Configure RX pin as input and TX pin as output in user code.
+  This cannot be be done automatically since there are alternative pin mappings
+  that the user can select via the port multiplexer.
+  This is not required for classic AVR controllers such as atmega328p }
 procedure uart_init(const UBRR: word);
+
+{ Alternative initialization function with runtime calculation of the required
+  baud rate register setting.  A bit more flexible, but wih increased code size }
 procedure uart_init1(const BAUD: dword; const useU2X: boolean = false);
 
 // Blocking functions
@@ -136,7 +141,7 @@ end;
   {$define UDR_:=UDR}
   {$define UDRE_:=UDRE}
   {$define RXC_:=RXC}
-{$else}
+{$elseif declared(UBRR0)}
   {$define UBRR_:=UBRR0}
   {$define UCSRA_:=UCSR0A}
   {$define UBRRL_:=UBRR0L}
@@ -150,6 +155,22 @@ end;
   {$define UDR_:=UDR0}
   {$define UDRE_:=UDRE0}
   {$define RXC_:=RXC0}
+{$elseif declared(UBRR1)}
+  {$define UBRR_:=UBRR1}
+  {$define UCSRA_:=UCSR1A}
+  {$define UBRRL_:=UBRR1L}
+  {$define UBRRH_:=UBRR1H}
+  {$define UCSRB_:=UCSR1B}
+  {$define UCSRC_:=UCSR1C}
+  {$define U2X_:=U2X1}
+  {$define RXEN_:=RXEN1}
+  {$define TXEN_:=TXEN1}
+  {$define UCSZ_:=UCSZ1}
+  {$define UDR_:=UDR1}
+  {$define UDRE_:=UDRE1}
+  {$define RXC_:=RXC1}
+{$else}
+  {$error Controller does not support the expected USART registers}
 {$endif}
 
 procedure uart_init1(const BAUD: dword; const useU2X: boolean = false);
