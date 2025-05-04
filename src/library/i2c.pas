@@ -39,7 +39,7 @@ type
   {$define SDApin := 2}
   {$define SDApin_bm := (1 shl SDApin)}
   {$define SDAport := PORTA}
-{$elseif defined(FPC_MCU_ATMEGA328P)}
+{$elseif defined(FPC_MCU_ATMEGA328P) or defined(FPC_MCU_ATMEGA8)}
   {$define SCLpin := 5}
   {$define SDApin := 4}
   {$define SDApin_bm := (1 shl SDApin)}
@@ -48,7 +48,7 @@ type
   {$define I2CDDR := DDRC}
   {$define I2CPins := PINC}
 {$else}
-  {$error 'MCU is not an XMEGA3 or atmega328p'}
+  {$error 'MCU is not an XMEGA3 or atmega328p/atmega8'}
 {$endif}
 
 const
