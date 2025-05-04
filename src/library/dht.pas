@@ -25,8 +25,8 @@ function DHTRead(out humidity: word; out temperature: int16): TDHTtype;
 function DHTidentify: TDHTtype;
 
 // Call these functions if the type of sensor is known
-function DHT11Read(var humidity: byte; var temperature: byte): TDHTResult;
-function DHT22Read(var humidity: word; var temperature: int16): TDHTResult;
+function DHT11Read(out humidity: byte; out temperature: byte): TDHTResult;
+function DHT22Read(out humidity: word; out temperature: int16): TDHTResult;
 
 // Global data array
 var
@@ -365,7 +365,7 @@ begin
   end
 end;
 
-function DHT11Read(var humidity: byte; var temperature: byte): TDHTResult;
+function DHT11Read(out humidity: byte; out temperature: byte): TDHTResult;
 begin
   Result := DHT_read_sensor;
   if Result = DHT_OK then
@@ -380,7 +380,7 @@ begin
   end
 end;
 
-function DHT22Read(var humidity: word; var temperature: int16): TDHTResult;
+function DHT22Read(out humidity: word; out temperature: int16): TDHTResult;
 begin
   Result := DHT_read_sensor;
   if Result = DHT_OK then
