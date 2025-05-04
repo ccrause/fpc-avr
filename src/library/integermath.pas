@@ -18,11 +18,16 @@ interface
 // x (dividend) = q(quotient) x d(divisor) + p(remainder)
 
 procedure div_mod_byte(Dividend, Divisor: byte; out result, remainder: byte);
+procedure div_mod_int8(Dividend, Divisor: int8; out result, remainder: int8);
 procedure div_mod_word(Dividend, Divisor: word; out result, remainder: word);
+procedure div_mod_int16(Dividend, Divisor: int16; out result, remainder: int16);
 {$ifndef CPUAVR_16_REGS}
 procedure div_mod_dword(Dividend, Divisor: dword; out result, remainder: dword);
+procedure div_mod_int32(Dividend, Divisor: int32; out result, remainder: int32);
+
 function div_mod_qword(Dividend, Divisor: qword; out Remainder: qword): qword;
 {$endif}
+
 implementation
 
 procedure div_mod_byte(Dividend, Divisor: byte; out Result, Remainder: byte); assembler; nostackframe;
@@ -68,6 +73,27 @@ finish:
   pop R30
   pop R31
   st  Z, R24
+end;
+
+procedure div_mod_int8(Dividend, Divisor: int8; out result, remainder: int8);
+var
+  neg: boolean;
+begin
+  neg := false;
+  if (Dividend < 0) then
+  begin
+    neg := true;
+    Dividend := -Dividend;
+  end;
+
+  if Divisor < 0 then
+  begin
+    neg := not(neg);
+    Divisor := -Divisor;
+  end;
+  div_mod_byte(byte(Dividend), byte(Divisor), byte(result), byte(remainder));
+  if neg then
+    result := -result;
 end;
 
 procedure div_mod_word(Dividend, Divisor: word; out Result, Remainder: word); assembler; nostackframe;
@@ -122,7 +148,29 @@ finish:
   st Z, R25
 end;
 
+procedure div_mod_int16(Dividend, Divisor: int16; out result, remainder: int16);
+var
+  neg: boolean;
+begin
+  neg := false;
+  if Dividend < 0 then
+  begin
+    neg := true;
+    Dividend := -Dividend;
+  end;
+
+  if Divisor < 0 then
+  begin
+    neg := not(neg);
+    Divisor := -Divisor;
+  end;
+  div_mod_word(word(Dividend), word(Divisor), word(result), word(remainder));
+  if neg then
+    result := -result;
+end;
+
 {$ifndef CPUAVR_16_REGS}
+
 procedure div_mod_dword(Dividend, Divisor: dword; out Result, Remainder: dword); assembler; nostackframe;
 label
   start, div1, div2, div3, finish;
@@ -187,6 +235,27 @@ finish:
   st Z+, R23
   st Z+, R24
   st Z, R25
+end;
+
+procedure div_mod_int32(Dividend, Divisor: int32; out result, remainder: int32);
+var
+  neg: boolean;
+begin
+  neg := false;
+  if (Dividend < 0) then
+  begin
+    neg := true;
+    Dividend := -Dividend;
+  end;
+
+  if Divisor < 0 then
+  begin
+    neg := not(neg);
+    Divisor := -Divisor;
+  end;
+  div_mod_dword(dword(Dividend), dword(Divisor), dword(result), dword(remainder));
+  if neg then
+    result := -result;
 end;
 
 function div_mod_qword(Dividend, Divisor: qword; out Remainder: qword): qword; assembler; {nostackframe;}
