@@ -23,13 +23,12 @@ var
   i, j, addr: byte;
 begin
   i2c_master.init(I2C_100kHz);
-  uart_transmit('Starting scanning right adjusted addresses $00 - $7f.'#13#10);
-  uart_transmit(#13#10);
+  uart_transmit('I2C scanning right adjusted addresses $00 - $7f'#13#10);
   uart_transmit('   00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F'#13#10);
   for i := 0 to 7 do
   begin
-    uart_transmit_hex(i);
-    uart_transmit('0 ');
+    uart_transmit_hex(i shl 4);
+    uart_transmit(' ');
     for j := 0 to 15 do
     begin
       addr := (i shl 4) or j;
@@ -39,7 +38,7 @@ begin
         uart_transmit(' ');
       end
       else
-        uart_transmit('.. ');
+        uart_transmit('-- ');
       i2c_master.stop;
     end;
     uart_transmit(#13#10);
