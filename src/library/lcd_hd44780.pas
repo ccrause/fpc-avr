@@ -42,19 +42,23 @@ const
   displayControl_mask = (1 shl 3);
   dataPinMask = (1 shl lcd_dataPin4) or (1 shl lcd_dataPin5) or (1 shl lcd_dataPin6) or (1 shl lcd_dataPin7);
 
-//  LineLength = 40;
   Line1Start = 0;
   Line2Start = 64; // $40
   Line3Start = 20; // $14
   Line4Start = 84; // $54
 
-var
-  singleDataPort: boolean = false;
+  singleDataPort = (@LCD_DATA4_PORT = @LCD_DATA5_PORT) and (@LCD_DATA5_PORT = @LCD_DATA6_PORT) and (@LCD_DATA6_PORT = @LCD_DATA7_PORT);
+  consecutiveDataPins = ((lcd_dataPin5 + lcd_dataPin6 + lcd_dataPin7 - 3*lcd_dataPin4) = 6) and
+                        (lcd_dataPin4 < lcd_dataPin5) and
+                        (lcd_dataPin5 < lcd_dataPin6) and
+                        (lcd_dataPin6 < lcd_dataPin7);
 
 procedure set_controlPinsOutput(); inline;
 begin
   LCD_RS_DDR := LCD_RS_DDR or (1 shl LCD_RS_PIN);
+  {$if declared(LCD_RW_PORT)}
   LCD_RW_DDR := LCD_RW_DDR or (1 shl LCD_RW_PIN);
+  {$endif}
   LCD_E_DDR  := LCD_E_DDR  or (1 shl LCD_E_PIN);
 end;
 
@@ -70,12 +74,16 @@ end;
 
 procedure lcd_rw_low(); inline;
 begin
+  {$if declared(LCD_RW_PORT)}
   LCD_RW_PORT := LCD_RW_PORT and not (1 shl LCD_RW_PIN);
+  {$endif}
 end;
 
 procedure lcd_rw_high(); inline;
 begin
+  {$if declared(LCD_RW_PORT)}
   LCD_RW_PORT := LCD_RW_PORT or (1 shl LCD_RW_PIN);
+  {$endif}
 end;
 
 procedure lcd_e_low(); inline;
@@ -99,7 +107,7 @@ end;
 procedure set_dataOutput();
 begin
   if singleDataPort then
-    LCD_DATA4_DDR := LCD_DATA4_DDR or dataPinMask //(1 shl lcd_dataPin4) or (1 shl lcd_dataPin5) or (1 shl lcd_dataPin6) or (1 shl lcd_dataPin7)
+    LCD_DATA4_DDR := LCD_DATA4_DDR or dataPinMask
   else
   begin
     LCD_DATA4_DDR := LCD_DATA4_DDR or (1 shl lcd_dataPin4);
@@ -113,7 +121,6 @@ procedure set_dataLow();
 begin
   if singleDataPort then
     LCD_DATA4_PORT := LCD_DATA4_PORT and not dataPinMask
-                      //((1 shl lcd_dataPin4) or (1 shl lcd_dataPin5) or (1 shl lcd_dataPin4) or (1 shl lcd_dataPin5));
   else
   begin
     LCD_DATA4_PORT := LCD_DATA4_PORT and not (1 shl lcd_dataPin4);
@@ -139,8 +146,8 @@ end;
 procedure set_dataNibble(const nibble: byte);
 begin
   set_dataLow();
-  if singleDataPort then
-    LCD_DATA4_PORT := LCD_DATA4_PORT or ((nibble and $0F) shl lcd_dataPin4) // 4 data pins may not start at 0
+  if singleDataPort and consecutiveDataPins then
+    LCD_DATA4_PORT := LCD_DATA4_PORT or ((nibble and $0F) shl lcd_dataPin4)
   else
   begin
     LCD_DATA4_PORT := LCD_DATA4_PORT or ((nibble and 1) shl lcd_dataPin4);
@@ -162,7 +169,7 @@ begin
   Toggle_e();
 
   // low nibble
-  set_dataNibble(data and $0F);
+  set_dataNibble(data);
   Toggle_e();
 
   lcd_rs_low();
@@ -177,14 +184,11 @@ end;
 
 procedure lcd_init(const settings_mask: byte);
 begin
-  if (LCD_DATA4_PORT = LCD_DATA5_PORT) and (LCD_DATA5_PORT = LCD_DATA6_PORT) and (LCD_DATA6_PORT = LCD_DATA7_PORT) then
-    singleDataPort := true;
-
   // Set data port pins
   set_DataOutput();
   set_dataHigh();
 
-  //Control pins
+  // Control pins
   set_controlPinsOutput();
   // Default low value
   lcd_rs_low();
@@ -197,7 +201,7 @@ begin
   set_dataNibble(%0011);
 
   Toggle_e();
-  delay_us(4100);  // Hitachi datasheet
+  delay_us(4100); // Hitachi datasheet
   Toggle_e();
   delay_us(100);  // Hitachi datasheet
   Toggle_e();
