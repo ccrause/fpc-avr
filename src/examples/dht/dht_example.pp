@@ -10,7 +10,8 @@ program dht_example;
   and temperatute * 10 to include a single decimal value in the result. }
 
 uses
-  uart, delay, dht, simplemath;
+  uart, delay, dht, simplemath,
+  dht_config;
 
 const
   BAUD_Rate = 115200;

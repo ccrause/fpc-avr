@@ -5,13 +5,15 @@ unit dht;
   1 wire protocol.
 
   The port and pin connected to the DHT data pin needs to be specified in an
-  application provided dht_config.inc file.
+  application provided dht_config.pas unit.
 
   This library uses timer1 to measure bit durations during the read process.
   Therefore any previous timer1 functionality is suspended during a call to one
   of the DHT read procedures and restored at the end of the call.
 
   Interrupts are disabled during sensitive timing measurements. }
+
+{$goto on} // Goto used to skip to finalization code on timeout
 
 interface
 
@@ -35,9 +37,8 @@ var
 implementation
 
 uses
-  delay, intrinsics;
+  delay, intrinsics, dht_config;
 
-{$include dht_config.inc}
 {$define PinMask := (1 shl dhtPin)}
 
   // Timeout settings
@@ -95,6 +96,8 @@ uses
 {$endif}
 
 function DHT_read_sensor: TDHTResult;
+label
+  cleanup;
 var
   cnt: byte = 7;
   idx: byte = 0;
@@ -103,6 +106,7 @@ var
   // Variables used to save state of modified registers
   SREG, _CTRLA, _CTRLB, _CTRLD, _INTCTRL: byte;
 begin
+  Result := DHT_TIMEOUT;
   for i := 0 to length(data)-1 do
     data[i] := 0;
 
@@ -130,8 +134,9 @@ begin
   VPort.OUT_ := VPort.OUT_ or pinMask;
   delay_us(20);  // Drive data line high 20 - 200 us
 
-  // Save current interrupt status
+  // Save current interrupt status and disable interrupts
   SREG := avr_save;
+  avr_cli;
 
   // 3. Switch pin to input
   VPORT.DIR := VPORT.DIR and not(pinMask);  // Pin now input
@@ -140,19 +145,19 @@ begin
   timerCA.CNT := 0;
   while (VPORT.IN_ and pinMask = pinMask) do
     if timerCA.CNT >= TicksFor_140us_Timeout then
-      exit(DHT_TIMEOUT);
+      goto cleanup; // exit(DHT_TIMEOUT);
 
   // 5. Wait for sensor acknowledge = pin low for ~ 80 us
   timerCA.CNT:= 0;
   while (VPORT.IN_ and pinMask = 0) do
     if timerCA.CNT >= TicksFor_140uS_Timeout then
-      exit(DHT_TIMEOUT);
+      goto cleanup; // exit(DHT_TIMEOUT);
 
   // 6. Second part of ACK: high for 80 us
   timerCA.CNT := 0;
   while (VPORT.IN_ and pinMask = pinMask) do
     if timerCA.CNT >= TicksFor_140uS_Timeout then
-      exit(DHT_TIMEOUT);
+      goto cleanup; // exit(DHT_TIMEOUT);
 
   // 8. Read 5 data output bytes => 40 pairs of low + high levels
   for i := 0 to 39 do
@@ -162,13 +167,13 @@ begin
     // 7a Start of bit indicated by low for 50us,
     while (VPORT.IN_ and pinMask = 0) do
       if timerCA.CNT >= TicksFor_100uS_Timeout then
-        exit(DHT_TIMEOUT);
+        goto cleanup; // exit(DHT_TIMEOUT);
 
     timerCA.CNT := 0;
     // 7b Max high time is 70 us
     while (VPORT.IN_ and pinMask = pinMask) do
       if timerCA.CNT >= TicksFor_140uS_Timeout then
-        exit(DHT_TIMEOUT);
+        goto cleanup; // exit(DHT_TIMEOUT);
 
     // Use cutoff time halfway between time for "0" and "1"
     if timerCA.CNT > TicksFor_48us_Timeout then
@@ -182,7 +187,9 @@ begin
     else
       dec(cnt);
   end;
+  Result := DHT_OK;
 
+cleanup:
   CPU.SREG := SREG; // Restore previous interrupt status
   // Restore previous state of timer
   timerCA.INTCTRL := _INTCTRL;
@@ -190,11 +197,12 @@ begin
   timerCA.CTRLB   := _CTRLB;
   timerCA.CTRLA   := _CTRLA;
 
-  checksum := data[0]+ data[1] + data[2]+ data[3];
-  if (data[4] <> checksum) then
-    Result := DHT_CHECKSUM
-  else
-    Result := DHT_OK;
+  if Result = DHT_OK then
+  begin
+    checksum := data[0]+ data[1] + data[2]+ data[3];
+    if (data[4] <> checksum) then
+      Result := DHT_CHECKSUM;
+  end;
 end;
 
 {$else CPUAVRXMEGA3}
@@ -210,6 +218,8 @@ end;
 {$endif}
 
 function DHT_read_sensor: TDHTResult;
+label
+  cleanup;
 var
   cnt: byte = 7;
   idx: byte = 0;
@@ -220,6 +230,7 @@ var
   {$if declared(TCCR1C)}_TCCR1C: byte;{$endif}
   {$if declared(SFIOR)}_SFIOR: byte;{$endif}
 begin
+  Result := DHT_TIMEOUT;
   {$if declared(SFIOR)}
   _SFIOR := SFIOR;
   // Ensure PUD (pullup disabled) is cleared
@@ -256,7 +267,6 @@ begin
   _TIMSK := TIMSK1;
   TIMSK1 := TIMSK1 and not((1 shl ICIE1) or (1 shl TOIE1));
   {$endif}
-  SREG := avr_save; // Save current interrupt status and disable interrupts
 
   // Initiate sample request
   // 1. Pull pin low
@@ -267,6 +277,10 @@ begin
   dataPORT := dataPORT or pinMask;
   delay_us(20);  // Drive data line high 20 - 200 us
 
+  // Save current interrupt status and disable interrupts
+  SREG := avr_save;
+  avr_cli;
+
   // 3. Switch pin to input mode
   dataDDR := dataDDR and not(pinMask);  // Pin now input with pullup enabled
 
@@ -274,19 +288,19 @@ begin
   TCNT1 := 0;
   while (dataPIN and pinMask > 0) do
     if TCNT1 >= TicksFor_140us_Timeout then
-      exit(DHT_TIMEOUT);
+      goto cleanup; // exit(DHT_TIMEOUT);
 
   // 5. Wait for acknowledge = pin low for ~ 80 us
   TCNT1 := 0;
   while (dataPIN and pinMask = 0) do
     if TCNT1 >= TicksFor_140uS_Timeout then
-      exit(DHT_TIMEOUT);
+      goto cleanup; // exit(DHT_TIMEOUT);
 
   // 6. Second part of ACK: high for 80 us
   TCNT1 := 0;
   while (dataPIN and pinMask > 0) do
     if TCNT1 >= TicksFor_140uS_Timeout then
-      exit(DHT_TIMEOUT);
+      goto cleanup; // exit(DHT_TIMEOUT);
 
   // 8. Read 5 data output bytes => 40 pairs of low + high levels
   for i := 0 to 39 do
@@ -296,13 +310,14 @@ begin
     TCNT1 := 0;
     while (dataPIN and pinMask = 0) do
       if TCNT1 >= TicksFor_100uS_Timeout then
-        exit(DHT_TIMEOUT);
+        goto cleanup; // exit(DHT_TIMEOUT);
 
     // 7b Max high time is 70 us
     TCNT1 := 0;
     while (dataPIN and pinMask > 0) do
       if TCNT1 >= TicksFor_140uS_Timeout then
-        exit(DHT_TIMEOUT);
+        goto cleanup; // exit(DHT_TIMEOUT);
+
     // Use cutoff time halfway between time for "0" and "1"
     if TCNT1 > TicksFor_48us_Timeout then
       data[idx] := data[idx] or 1;
@@ -315,7 +330,9 @@ begin
     else
       dec(cnt);
   end;
+  Result := DHT_OK;
 
+cleanup:
   avr_restore(SREG); // Restore previous interrupt status
   // Restore previous state of timer1
   TCCR1A := _TCCR1A;
@@ -332,11 +349,12 @@ begin
   SFIOR := _SFIOR;
   {$endif}
 
-  checksum := data[0]+ data[1] + data[2]+ data[3];
-  if (data[4] <> checksum) then
-    Result := DHT_CHECKSUM
-  else
-    Result := DHT_OK;
+  if Result = DHT_OK then
+  begin
+    checksum := data[0]+ data[1] + data[2]+ data[3];
+    if (data[4] <> checksum) then
+      Result := DHT_CHECKSUM;
+  end;
 end;
 {$endif CPUAVRXMEGA3}
 
