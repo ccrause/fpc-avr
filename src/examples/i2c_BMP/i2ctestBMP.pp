@@ -19,7 +19,8 @@ const
 
 var
   ID: byte;
-  T, dT, P: int32;
+  T, dT: int32;
+  P: uint32;
 
 begin
   uart.uart_init(BAUD_SETTING);
